@@ -339,6 +339,30 @@
     flex-direction:column;
     justify-content:center;
   }
+  .bell-btn{
+    position:relative;
+    background:none;
+    border:none;
+    font-size:22px;
+    cursor:pointer;
+    padding:4px;
+  }
+  .bell-badge{
+    position:absolute;
+    top:-2px;
+    right:-2px;
+    background:var(--rose);
+    color:#fff;
+    font-size:11px;
+    font-weight:800;
+    border-radius:10px;
+    min-width:18px;
+    height:18px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:0 4px;
+  }
   .hidden{display:none;}
 </style>
 </head>
@@ -868,14 +892,46 @@ function render(){
       });
     }
   }
+  else if(state.view === 'admin-comments'){
+    const comments = buildActivityFeed(state.adminData).filter(i=>i.comment);
+    app.innerHTML = `
+      <button class="back" id="back-btn">&larr; Volver</button>
+      <div class="brand">russ.trainer</div>
+      <h1>🔔 Comentarios</h1>
+      <div id="comments-list"></div>
+    `;
+    document.getElementById('back-btn').onclick = ()=>{ state.view='admin-list'; render(); };
+    const wrap = document.getElementById('comments-list');
+    if(comments.length === 0){
+      wrap.innerHTML = '<div class="empty">Nadie dejó comentarios todavía.</div>';
+    } else {
+      comments.forEach(item=>{
+        const box = document.createElement('div');
+        box.className = 'card';
+        box.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:baseline;">
+            <span style="font-weight:700;">${escapeHtml(item.clienta)}</span>
+            <span class="sub" style="margin:0;">${formatDate(item.date)}</span>
+          </div>
+          <div class="sub" style="margin:2px 0 8px;">sobre <strong>${escapeHtml(item.exercise)}</strong></div>
+          <div class="tip" style="margin:0;">💬 ${escapeHtml(item.comment)}</div>
+        `;
+        wrap.appendChild(box);
+      });
+    }
+  }
   else if(state.view === 'admin-list'){
+    const commentCount = buildActivityFeed(state.adminData || {}).filter(i=>i.comment).length;
     app.innerHTML = `
       <div class="topbar">
         <div>
           <div class="brand">russ.trainer</div>
           <div class="name">Panel de entrenadora</div>
         </div>
-        <button class="link-btn" id="admin-exit-btn">Salir</button>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <button class="bell-btn" id="comments-bell-btn">🔔${commentCount > 0 ? `<span class="bell-badge">${commentCount}</span>` : ''}</button>
+          <button class="link-btn" id="admin-exit-btn">Salir</button>
+        </div>
       </div>
       <div id="admin-today"></div>
       <button class="btn-ghost" id="feed-btn" style="width:100%; margin-top:10px;">🕐 Ver actividad reciente</button>
@@ -884,6 +940,7 @@ function render(){
     `;
     document.getElementById('admin-exit-btn').onclick = ()=>{ state.view='login'; state.adminData=null; render(); };
     document.getElementById('feed-btn').onclick = ()=>{ state.view='admin-feed'; render(); };
+    document.getElementById('comments-bell-btn').onclick = ()=>{ state.view='admin-comments'; render(); };
     if(state.adminData){
       const keys = Object.keys(state.adminData);
       const todayStr = todayISO();
