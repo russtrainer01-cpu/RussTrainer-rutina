@@ -670,6 +670,16 @@ function daysSince(dateStr){
   return Math.round((now - then) / 86400000);
 }
 
+function weekEndInfo(semanaInicio){
+  if(!semanaInicio) return null;
+  const start = new Date(semanaInicio + 'T00:00:00');
+  const end = new Date(start);
+  end.setDate(end.getDate() + 7);
+  const endStr = end.toISOString().slice(0,10);
+  const daysLeft = daysUntil(endStr);
+  return { endStr, daysLeft };
+}
+
 function daysUntil(dateStr){
   if(!dateStr) return null;
   const target = new Date(dateStr + 'T00:00:00');
@@ -858,12 +868,13 @@ async function loadClienta(name){
     if(!parsed.completados) parsed.completados = {};
     if(!parsed.bodyWeight) parsed.bodyWeight = [];
     if(!parsed.weightPromptSeen) parsed.weightPromptSeen = false;
-    if(!parsed.ficha) parsed.ficha = { objetivo:'', nivel:'', restricciones:'', fechaInicio:'', cumpleanos:'' };
+    if(!parsed.ficha) parsed.ficha = { objetivo:'', nivel:'', restricciones:'', fechaInicio:'', cumpleanos:'', semanaInicio:'' };
+    if(parsed.ficha.semanaInicio === undefined) parsed.ficha.semanaInicio = '';
     if(!parsed.vencimiento) parsed.vencimiento = '';
     if(!parsed.trainerNotes) parsed.trainerNotes = [];
     return parsed;
   }catch(e){
-    return { exercises: {}, completados: {}, bodyWeight: [], weightPromptSeen: false, ficha:{ objetivo:'', nivel:'', restricciones:'', fechaInicio:'', cumpleanos:'' }, vencimiento:'', trainerNotes: [] };
+    return { exercises: {}, completados: {}, bodyWeight: [], weightPromptSeen: false, ficha:{ objetivo:'', nivel:'', restricciones:'', fechaInicio:'', cumpleanos:'', semanaInicio:'' }, vencimiento:'', trainerNotes: [] };
   }
 }
 async function saveClienta(name, data){
@@ -1133,6 +1144,8 @@ function render(){
         const birthday = isBirthdayToday(c.data.ficha.cumpleanos);
         const vencDays = daysUntil(c.data.vencimiento);
         const vencAlert = vencDays !== null && vencDays <= 7;
+        const weekInfo = weekEndInfo(c.data.ficha.semanaInicio);
+        const weekAlert = weekInfo && weekInfo.daysLeft <= 3;
         const card = document.createElement('button');
         card.className = 'card';
         card.style.cssText = `text-align:left; width:100%; border:1px solid var(--border); border-left:3px solid ${isAlert ? '#c65f5f' : 'var(--rose)'}; cursor:pointer; background:var(--bg-card); font-family:inherit;`;
@@ -1143,6 +1156,7 @@ function render(){
           </div>
           <div class="sub" style="margin:2px 0 0;">${streak > 0 ? '🔥 ' + streak + ' · ' : ''}${weekCount}/${target} esta semana</div>
           ${vencAlert ? `<div class="sub" style="margin:4px 0 0; color:#c65f5f; font-weight:600;">💳 ${vencDays < 0 ? 'Plan vencido' : vencDays === 0 ? 'Vence hoy' : 'Vence en ' + vencDays + ' días'}</div>` : ''}
+          ${weekAlert ? `<div class="sub" style="margin:4px 0 0; color:var(--rose-dark); font-weight:600;">📅 ${weekInfo.daysLeft < 0 ? 'Semana vencida, hay que planificar' : weekInfo.daysLeft === 0 ? 'Su semana termina hoy' : 'Le queda' + (weekInfo.daysLeft===1?' 1 día':'n ' + weekInfo.daysLeft + ' días') + ' de su semana'}</div>` : ''}
         `;
         card.onclick = ()=>{ state.adminSelected = key; state.view = 'admin-detail'; render(); };
         content.appendChild(card);
@@ -1157,11 +1171,14 @@ function render(){
     const gap = daysSince(lastActive);
     const isAlert = gap === null || gap >= 3;
     const f = c.data.ficha;
+    const weekInfo = weekEndInfo(f.semanaInicio);
+    const weekAlert = weekInfo && weekInfo.daysLeft <= 3;
     app.innerHTML = `
       <button class="back" id="back-btn">&larr; Volver</button>
       <div class="brand">russ.trainer</div>
       <h1>${escapeHtml(c.displayName)}</h1>
       ${isAlert ? `<div class="tip" style="border-left-color:#c65f5f; color:#c65f5f;">⚠️ ${lastActive ? 'Última actividad: ' + formatDate(lastActive) + ' (' + gap + ' días)' : 'Todavía no registró actividad'}</div>` : `<div class="sub">Última actividad: ${formatDate(lastActive)}</div>`}
+      ${weekAlert ? `<div class="tip" style="border-left-color:var(--rose-dark); color:var(--rose-dark);">📅 ${weekInfo.daysLeft < 0 ? 'Su semana ya venció, hay que planificar la próxima' : weekInfo.daysLeft === 0 ? 'Su semana termina hoy' : 'Le queda' + (weekInfo.daysLeft===1?' 1 día':'n ' + weekInfo.daysLeft + ' días') + ' de su semana actual'}</div>` : ''}
 
       <h2 style="margin-top:20px;">Ficha</h2>
       <div class="card">
@@ -1183,6 +1200,9 @@ function render(){
         </div>
         <label>Vencimiento del plan</label>
         <input type="date" id="f-vencimiento" value="${escapeHtml(c.data.vencimiento)}" />
+        <label>Inicio de su semana actual</label>
+        <input type="date" id="f-semanainicio" value="${escapeHtml(f.semanaInicio)}" />
+        <p class="sub" style="margin:-6px 0 12px; font-size:12px;">Actualizá esto cada vez que le armes una semana nueva — así el panel te avisa cuando está por terminar.</p>
         <button class="btn-primary" id="f-save-btn" style="margin-top:6px;">Guardar ficha</button>
       </div>
 
@@ -1499,7 +1519,8 @@ async function onSaveFicha(key){
     nivel: document.getElementById('f-nivel').value.trim(),
     restricciones: document.getElementById('f-restricciones').value.trim(),
     fechaInicio: document.getElementById('f-fechainicio').value,
-    cumpleanos: document.getElementById('f-cumple').value.trim()
+    cumpleanos: document.getElementById('f-cumple').value.trim(),
+    semanaInicio: document.getElementById('f-semanainicio').value
   };
   fresh.vencimiento = document.getElementById('f-vencimiento').value;
   await saveClienta(c.displayName, fresh);
