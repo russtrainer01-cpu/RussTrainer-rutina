@@ -333,6 +333,9 @@
   .day-card.running{
     background:linear-gradient(135deg, #4a90b8, #2c5f7c);
   }
+  .day-card.neutral-menu{
+    background:linear-gradient(135deg, #5a6472, #333b45);
+  }
   .login-wrap{
     min-height:calc(100vh - 64px);
     display:flex;
@@ -912,7 +915,7 @@ function render(){
       const dayChips = document.getElementById('routine-day-chips');
       Object.keys(myRoutine).forEach(day=>{
         const chip = document.createElement('button');
-        chip.className = 'day-card' + (day.toLowerCase().includes('running') ? ' running' : '');
+        chip.className = 'day-card' + (day.toLowerCase().includes('running') ? ' running' : '') + (routineKey(state.clienta) === 'braian' ? ' neutral-menu' : '');
         chip.innerHTML = `<div class="dc-label">${escapeHtml(day)}</div><div class="dc-sub">Toca para empezar →</div>`;
         chip.onclick = ()=>{ state.view='routine-day'; state.routineDay=day; render(); };
         dayChips.appendChild(chip);
