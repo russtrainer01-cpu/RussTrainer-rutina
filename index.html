@@ -400,6 +400,35 @@
     cursor:pointer;
     margin-top:8px;
   }
+  .set-counter{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin:0 0 14px;
+  }
+  .set-counter button{
+    width:40px;
+    height:40px;
+    border-radius:50%;
+    border:none;
+    font-size:20px;
+    font-weight:800;
+    cursor:pointer;
+  }
+  .set-minus{
+    background:var(--bg-elevated);
+    color:var(--text);
+  }
+  .set-plus{
+    background:var(--rose);
+    color:#1a0d0f;
+  }
+  .set-counter .count{
+    font-weight:800;
+    font-size:17px;
+    min-width:70px;
+    text-align:center;
+  }
   .hidden{display:none;}
 </style>
 </head>
@@ -770,7 +799,7 @@ function computeWeekCount(data){
   return count;
 }
 
-let state = { clienta: null, data: null, view: 'login', exercise: null, routineDay: null, uiExpanded: {}, uiFeeling: {}, adminData: null, adminSelected: null };
+let state = { clienta: null, data: null, view: 'login', exercise: null, routineDay: null, uiExpanded: {}, uiFeeling: {}, uiSets: {}, adminData: null, adminSelected: null };
 let chartInstance = null;
 
 const EXERCISE_LIBRARY = {
@@ -1338,7 +1367,14 @@ function render(){
           <button class="btn-ghost edit-btn" data-idx="${idx}" style="width:100%;">✏️ Editar registro</button>
         `;
       } else {
+        const setsDone = state.uiSets[idx] !== undefined ? state.uiSets[idx] : 0;
         bodyHtml += `
+          <div class="sub" style="margin:0 0 6px;">Series hechas</div>
+          <div class="set-counter">
+            <button class="set-minus" data-idx="${idx}">−</button>
+            <span class="count">${setsDone}${setsTarget !== null ? ' / ' + setsTarget : ''}</span>
+            <button class="set-plus" data-idx="${idx}">+1</button>
+          </div>
           <div class="feeling-row">
             ${feelings.map(f=>`<button class="feeling-btn${selectedFeeling===f ? ' selected':''}" data-idx="${idx}" data-feeling="${escapeHtml(f)}">${f.split(' ')[0]}</button>`).join('')}
           </div>
@@ -1348,13 +1384,13 @@ function render(){
           `}
           <input type="text" id="reg-comment-${idx}" value="${lastToday && lastToday.comment ? escapeHtml(lastToday.comment) : ''}" placeholder="💬 Comentario para tu entrenadora (opcional)" />
           <div class="error hidden" id="reg-error-${idx}">Ingresá el peso usado.</div>
-          <button class="btn-primary registrar-btn" data-idx="${idx}" data-exercise="${escapeHtml(item.ejercicio)}" data-sinpeso="${item.sinPeso ? '1':'0'}" data-reps="${repsTarget !== null ? repsTarget : ''}" data-sets="${setsTarget !== null ? setsTarget : ''}" style="margin-top:4px;">Registrar</button>
+          <button class="btn-primary registrar-btn" data-idx="${idx}" data-exercise="${escapeHtml(item.ejercicio)}" data-sinpeso="${item.sinPeso ? '1':'0'}" data-reps="${repsTarget !== null ? repsTarget : ''}" data-sets="${setsDone}" style="margin-top:4px;">Registrar</button>
         `;
       }
       card.innerHTML = bodyHtml;
       wrap.appendChild(card);
     });
-    document.getElementById('back-btn').onclick = ()=>{ state.view='dashboard'; state.routineDay=null; state.uiExpanded={}; state.uiFeeling={}; render(); };
+    document.getElementById('back-btn').onclick = ()=>{ state.view='dashboard'; state.routineDay=null; state.uiExpanded={}; state.uiFeeling={}; state.uiSets={}; render(); };
     wrap.querySelectorAll('.check-btn').forEach(btn=>{
       btn.onclick = ()=> onToggleChecklist(btn.dataset.idx);
     });
@@ -1366,6 +1402,22 @@ function render(){
     });
     wrap.querySelectorAll('.feeling-btn').forEach(btn=>{
       btn.onclick = ()=>{ state.uiFeeling[btn.dataset.idx] = btn.dataset.feeling; render(); };
+    });
+    wrap.querySelectorAll('.set-plus').forEach(btn=>{
+      btn.onclick = ()=>{
+        const idx = btn.dataset.idx;
+        const current = state.uiSets[idx] !== undefined ? state.uiSets[idx] : 0;
+        state.uiSets[idx] = current + 1;
+        render();
+      };
+    });
+    wrap.querySelectorAll('.set-minus').forEach(btn=>{
+      btn.onclick = ()=>{
+        const idx = btn.dataset.idx;
+        const current = state.uiSets[idx] !== undefined ? state.uiSets[idx] : 0;
+        state.uiSets[idx] = Math.max(0, current - 1);
+        render();
+      };
     });
     wrap.querySelectorAll('.registrar-btn').forEach(btn=>{
       btn.onclick = ()=>{
@@ -1558,6 +1610,7 @@ async function onQuickSave(idx, exerciseName, weight, reps, sets, feeling, comme
   await saveClienta(state.clienta, state.data);
   delete state.uiExpanded[idx];
   delete state.uiFeeling[idx];
+  delete state.uiSets[idx];
   render();
 }
 
