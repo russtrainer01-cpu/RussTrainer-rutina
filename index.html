@@ -333,6 +333,12 @@
   .day-card.running{
     background:linear-gradient(135deg, #4a90b8, #2c5f7c);
   }
+  .login-wrap{
+    min-height:calc(100vh - 64px);
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+  }
   .hidden{display:none;}
 </style>
 </head>
@@ -728,15 +734,17 @@ function render(){
   const app = document.getElementById('app');
   if(state.view === 'login'){
     app.innerHTML = `
-      <div class="brand">russ.trainer</div>
-      <div class="stars">✦ ✦ ✦ ✦ ✦</div>
-      <h1>Tu progreso empieza acá</h1>
-      <p class="sub">Registrá tus avances y observá todo lo que tu cuerpo es capaz de lograr.</p>
-      <div class="login-card">
-        <label>¿Cómo te llamás?</label>
-        <input id="name-input" placeholder="Ej: Ale" autocomplete="off" />
-        <div id="login-error" class="error hidden">Escribí tu nombre para continuar.</div>
-        <button class="btn-primary" id="enter-btn">Comenzar →</button>
+      <div class="login-wrap">
+        <div class="brand">russ.trainer</div>
+        <div class="stars">✦ ✦ ✦ ✦ ✦</div>
+        <h1>Tu progreso empieza acá</h1>
+        <p class="sub">Registrá tus avances y observá todo lo que tu cuerpo es capaz de lograr.</p>
+        <div class="login-card">
+          <label>¿Cómo te llamás?</label>
+          <input id="name-input" placeholder="Ej: Ale" autocomplete="off" />
+          <div id="login-error" class="error hidden">Escribí tu nombre para continuar.</div>
+          <button class="btn-primary" id="enter-btn">Comenzar →</button>
+        </div>
       </div>
     `;
     document.getElementById('enter-btn').onclick = onEnter;
