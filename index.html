@@ -403,30 +403,36 @@
   .set-counter{
     display:flex;
     align-items:center;
-    gap:14px;
+    justify-content:flex-start;
+    gap:16px;
     margin:0 0 14px;
   }
   .set-counter button{
-    width:40px;
-    height:40px;
+    width:38px;
+    height:38px;
     border-radius:50%;
-    border:none;
-    font-size:20px;
-    font-weight:800;
+    font-size:17px;
+    font-weight:700;
     cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    line-height:1;
   }
   .set-minus{
     background:var(--bg-elevated);
-    color:var(--text);
+    border:1px solid var(--border);
+    color:var(--text-muted);
   }
   .set-plus{
-    background:var(--rose);
-    color:#1a0d0f;
+    background:var(--bg-elevated);
+    border:1px solid var(--rose);
+    color:var(--rose-dark);
   }
   .set-counter .count{
     font-weight:800;
-    font-size:17px;
-    min-width:70px;
+    font-size:16px;
+    min-width:56px;
     text-align:center;
   }
   .hidden{display:none;}
@@ -1373,7 +1379,7 @@ function render(){
           <div class="set-counter">
             <button class="set-minus" data-idx="${idx}">−</button>
             <span class="count">${setsDone}${setsTarget !== null ? ' / ' + setsTarget : ''}</span>
-            <button class="set-plus" data-idx="${idx}">+1</button>
+            <button class="set-plus" data-idx="${idx}">+</button>
           </div>
           <div class="feeling-row">
             ${feelings.map(f=>`<button class="feeling-btn${selectedFeeling===f ? ' selected':''}" data-idx="${idx}" data-feeling="${escapeHtml(f)}">${f.split(' ')[0]}</button>`).join('')}
