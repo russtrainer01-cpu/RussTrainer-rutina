@@ -541,6 +541,48 @@ function isBirthdayToday(mmdd){
   return mmdd === todayMMDD;
 }
 
+function buildActivityFeed(adminData){
+  const items = [];
+  Object.keys(adminData).forEach(key=>{
+    const c = adminData[key];
+    Object.keys(c.data.exercises).forEach(ex=>{
+      c.data.exercises[ex].forEach(e=>{
+        items.push({
+          clienta: c.displayName,
+          type: 'exercise',
+          exercise: ex,
+          date: e.date,
+          ts: e.ts || e.date,
+          weight: e.weight,
+          reps: e.reps,
+          sets: e.sets,
+          feeling: e.feeling,
+          comment: e.comment
+        });
+      });
+    });
+    const routine = ROUTINES[key] || {};
+    Object.keys(c.data.completados || {}).forEach(day=>{
+      const dayItems = routine[day] || [];
+      Object.keys(c.data.completados[day]).forEach(idx=>{
+        const rec = c.data.completados[day][idx];
+        if(rec && rec.done){
+          const item = dayItems[Number(idx)];
+          items.push({
+            clienta: c.displayName,
+            type: 'checklist',
+            exercise: item ? item.ejercicio : 'Ejercicio',
+            date: rec.date,
+            ts: rec.ts || rec.date
+          });
+        }
+      });
+    });
+  });
+  items.sort((a,b)=> String(b.ts).localeCompare(String(a.ts)));
+  return items;
+}
+
 async function loadAdminData(){
   state.adminData = {};
   for(const key of Object.keys(ROUTINES)){
@@ -784,6 +826,40 @@ function render(){
     document.getElementById('back-btn').onclick = ()=>{ state.view='dashboard'; render(); };
     document.getElementById('update-weight-save').onclick = onUpdateWeight;
   }
+  else if(state.view === 'admin-feed'){
+    const feed = buildActivityFeed(state.adminData);
+    app.innerHTML = `
+      <button class="back" id="back-btn">&larr; Volver</button>
+      <div class="brand">russ.trainer</div>
+      <h1>Actividad reciente</h1>
+      <div id="feed-list"></div>
+    `;
+    document.getElementById('back-btn').onclick = ()=>{ state.view='admin-list'; render(); };
+    const wrap = document.getElementById('feed-list');
+    if(feed.length === 0){
+      wrap.innerHTML = '<div class="empty">Todavía no hay actividad registrada.</div>';
+    } else {
+      feed.slice(0, 60).forEach(item=>{
+        const box = document.createElement('div');
+        box.className = 'card';
+        let line;
+        if(item.type === 'checklist'){
+          line = `✓ Marcó como hecho: <strong>${escapeHtml(item.exercise)}</strong>`;
+        } else {
+          line = `<strong>${escapeHtml(item.exercise)}</strong>${item.weight ? ' · ' + item.weight + 'kg' : ''} × ${item.reps || 0} × ${item.sets || 0}${item.feeling ? ' · ' + item.feeling : ''}`;
+        }
+        box.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:baseline;">
+            <span style="font-weight:700;">${escapeHtml(item.clienta)}</span>
+            <span class="sub" style="margin:0;">${formatDate(item.date)}</span>
+          </div>
+          <div class="sub" style="margin:4px 0 0; color:var(--text);">${line}</div>
+          ${item.comment ? `<div class="tip">💬 ${escapeHtml(item.comment)}</div>` : ''}
+        `;
+        wrap.appendChild(box);
+      });
+    }
+  }
   else if(state.view === 'admin-list'){
     app.innerHTML = `
       <div class="topbar">
@@ -794,10 +870,12 @@ function render(){
         <button class="link-btn" id="admin-exit-btn">Salir</button>
       </div>
       <div id="admin-today"></div>
+      <button class="btn-ghost" id="feed-btn" style="width:100%; margin-top:10px;">🕐 Ver actividad reciente</button>
       <h2 style="margin-top:18px;">Tus alumnas</h2>
       <div id="admin-list-content">${state.adminData ? '' : '<div class="empty">Cargando...</div>'}</div>
     `;
     document.getElementById('admin-exit-btn').onclick = ()=>{ state.view='login'; state.adminData=null; render(); };
+    document.getElementById('feed-btn').onclick = ()=>{ state.view='admin-feed'; render(); };
     if(state.adminData){
       const keys = Object.keys(state.adminData);
       const todayStr = todayISO();
@@ -1279,6 +1357,7 @@ async function onQuickSave(idx, exerciseName, weight, reps, sets, feeling, comme
   }
   const entry = {
     date: todayISO(),
+    ts: new Date().toISOString(),
     weight: Number(weight),
     reps: reps === '' ? 0 : Number(reps),
     sets: sets === '' ? 0 : Number(sets)
@@ -1298,7 +1377,7 @@ async function onToggleChecklist(idx){
   if(!state.data.completados[day]) state.data.completados[day] = {};
   const current = state.data.completados[day][idx];
   const isDone = current && current.done;
-  state.data.completados[day][idx] = isDone ? { done:false } : { done:true, date: todayISO() };
+  state.data.completados[day][idx] = isDone ? { done:false } : { done:true, date: todayISO(), ts: new Date().toISOString() };
   await saveClienta(state.clienta, state.data);
   render();
 }
