@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Progreso · russ.trainer</title>
+<style>
+  :root{
+    --bg:#FCFCF7;
+    --bg-card:#F5F2E9;
+    --bg-elevated:#EFEBDD;
+    --rose:#d4848f;
+    --rose-dark:#a85c68;
+    --text:#2b2521;
+    --text-muted:#8a8078;
+    --border:rgba(43,37,33,0.1);
+    --danger:#b85c5c;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+  }
+  #app{
+    width:100%;
+    max-width:440px;
+    padding:32px 20px 90px;
+  }
+  .brand{
+    font-size:13px;
+    letter-spacing:0.08em;
+    color:var(--rose);
+    text-transform:lowercase;
+    margin-bottom:4px;
+  }
+  h1{
+    font-size:26px;
+    font-weight:800;
+    margin:0 0 24px;
+    letter-spacing:-0.01em;
+  }
+  h2{
+    font-size:18px;
+    font-weight:700;
+    margin:0 0 16px;
+  }
+  p.sub{
+    color:var(--text-muted);
+    font-size:14px;
+    margin:-16px 0 24px;
+    line-height:1.5;
+  }
+  input, select{
+    width:100%;
+    background:var(--bg-elevated);
+    border:1px solid var(--border);
+    color:var(--text);
+    font-size:15px;
+    padding:12px 14px;
+    border-radius:6px;
+    margin-bottom:12px;
+    font-family:inherit;
+  }
+  input:focus, select:focus{
+    outline:none;
+    border-color:var(--rose);
+  }
+  label{
+    display:block;
+    font-size:13px;
+    color:var(--text-muted);
+    margin-bottom:6px;
+  }
+  button{
+    font-family:inherit;
+    font-size:15px;
+    font-weight:700;
+    border:none;
+    border-radius:6px;
+    padding:13px 20px;
+    cursor:pointer;
+  }
+  .btn-primary{
+    background:var(--rose);
+    color:#1a0d0f;
+    width:100%;
+  }
+  .btn-primary:active{background:var(--rose-dark);}
+  .btn-ghost{
+    background:transparent;
+    color:var(--text-muted);
+    border:1px solid var(--border);
+  }
+  .btn-ghost:active{background:var(--bg-elevated);}
+  .row{display:flex;gap:10px;}
+  .row > *{flex:1;}
+  .card{
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-left:3px solid var(--rose);
+    border-radius:4px;
+    padding:16px 18px;
+    margin-bottom:14px;
+  }
+  .topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:22px;
+  }
+  .topbar .name{
+    font-size:14px;
+    color:var(--text-muted);
+  }
+  .link-btn{
+    background:none;
+    border:none;
+    color:var(--rose);
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    padding:0;
+  }
+  .chip-list{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:20px;
+  }
+  .chip{
+    background:var(--bg-elevated);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:10px 16px;
+    border-radius:20px;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .chip:active{border-color:var(--rose);}
+  .chip-add{
+    color:var(--rose);
+    border-style:dashed;
+  }
+  .empty{
+    color:var(--text-muted);
+    font-size:14px;
+    line-height:1.6;
+    padding:20px 0;
+  }
+  .back{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    color:var(--text-muted);
+    font-size:14px;
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:0 0 18px;
+  }
+  #chart-wrap{
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:16px 14px 8px;
+    margin:18px 0;
+    position:relative;
+    height:220px;
+  }
+  .entry-row{
+    display:flex;
+    justify-content:space-between;
+    padding:10px 0;
+    border-bottom:1px solid var(--border);
+    font-size:14px;
+  }
+  .entry-row:last-child{border-bottom:none;}
+  .entry-date{color:var(--text-muted);}
+  .entry-detail{font-weight:600;}
+  .error{
+    color:var(--danger);
+    font-size:13px;
+    margin:-8px 0 12px;
+  }
+  .tip{
+    background:var(--bg-elevated);
+    border-left:2px solid var(--rose);
+    padding:8px 12px;
+    font-size:13px;
+    color:var(--text-muted);
+    border-radius:3px;
+    margin:0 0 12px;
+  }
+  .login-card{
+    background:var(--bg-card);
+    border-radius:14px;
+    box-shadow:0 8px 30px rgba(43,37,33,0.08);
+    padding:36px 26px;
+    margin-top:12px;
+  }
+  .stars{
+    color:var(--rose);
+    font-size:13px;
+    letter-spacing:0.15em;
+    margin-bottom:14px;
+  }
+  .tagline{
+    font-style:italic;
+    color:var(--rose-dark);
+    font-size:14px;
+    margin:0 0 6px;
+  }
+  @keyframes glowPulse{
+    0%, 100%{ box-shadow:0 0 0 0 rgba(212,132,143,0.45); transform:translateY(0); }
+    50%{ box-shadow:0 0 14px 4px rgba(212,132,143,0.35); transform:translateY(-2px); }
+  }
+  .day-grid{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin:14px 0 4px;
+  }
+  .day-card{
+    flex:1 1 calc(50% - 10px);
+    min-width:130px;
+    background:linear-gradient(135deg, var(--rose), var(--rose-dark));
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    padding:16px 14px;
+    text-align:left;
+    cursor:pointer;
+    animation:glowPulse 2.4s ease-in-out infinite;
+  }
+  .day-card .dc-label{
+    font-weight:800;
+    font-size:16px;
+  }
+  .day-card .dc-sub{
+    font-size:12px;
+    opacity:0.85;
+    margin-top:2px;
+  }
+  .streak-banner{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:15px;
+    font-weight:700;
+    margin:2px 0 0;
+  }
+  .streak-banner .dim{
+    font-weight:500;
+    color:var(--text-muted);
+    font-size:13px;
+  }
+  .bottom-tab{
+    position:fixed;
+    bottom:0; left:0; right:0;
+    background:var(--bg-card);
+    border-top:1px solid var(--border);
+    padding:10px 16px;
+    display:flex;
+    justify-content:center;
+    z-index:10;
+  }
+  .bottom-tab button{
+    background:none;
+    border:none;
+    color:var(--text-muted);
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    padding:6px 14px;
+  }
+  .video-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    background:var(--bg-elevated);
+    border:1px solid var(--rose);
+    color:var(--rose-dark);
+    font-weight:700;
+    font-size:13px;
+    padding:8px 14px;
+    border-radius:20px;
+    text-decoration:none;
+    margin:0 0 12px;
+  }
+  .feeling-row{
+    display:flex;
+    gap:6px;
+    margin:0 0 12px;
+  }
+  .feeling-btn{
+    flex:1;
+    background:var(--bg-elevated);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:8px 4px;
+    font-size:19px;
+    text-align:center;
+    cursor:pointer;
+  }
+  .feeling-btn.selected{
+    border-color:var(--rose);
+    background:rgba(212,132,143,0.18);
+  }
+  .tip-toggle{
+    background:none;
+    border:none;
+    color:var(--rose-dark);
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    padding:0;
+    margin:0 0 10px;
+  }
+  .video-embed{
+    width:100%;
+    max-width:280px;
+    aspect-ratio:9/16;
+    border:none;
+    border-radius:10px;
+    margin:0 0 12px;
+    display:block;
+  }
+  .day-card.running{
+    background:linear-gradient(135deg, #4a90b8, #2c5f7c);
+  }
+  .hidden{display:none;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="bottom-tab" class="bottom-tab hidden">
+  <button id="weight-tab-btn">⚖️ Mi peso</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+function firstNumber(str){
+  const m = String(str).match(/\d+/);
+  return m ? Number(m[0]) : null;
+}
+function isTimeBased(str){
+  return /seg|min/i.test(String(str));
+}
+function youtubeEmbedUrl(url){
+  if(!url) return null;
+  let id = null;
+  const shortsMatch = url.match(/\/shorts\/([^?&]+)/);
+  const watchMatch = url.match(/[?&]v=([^&]+)/);
+  const shortLinkMatch = url.match(/youtu\.be\/([^?&]+)/);
+  if(shortsMatch) id = shortsMatch[1];
+  else if(watchMatch) id = watchMatch[1];
+  else if(shortLinkMatch) id = shortLinkMatch[1];
+  return id ? `https://www.youtube.com/embed/${id}` : null;
+}
+
+const ROUTINES = {
+  'lorena': {
+    'Día 1': [
+      { seccion:'🤸 Entrada en calor', ejercicio:'Cinta (entrada en calor)', series:'-', reps:'5-8 min suave', peso:'Sin peso', tipo:'checklist', video:null },
+      { seccion:'🤸 Entrada en calor', ejercicio:'Movilidad cuerpo completo', series:'-', reps:'-', peso:'Sin peso', tipo:'checklist', video:'https://www.youtube.com/shorts/KNPnEmf2Qnc' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Jalón abierto', series:'3 series', reps:'14', peso:'Poco peso', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/-MS6Z88wv5I', nota:'Llevá los codos hacia abajo y atrás, no tires solo con los brazos.' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Peso muerto rumano con mancuernas livianas', series:'3 series', reps:'14', peso:'Livianas', tipo:'carga', sinPeso:false, video:null, nota:'Espalda recta todo el movimiento, la bisagra es de cadera, no de rodilla.' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Sentadilla a banco', series:'3 series', reps:'14', peso:'Sin peso (técnica)', tipo:'carga', sinPeso:true, video:null, nota:'Bajá controlada hasta tocar el banco, no te dejes caer.' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Puente de glúteos', series:'3 series', reps:'12 a 14', peso:'Sin peso', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/Cxp6D7LEqjM', nota:'Apretá bien el glúteo arriba, no arquees la zona lumbar.' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Press militar con mancuernas', series:'3 series', reps:'14', peso:'Poco peso', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/H3JwesAsumc', nota:'No arquees la espalda baja, activá el core al empujar.' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Press de hombros sentado', series:'3 series', reps:'14', peso:'Poco peso', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Plancha inclinada (manos en banco)', series:'3 series', reps:'30-40 seg', peso:'Sin peso', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/nARfq78Dd-M', nota:'Cuerpo en línea recta, no dejes caer la cadera.' }
+    ],
+    'Día 2': [
+      { seccion:'🤸 Entrada en calor', ejercicio:'Cinta (entrada en calor)', series:'-', reps:'5-8 min suave', peso:'Sin peso', tipo:'checklist', video:null },
+      { seccion:'🤸 Entrada en calor', ejercicio:'Movilidad cuerpo completo', series:'-', reps:'-', peso:'Sin peso', tipo:'checklist', video:'https://www.youtube.com/shorts/KNPnEmf2Qnc' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Curl alternado', series:'3 series', reps:'14', peso:'Mancuernas livianas', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/c3Pl0072T7Q' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Sentadilla Goblet', series:'3 series', reps:'14', peso:'Mancuerna liviana', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/E2IoOrR3o6k' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Remo con mancuerna', series:'3 series', reps:'14', peso:'Mancuernas livianas', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/qTOaWaCxB8U' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Press de pecho con mancuernas', series:'3 series', reps:'14', peso:'Mancuernas livianas', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/VHtP8icWGaI' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Hip Thrust con mancuerna', series:'3 series', reps:'14', peso:'Mancuerna liviana', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/wYT_Ru0yGD0' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Superman', series:'3 series', reps:'14', peso:'Sin peso', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/e_VshMf5eGg' }
+    ],
+    'Día 3': [
+      { seccion:'🤸 Entrada en calor', ejercicio:'Cinta (entrada en calor)', series:'-', reps:'5 min suave', peso:'Sin peso', tipo:'checklist', video:null },
+      { seccion:'🤸 Entrada en calor', ejercicio:'Movilidad cuerpo completo', series:'-', reps:'-', peso:'Sin peso', tipo:'checklist', video:'https://www.youtube.com/shorts/KNPnEmf2Qnc' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Jalón agarre cerrado', series:'3 series', reps:'14', peso:'Poco peso', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/eaKV50dVxK4' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Zancada estática', series:'3 series', reps:'12 por pierna', peso:'Mancuernas livianas', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/K69_pVU11qs' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Patada de tríceps', series:'3 series', reps:'14', peso:'Mancuernas livianas', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Aperturas con mancuernas', series:'3 series', reps:'14', peso:'Mancuernas livianas', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/WvOpBoKbaaY' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Elevaciones laterales', series:'3 series', reps:'14', peso:'Mancuernas muy livianas', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/zEANAIh1l9g' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Plancha frontal', series:'3 series', reps:'30-40 seg', peso:'Sin peso', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/MczN_Wu94Hc' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Cinta (cierre cardio)', series:'-', reps:'10 min suave', peso:'Sin peso', tipo:'checklist', video:null }
+    ]
+  },
+  'anderson': {
+    'Día 1': [
+      { seccion:'🤸 Entrada en calor', ejercicio:'Movilidad cuerpo completo', series:'-', reps:'-', peso:'Sin peso', tipo:'checklist', video:'https://www.youtube.com/shorts/KNPnEmf2Qnc' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Sentadilla Goblet', series:'4 series', reps:'15', peso:'Mancuerna media', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/E2IoOrR3o6k', nota:'Pecho arriba, bajá hasta que los muslos queden paralelos al piso.' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Peso muerto rumano con mancuernas livianas', series:'4 series', reps:'15', peso:'Mancuernas medias', tipo:'carga', sinPeso:false, video:null, nota:'Espalda recta, la bisagra es de cadera, no de rodilla.' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Zancada caminando', series:'3 series', reps:'12 por pierna', peso:'Mancuernas livianas', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/tsyHY_g6LpI', nota:'La rodilla de adelante no pasa la punta del pie.' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Puente de glúteos', series:'3 series', reps:'15', peso:'Sin peso', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/Cxp6D7LEqjM', nota:'Apretá el glúteo arriba, no arquees la zona lumbar.' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Plancha frontal', series:'3 series', reps:'30-40 seg', peso:'Sin peso', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/MczN_Wu94Hc', nota:'Cuerpo en línea recta, no dejes caer la cadera.' },
+      { seccion:'❤️ Cierre cardio', ejercicio:'Jumping Jacks', series:'-', reps:'8-10 min', peso:'Sin peso', tipo:'checklist', video:null }
+    ],
+    'Día 2': [
+      { seccion:'🤸 Entrada en calor', ejercicio:'Movilidad cuerpo completo', series:'-', reps:'-', peso:'Sin peso', tipo:'checklist', video:'https://www.youtube.com/shorts/KNPnEmf2Qnc' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Press de pecho con mancuernas', series:'4 series', reps:'15', peso:'Mancuernas medias', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/VHtP8icWGaI', nota:'Bajá controlado, codos a 45° del torso, no los abras del todo.' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Remo con mancuerna', series:'4 series', reps:'15', peso:'Mancuerna media', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/qTOaWaCxB8U', nota:'Llevá el codo hacia atrás, no gires el torso para ayudarte.' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Press militar con mancuernas', series:'3 series', reps:'15', peso:'Mancuernas livianas', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/H3JwesAsumc', nota:'No arquees la espalda baja, activá el core al empujar.' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Curl martillo', series:'3 series', reps:'15', peso:'Mancuernas livianas', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/PzmSQcFSNPI', nota:'Codos pegados al cuerpo, subí sin balancear el torso.' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Patada de tríceps', series:'3 series', reps:'15', peso:'Mancuernas livianas', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/DB9RGNP8Hg4', nota:'Brazo pegado al torso, extendé solo el antebrazo hacia atrás.' },
+      { seccion:'❤️ Cierre cardio', ejercicio:'Burpees', series:'-', reps:'8-10 min', peso:'Sin peso', tipo:'checklist', video:null }
+    ],
+    'Día 3': [
+      { seccion:'🤸 Entrada en calor', ejercicio:'Movilidad cuerpo completo', series:'-', reps:'-', peso:'Sin peso', tipo:'checklist', video:'https://www.youtube.com/shorts/KNPnEmf2Qnc' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Sentadilla sumo con mancuerna', series:'4 series', reps:'15', peso:'Mancuerna media', tipo:'carga', sinPeso:false, video:null, nota:'Pies bien abiertos, rodillas hacia afuera siguiendo la punta de los pies.' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Estocadas hacia atrás', series:'3 series', reps:'12 por pierna', peso:'Mancuernas livianas', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/Ybaqu7qkI30', nota:'Bajá recto, la rodilla de atrás casi toca el piso.' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Hip Thrust con mancuerna', series:'4 series', reps:'15', peso:'Mancuerna media', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/wYT_Ru0yGD0', nota:'Apoyá bien la escápula en el banco y empujá con los talones.' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Curl femoral (mancuerna/tobilleras)', series:'3 series', reps:'15', peso:'Livianas', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/2qi4LPYE010', nota:'Movimiento controlado, sin impulso.' },
+      { seccion:'🧱 Core', ejercicio:'Russian Twist', series:'3 series', reps:'20', peso:'Mancuerna liviana', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/Xvm7zSiFyak', nota:'Girá desde el torso, no muevas solo los brazos.' },
+      { seccion:'❤️ Cierre cardio', ejercicio:'Mountain Climbers', series:'-', reps:'8-10 min', peso:'Sin peso', tipo:'checklist', video:null }
+    ],
+    'Día 4': [
+      { seccion:'🤸 Entrada en calor', ejercicio:'Movilidad cuerpo completo', series:'-', reps:'-', peso:'Sin peso', tipo:'checklist', video:'https://www.youtube.com/shorts/KNPnEmf2Qnc' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Curl alternado', series:'3 series', reps:'15', peso:'Mancuernas livianas', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/c3Pl0072T7Q', nota:'Codos fijos, no balancees el cuerpo para subir el peso.' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Aperturas con mancuernas', series:'3 series', reps:'15', peso:'Mancuernas livianas', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/WvOpBoKbaaY', nota:'Codos ligeramente flexionados, movimiento amplio y controlado.' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Elevaciones laterales', series:'3 series', reps:'15', peso:'Mancuernas muy livianas', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/zEANAIh1l9g', nota:'Subí hasta la altura del hombro, sin impulso ni encoger el cuello.' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Estocada cruzada', series:'3 series', reps:'12 por pierna', peso:'Mancuernas livianas', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/mifq_revVEk', nota:'Cruzá la pierna por detrás manteniendo el torso estable.' },
+      { seccion:'🧱 Core', ejercicio:'Plancha lateral', series:'3 series', reps:'25-30 seg por lado', peso:'Sin peso', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/GaugOQIlUPs', nota:'Cadera arriba, cuerpo en línea recta de pies a cabeza.' },
+      { seccion:'❤️ Cierre cardio', ejercicio:'Saltar la cuerda', series:'-', reps:'8-10 min', peso:'Sin peso', tipo:'checklist', video:null }
+    ]
+  },
+  'roiner': {
+    'Día 1': [
+      { seccion:'🔥 Calentamiento', ejercicio:'Flexiones (calentamiento)', series:'2 series', reps:'12', peso:'Peso corporal', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/YN5pE2JmzHM' },
+      { seccion:'🏋️ Full Body (Hombros + Espalda + Bíceps)', ejercicio:'Jalón al pecho', series:'3 series', reps:'12', peso:'Igual que semana pasada', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/K7L77ubdeMU', nota:'Agarre neutro (agarre en V) — respetar siempre por tu restricción de agarre.' },
+      { seccion:'🏋️ Full Body (Hombros + Espalda + Bíceps)', ejercicio:'Remo en polea baja', series:'3 series', reps:'10', peso:'Igual que semana pasada', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/s1ug3iHJzRc', nota:'Agarre neutro. Este es tu ejercicio de polea del día.' },
+      { seccion:'🏋️ Full Body (Hombros + Espalda + Bíceps)', ejercicio:'Remo unilateral con mancuerna', series:'3 series', reps:'8 por lado', peso:'Igual que semana pasada', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/qTOaWaCxB8U' },
+      { seccion:'🏋️ Full Body (Hombros + Espalda + Bíceps)', ejercicio:'Pájaro con mancuernas', series:'3 series', reps:'10', peso:'Igual que semana pasada', tipo:'carga', sinPeso:false, video:null, nota:'Deltoide posterior.' },
+      { seccion:'🏋️ Full Body (Hombros + Espalda + Bíceps)', ejercicio:'Elevaciones laterales', series:'3 series', reps:'10', peso:'Igual que semana pasada', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/zEANAIh1l9g' },
+      { seccion:'🏋️ Full Body (Hombros + Espalda + Bíceps)', ejercicio:'Curl martillo con mancuernas', series:'3 series', reps:'10', peso:'A definir', tipo:'carga', sinPeso:false, video:null, nota:'Agarre neutro. Reemplaza al curl en polea esta semana para variar el estímulo.' },
+      { seccion:'❤️ Cierre', ejercicio:'Caminadora (cierre)', series:'-', reps:'14-15 min', peso:'Sin peso', tipo:'checklist', video:null }
+    ],
+    'Día 2': [
+      { seccion:'🔥 Calentamiento', ejercicio:'Sentadilla con peso corporal (calentamiento)', series:'2 series', reps:'15', peso:'Peso corporal', tipo:'carga', sinPeso:true, video:null },
+      { seccion:'🦵 Piernas + Tríceps + Abs', ejercicio:'Prensa de piernas', series:'3 series', reps:'12', peso:'Igual que semana pasada', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🦵 Piernas + Tríceps + Abs', ejercicio:'Zancadas con mancuernas', series:'3 series', reps:'8 por pierna', peso:'Igual que semana pasada', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🦵 Piernas + Tríceps + Abs', ejercicio:'Extensión de cuádriceps', series:'3 series', reps:'10', peso:'Igual que semana pasada', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🦵 Piernas + Tríceps + Abs', ejercicio:'Curl femoral (tumbado o sentado)', series:'3 series', reps:'10', peso:'Igual que semana pasada', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🦵 Piernas + Tríceps + Abs', ejercicio:'Extensión de tríceps en polea con cuerda', series:'3 series', reps:'10', peso:'Igual que semana pasada', tipo:'carga', sinPeso:false, video:null, nota:'Agarre neutro. Este es tu ejercicio de polea del día.' },
+      { seccion:'🦵 Piernas + Tríceps + Abs', ejercicio:'Patada de tríceps con mancuerna', series:'3 series', reps:'8 por brazo', peso:'Igual que semana pasada', tipo:'carga', sinPeso:false, video:null, nota:'Agarre neutro.' },
+      { seccion:'🧩 Abdominales', ejercicio:'Plancha abdominal', series:'3 series', reps:'35-40 seg', peso:'Sin peso', tipo:'carga', sinPeso:true, video:null },
+      { seccion:'🧩 Abdominales', ejercicio:'Elevación de piernas acostado', series:'3 series', reps:'15', peso:'Sin peso', tipo:'carga', sinPeso:true, video:null },
+      { seccion:'❤️ Cierre', ejercicio:'Caminadora (cierre)', series:'-', reps:'15 min', peso:'Sin peso', tipo:'checklist', video:null }
+    ],
+    'Día 3': [
+      { seccion:'🔥 Calentamiento', ejercicio:'Flexiones (piernas estiradas)', series:'2 series', reps:'10', peso:'Peso corporal', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/YN5pE2JmzHM' },
+      { seccion:'🫀 Pecho + Bíceps + Glúteos + Abs', ejercicio:'Press de banca con mancuernas', series:'3 series', reps:'8', peso:'12-13 kg/lado', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/PBmuMEatHUI', nota:'Agarre neutro, palmas enfrentadas.' },
+      { seccion:'🫀 Pecho + Bíceps + Glúteos + Abs', ejercicio:'Aperturas con mancuernas', series:'3 series', reps:'10', peso:'12 kg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/WvOpBoKbaaY' },
+      { seccion:'🫀 Pecho + Bíceps + Glúteos + Abs', ejercicio:'Curl concentrado', series:'3 series', reps:'10', peso:'12-13 kg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/fP0JSmbdFNI', nota:'Agarre neutro.' },
+      { seccion:'🫀 Pecho + Bíceps + Glúteos + Abs', ejercicio:'Hip Thrust con barra', series:'3 series', reps:'8 por lado', peso:'Barra + 15 kg/lado', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/bup775DiMUE', nota:'⚠️ Grabate para que revisemos la técnica.' },
+      { seccion:'🫀 Pecho + Bíceps + Glúteos + Abs', ejercicio:'Búlgaras', series:'3 series', reps:'8 por pierna', peso:'Mancuernas 4-6 kg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/bbHPPlQeu6Y', nota:'⚠️ Grabate para que revisemos la técnica.' },
+      { seccion:'🧩 Abdominales', ejercicio:'Russian Twist', series:'3 series', reps:'15 por lado', peso:'Peso corporal o disco liviano', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/Xvm7zSiFyak', nota:'Oblicuos.' },
+      { seccion:'🧩 Abdominales', ejercicio:'Mountain Climbers', series:'3 series', reps:'35-40 seg', peso:'Sin peso', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/tQkpdUWK8KU' }
+    ],
+    'Día 4': [
+      { seccion:'🔥 Calentamiento', ejercicio:'Trote suave + movilidad + zancadas + skipping', series:'-', reps:'8 min', peso:'Sin peso', tipo:'checklist', video:null },
+      { seccion:'💪 Fuerza Full Body', ejercicio:'Peso muerto Unilateral', series:'3 vueltas', reps:'8 por lado', peso:'Mancuerna 6kg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/V0SfMaC_t6c' },
+      { seccion:'💪 Fuerza Full Body', ejercicio:'Sentadilla Goblet', series:'3 vueltas', reps:'10', peso:'Mancuerna 9kg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/E2IoOrR3o6k' },
+      { seccion:'💪 Fuerza Full Body', ejercicio:'Remo con mancuerna', series:'3 vueltas', reps:'10 por lado', peso:'Mancuerna 9kg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/qTOaWaCxB8U' },
+      { seccion:'💪 Fuerza Full Body', ejercicio:'Face Pull', series:'3 vueltas', reps:'8-10', peso:'A evaluar', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/vU30xyp6IYM' },
+      { seccion:'💪 Fuerza Full Body', ejercicio:'Plancha frontal', series:'3 vueltas', reps:'40-45 seg', peso:'Sin peso', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/MczN_Wu94Hc' },
+      { seccion:'💪 Fuerza Full Body', ejercicio:'Remo en polea sentado', series:'3 vueltas', reps:'10', peso:'A definir', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/oLssRgJyv6E', nota:'Agarre neutro (agarre en V). Este es tu ejercicio de polea del día.' },
+      { seccion:'⚡ Pliometría', ejercicio:'Sentadilla con salto', series:'3 vueltas', reps:'6-8', peso:'Sin peso', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/KV8PEe9MgSE', nota:'Aterrizá suave, con las rodillas flexionadas. Priorizamos calidad, no cantidad.' },
+      { seccion:'⚡ Pliometría', ejercicio:'Skater jump', series:'3 vueltas', reps:'8 por lado', peso:'Sin peso', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/watch?v=8fAogMVW-to' },
+      { seccion:'⚡ Pliometría', ejercicio:'Saltos de tobillo (pogo jumps)', series:'3 vueltas', reps:'25-30 seg', peso:'Sin peso', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/1eSXxyBJYXY', nota:'Semana de descarga: bajamos el volumen respecto a semanas anteriores.' }
+    ],
+    'Día 5 · Running 🏃': [
+      { seccion:'🟢 Trote suave', ejercicio:'Trote suave / regenerativo', series:'-', reps:'25-30 min', peso:'Ritmo cómodo (podés hablar sin ahogarte)', tipo:'checklist', video:null, nota:'Ubicalo después del Día 1 o en un día libre.' },
+      { seccion:'🟡 Fartlek', ejercicio:'Fartlek / cambios de ritmo', series:'-', reps:'5 min trote + 6-8 series de 2 min fuerte / 2 min suave + 5 min trote', peso:'Sin peso', tipo:'checklist', video:null, nota:'Ubicalo después del Día 3.' },
+      { seccion:'🔴 Fondo largo', ejercicio:'Fondo largo', series:'-', reps:'7 km', peso:'Sin peso', tipo:'checklist', video:null, nota:'Semana de descarga: 7km. Día libre, alejado del Día 2 y Día 4. Nunca el mismo día ni al día siguiente del Día 4.' }
+    ]
+  }
+};
+
+function routineKey(name){ return name.trim().toLowerCase(); }
+
+function isDayCompleteOn(data, dayLabel, items, dateStr){
+  return items.every((item, idx)=>{
+    if(item.tipo === 'checklist'){
+      const c = data.completados[dayLabel] && data.completados[dayLabel][idx];
+      return !!(c && c.done && c.date === dateStr);
+    }
+    const entries = data.exercises[item.ejercicio] || [];
+    return entries.some(e=> e.date === dateStr);
+  });
+}
+
+function lastCompletionDate(data, dayLabel, items){
+  const cursor = new Date();
+  for(let i=0;i<30;i++){
+    const ds = cursor.toISOString().slice(0,10);
+    if(isDayCompleteOn(data, dayLabel, items, ds)) return ds;
+    cursor.setDate(cursor.getDate()-1);
+  }
+  return null;
+}
+
+function lastActivityDate(data){
+  const dates = getActivityDates(data);
+  if(dates.size === 0) return null;
+  return Array.from(dates).sort().pop();
+}
+
+function daysSince(dateStr){
+  if(!dateStr) return null;
+  const then = new Date(dateStr + 'T00:00:00');
+  const now = new Date();
+  now.setHours(0,0,0,0);
+  return Math.round((now - then) / 86400000);
+}
+
+function daysUntil(dateStr){
+  if(!dateStr) return null;
+  const target = new Date(dateStr + 'T00:00:00');
+  const now = new Date();
+  now.setHours(0,0,0,0);
+  return Math.round((target - now) / 86400000);
+}
+
+function isBirthdayToday(mmdd){
+  if(!mmdd) return false;
+  const today = new Date();
+  const todayMMDD = String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+  return mmdd === todayMMDD;
+}
+
+async function loadAdminData(){
+  state.adminData = {};
+  for(const key of Object.keys(ROUTINES)){
+    const displayName = key.charAt(0).toUpperCase() + key.slice(1);
+    const data = await loadClienta(displayName);
+    state.adminData[key] = { displayName, data };
+  }
+  render();
+}
+
+const CLIENT_CONFIG = {
+  'lorena': { diasPorSemana: 4, genero: 'femenino' },
+  'anderson': { diasPorSemana: 4, genero: 'masculino' },
+  'roiner': { diasPorSemana: 5, genero: 'masculino' }
+};
+function weeklyTarget(name){
+  const cfg = CLIENT_CONFIG[routineKey(name)];
+  return cfg && cfg.diasPorSemana ? cfg.diasPorSemana : 7;
+}
+function isMasculino(name){
+  const cfg = CLIENT_CONFIG[routineKey(name)];
+  return cfg && cfg.genero === 'masculino';
+}
+
+function getActivityDates(data){
+  const dates = new Set();
+  Object.values(data.exercises || {}).forEach(entries=>{
+    entries.forEach(e=> dates.add(e.date));
+  });
+  Object.values(data.completados || {}).forEach(dayObj=>{
+    Object.values(dayObj).forEach(v=>{
+      if(v && v.done && v.date) dates.add(v.date);
+    });
+  });
+  return dates;
+}
+
+function computeStreak(data){
+  const dates = getActivityDates(data);
+  if(dates.size === 0) return 0;
+  const iso = d => d.toISOString().slice(0,10);
+  let cursor = new Date();
+  if(!dates.has(iso(cursor))){
+    cursor.setDate(cursor.getDate()-1);
+  }
+  let streak = 0;
+  while(dates.has(iso(cursor))){
+    streak++;
+    cursor.setDate(cursor.getDate()-1);
+  }
+  return streak;
+}
+
+function computeWeekCount(data){
+  const dates = getActivityDates(data);
+  let count = 0;
+  const cursor = new Date();
+  for(let i=0;i<7;i++){
+    if(dates.has(cursor.toISOString().slice(0,10))) count++;
+    cursor.setDate(cursor.getDate()-1);
+  }
+  return count;
+}
+
+let state = { clienta: null, data: null, view: 'login', exercise: null, routineDay: null, uiExpanded: {}, uiFeeling: {}, adminData: null, adminSelected: null };
+let chartInstance = null;
+
+const EXERCISE_LIBRARY = {
+  '🍑 Glúteos': ['Buenos días','Sentadilla sumo','Step Up','Bulgaras','Puente de glúteos','Hip Thrust unilateral','Hip Thrust con barra','Patada de glúteos','Abducción en máquina','Hiperextensiones','Abducción con banda','Puente rana','Hip Thrust con mancuerna','Bulgaras con giros','Clamshell con banda','Aductores en máquina','Clamshell con disco','Estocadas hacia atrás','Estocada cruzada'],
+  '🦵 Cuádriceps': ['Sentadilla con barra','Bulgara quads','Prensa 45°','Sentadilla Goblet','Sillón de cuádriceps','Sentadilla Smith','Zancada estática','Zancada caminando','Sentadilla a banco','Sentadilla con disco','Isométrico en pared (Wall Sit)'],
+  '🦵 Isquios': ['Peso muerto unilateral','Peso muerto','Curl femoral acostado','Curl femoral (mancuerna/tobilleras)','Peso muerto rumano con mancuernas','Camilla femoral'],
+  '🦵 Aductores': ['Aducción con banda','Sentadilla sumo con mancuerna','Aducción con tobilleras'],
+  '🏋️ Espalda': ['Remo con barra','Pullover en polea','Remo invertido','Dominadas negativas','Jalón agarre cerrado','Face Pull espalda','Remo con mancuerna','Pullover con mancuerna','Dominadas asistidas','Remo sentado','Superman','Jalón abierto','Plancha con remo','Box al aire'],
+  '💪 Pecho': ['Press de pecho con barra','Press de pecho con mancuernas','Press inclinado con mancuernas','Flexiones','Aperturas con mancuernas','Cruce de poleas','Aperturas en máquina','Flexiones con banda','Fondos para pecho','Press de pecho en máquina'],
+  '🤲 Hombros': ['Remo al mentón','Elevación unilateral','Elevaciones laterales','Face Pull','Press Arnold','Press militar con barra','Elevaciones frontales','Press militar con mancuernas','Pájaros','Pájaros unilateral','Cuban Press','Press de hombros sentado'],
+  '💪 Bíceps': ['Curl con barra Z','Curl martillo','Curl concentrado','Curl en polea','Curl alternado','Curl unilateral','Curl inclinado'],
+  '💪 Tríceps': ['Patada de tríceps','Extensión unilateral','Extensión por encima de la cabeza','Extensión en polea','Flexiones diamante','Press francés','Fondos en banco','Press cerrado'],
+  '🧱 Core': ['Elevación de piernas','Pallof Press','Mountain Climbers','Wood Chop','Russian Twist','Dead Bug','Plancha lateral','Hollow Hold','Crunch','Bird Dog','Plancha frontal','Crunch inverso','Plancha dinámica','Plancha con toque de hombros','Sit-up con disco','Plancha inclinada'],
+  '❤️ Cardio': ['Caminata','Escaladora','Saltar la cuerda','High Knees','Elíptico','Jumping Jacks','Remo','Bicicleta','Burpees','Cinta','Trote suave'],
+  '🤸 Movilidad': ['Calentamiento tren inferior','Calentamiento tren superior','Movilidad cuerpo completo'],
+  '🔗 Otros': ['Puente','Hip a 1 pierna','RDL','Abducción','Scapular push-ups','Squat thrust','Butt kicks','Skipping','Puente a una pierna','Y-T-W','Walking lunges','Extensión de tríceps (peso corporal)','Deslizamiento escapular en pared','Ángel de nieve invertido','Flexión pike','Plancha de oso con traslado','Plancha lateral + abducción de cadera','Hidrante de cadera','Sentadilla búlgara','Elevación de pierna acostada de lado','Pulsos de sentadilla','Puente de glúteos 1 y ½','Caminata de oso','Extensión de tríceps en anillas','Plancha en anillas','Curl femoral en anillas','Remo en anillas','Face Pull en anillas']
+};
+
+function storageKey(name){ return 'clienta:' + name.trim().toLowerCase(); }
+
+const SUPABASE_URL = 'https://yarqttoduryzhinnxgio.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_IKFhc2x6r1AdB0IS8b4Nlw_TwowDq34';
+
+async function dbGet(nombre){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/clientes?nombre=eq.${encodeURIComponent(nombre)}&select=data`, {
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+  });
+  if(!res.ok) throw new Error('No se pudo leer de la base');
+  const rows = await res.json();
+  return rows.length ? rows[0].data : null;
+}
+
+async function dbSet(nombre, data){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/clientes`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'resolution=merge-duplicates'
+    },
+    body: JSON.stringify({ nombre, data })
+  });
+  if(!res.ok) throw new Error('No se pudo guardar en la base');
+}
+
+async function loadClienta(name){
+  try{
+    const parsed = (await dbGet(storageKey(name))) || { exercises: {} };
+    if(!parsed.completados) parsed.completados = {};
+    if(!parsed.bodyWeight) parsed.bodyWeight = [];
+    if(!parsed.weightPromptSeen) parsed.weightPromptSeen = false;
+    if(!parsed.ficha) parsed.ficha = { objetivo:'', nivel:'', restricciones:'', fechaInicio:'', cumpleanos:'' };
+    if(!parsed.vencimiento) parsed.vencimiento = '';
+    if(!parsed.trainerNotes) parsed.trainerNotes = [];
+    return parsed;
+  }catch(e){
+    return { exercises: {}, completados: {}, bodyWeight: [], weightPromptSeen: false, ficha:{ objetivo:'', nivel:'', restricciones:'', fechaInicio:'', cumpleanos:'' }, vencimiento:'', trainerNotes: [] };
+  }
+}
+async function saveClienta(name, data){
+  try{
+    await dbSet(storageKey(name), data);
+  }catch(e){
+    console.error('No se pudo guardar', e);
+  }
+}
+
+function todayISO(){
+  return new Date().toISOString().slice(0,10);
+}
+function formatDate(iso){
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('es-AR', {day:'2-digit', month:'short'});
+}
+
+function render(){
+  const app = document.getElementById('app');
+  if(state.view === 'login'){
+    app.innerHTML = `
+      <div class="brand">russ.trainer</div>
+      <div class="stars">✦ ✦ ✦ ✦ ✦</div>
+      <h1>Tu progreso empieza acá</h1>
+      <p class="sub">Registrá tus avances y observá todo lo que tu cuerpo es capaz de lograr.</p>
+      <div class="login-card">
+        <label>¿Cómo te llamás?</label>
+        <input id="name-input" placeholder="Ej: Ale" autocomplete="off" />
+        <div id="login-error" class="error hidden">Escribí tu nombre para continuar.</div>
+        <button class="btn-primary" id="enter-btn">Comenzar →</button>
+      </div>
+    `;
+    document.getElementById('enter-btn').onclick = onEnter;
+    document.getElementById('name-input').addEventListener('keydown', e=>{
+      if(e.key === 'Enter') onEnter();
+    });
+  }
+  else if(state.view === 'welcome'){
+    const masc = isMasculino(state.clienta);
+    app.innerHTML = `
+      <div class="brand">russ.trainer</div>
+      <h1>¡${masc ? 'Bienvenido' : 'Bienvenida'}, ${escapeHtml(state.clienta)}! ${masc ? '💪' : '🩷'}</h1>
+      <p class="sub">Entrenamos desde el amor, no desde la exigencia. Este es tu espacio para registrar cada entreno y ver tu progreso real, semana a semana. Vamos paso a paso, junt${masc ? 'os' : 'as'}.</p>
+      <label>Si querés, contame tu peso actual (kg)</label>
+      <input type="number" step="0.1" min="0" id="w-weight" placeholder="Ej: 65.5" />
+      <p class="sub" style="margin:-6px 0 16px; font-size:13px;">Esto es solo un registro personal para vos, no una exigencia — si preferís no compartirlo por ahora, no hay ningún problema.</p>
+      <button class="btn-primary" id="welcome-save-btn">Empezar</button>
+      <button class="btn-ghost" id="welcome-skip-btn" style="width:100%; margin-top:10px;">Prefiero no decirlo por ahora</button>
+    `;
+    document.getElementById('welcome-save-btn').onclick = onSaveInitialWeight;
+    document.getElementById('welcome-skip-btn').onclick = onSkipInitialWeight;
+  }
+  else if(state.view === 'dashboard'){
+    const exercises = Object.keys(state.data.exercises);
+    const myRoutine = ROUTINES[routineKey(state.clienta)];
+    const streak = computeStreak(state.data);
+    const weekCount = computeWeekCount(state.data);
+    const target = weeklyTarget(state.clienta);
+    app.innerHTML = `
+      <div class="topbar">
+        <div>
+          <div class="brand">russ.trainer</div>
+          <div class="name">Hola, ${escapeHtml(state.clienta)}</div>
+        </div>
+        <button class="link-btn" id="switch-btn">Cambiar</button>
+      </div>
+      <h1 style="font-size:20px; margin:4px 0 6px;">Tu espacio de entrenamiento</h1>
+      <div class="streak-banner">
+        <span>${streak > 0 ? '🔥 ' + streak : streak} ${streak === 1 ? 'día seguido' : 'días seguidos'}</span>
+        <span class="dim">&middot; ${weekCount}/${target} esta semana</span>
+      </div>
+      ${myRoutine ? `
+        <p class="sub" style="margin:14px 0 0;">Tocá tu día para arrancar</p>
+        <div class="day-grid" id="routine-day-chips"></div>
+      ` : ''}
+      <h2 style="margin-top:26px;">Tu progreso por ejercicio</h2>
+      ${exercises.length === 0 ? '<div class="empty">Todavía no registraste ningún entrenamiento. Entrá a tu rutina para empezar.</div>' : ''}
+      <div class="chip-list" id="chip-list"></div>
+    `;
+    if(myRoutine){
+      const dayChips = document.getElementById('routine-day-chips');
+      Object.keys(myRoutine).forEach(day=>{
+        const chip = document.createElement('button');
+        chip.className = 'day-card' + (day.toLowerCase().includes('running') ? ' running' : '');
+        chip.innerHTML = `<div class="dc-label">${escapeHtml(day)}</div><div class="dc-sub">Toca para empezar →</div>`;
+        chip.onclick = ()=>{ state.view='routine-day'; state.routineDay=day; render(); };
+        dayChips.appendChild(chip);
+      });
+    }
+    const chipList = document.getElementById('chip-list');
+    exercises.forEach(ex=>{
+      const chip = document.createElement('button');
+      chip.className = 'chip';
+      chip.textContent = ex;
+      chip.onclick = ()=>{ state.view='exercise'; state.exercise=ex; render(); };
+      chipList.appendChild(chip);
+    });
+    document.getElementById('switch-btn').onclick = ()=>{ state.view='login'; state.clienta=null; state.data=null; render(); };
+  }
+  else if(state.view === 'weight'){
+    const latestWeight = state.data.bodyWeight.length ? state.data.bodyWeight[state.data.bodyWeight.length-1] : null;
+    app.innerHTML = `
+      <button class="back" id="back-btn">&larr; Volver</button>
+      <div class="brand">russ.trainer</div>
+      <h1>Mi peso</h1>
+      <p class="sub">Un registro personal para vos — no es una exigencia, y no cambia el plan que armamos.</p>
+      <div class="card" style="text-align:center;">
+        <div class="sub" style="margin:0;">Peso actual</div>
+        <div style="font-size:26px; font-weight:800;">${latestWeight ? latestWeight.weight + ' kg' : '— (sin registrar)'}</div>
+        ${latestWeight ? `<div class="sub" style="margin:2px 0 0;">Registrado el ${formatDate(latestWeight.date)}</div>` : ''}
+      </div>
+      <label>Nuevo peso (kg)</label>
+      <input type="number" step="0.1" min="0" id="update-weight-input" placeholder="Ej: 64.8" />
+      <div id="update-weight-error" class="error hidden">Ingresá un valor.</div>
+      <button class="btn-primary" id="update-weight-save">Guardar peso</button>
+    `;
+    document.getElementById('back-btn').onclick = ()=>{ state.view='dashboard'; render(); };
+    document.getElementById('update-weight-save').onclick = onUpdateWeight;
+  }
+  else if(state.view === 'admin-list'){
+    app.innerHTML = `
+      <div class="topbar">
+        <div>
+          <div class="brand">russ.trainer</div>
+          <div class="name">Panel de entrenadora</div>
+        </div>
+        <button class="link-btn" id="admin-exit-btn">Salir</button>
+      </div>
+      <div id="admin-today"></div>
+      <h2 style="margin-top:18px;">Tus alumnas</h2>
+      <div id="admin-list-content">${state.adminData ? '' : '<div class="empty">Cargando...</div>'}</div>
+    `;
+    document.getElementById('admin-exit-btn').onclick = ()=>{ state.view='login'; state.adminData=null; render(); };
+    if(state.adminData){
+      const keys = Object.keys(state.adminData);
+      const todayStr = todayISO();
+      const trainedToday = keys.filter(k=> lastActivityDate(state.adminData[k].data) === todayStr);
+      const notTrainedToday = keys.filter(k=> lastActivityDate(state.adminData[k].data) !== todayStr);
+      const todayWrap = document.getElementById('admin-today');
+      todayWrap.innerHTML = `
+        <div class="card">
+          <div style="font-weight:700; margin-bottom:6px;">Hoy</div>
+          <div class="sub" style="margin:0;">✅ Entrenaron: ${trainedToday.length ? trainedToday.map(k=>state.adminData[k].displayName).join(', ') : 'nadie todavía'}</div>
+          <div class="sub" style="margin:4px 0 0;">⏳ Todavía no: ${notTrainedToday.length ? notTrainedToday.map(k=>state.adminData[k].displayName).join(', ') : 'todas entrenaron'}</div>
+        </div>
+      `;
+      const content = document.getElementById('admin-list-content');
+      keys.sort((a,b)=>{
+        const da = daysSince(lastActivityDate(state.adminData[a].data));
+        const db = daysSince(lastActivityDate(state.adminData[b].data));
+        const alertA = da === null || da >= 3 ? 1 : 0;
+        const alertB = db === null || db >= 3 ? 1 : 0;
+        if(alertA !== alertB) return alertB - alertA;
+        return (db === null ? 999 : db) - (da === null ? 999 : da);
+      });
+      keys.forEach(key=>{
+        const c = state.adminData[key];
+        const streak = computeStreak(c.data);
+        const weekCount = computeWeekCount(c.data);
+        const target = weeklyTarget(c.displayName);
+        const lastActive = lastActivityDate(c.data);
+        const gap = daysSince(lastActive);
+        const isAlert = gap === null || gap >= 3;
+        const birthday = isBirthdayToday(c.data.ficha.cumpleanos);
+        const vencDays = daysUntil(c.data.vencimiento);
+        const vencAlert = vencDays !== null && vencDays <= 7;
+        const card = document.createElement('button');
+        card.className = 'card';
+        card.style.cssText = `text-align:left; width:100%; border:1px solid var(--border); border-left:3px solid ${isAlert ? '#c65f5f' : 'var(--rose)'}; cursor:pointer; background:var(--bg-card); font-family:inherit;`;
+        card.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-weight:700;">${escapeHtml(c.displayName)} ${birthday ? '🎂' : ''}</div>
+            ${isAlert ? `<span style="color:#c65f5f; font-size:12px; font-weight:700;">⚠️ ${gap === null ? 'Sin actividad' : gap + ' días sin entrenar'}</span>` : ''}
+          </div>
+          <div class="sub" style="margin:2px 0 0;">${streak > 0 ? '🔥 ' + streak + ' · ' : ''}${weekCount}/${target} esta semana</div>
+          ${vencAlert ? `<div class="sub" style="margin:4px 0 0; color:#c65f5f; font-weight:600;">💳 ${vencDays < 0 ? 'Plan vencido' : vencDays === 0 ? 'Vence hoy' : 'Vence en ' + vencDays + ' días'}</div>` : ''}
+        `;
+        card.onclick = ()=>{ state.adminSelected = key; state.view = 'admin-detail'; render(); };
+        content.appendChild(card);
+      });
+    }
+  }
+  else if(state.view === 'admin-detail'){
+    const key = state.adminSelected;
+    const c = state.adminData[key];
+    const routine = ROUTINES[key];
+    const lastActive = lastActivityDate(c.data);
+    const gap = daysSince(lastActive);
+    const isAlert = gap === null || gap >= 3;
+    const f = c.data.ficha;
+    app.innerHTML = `
+      <button class="back" id="back-btn">&larr; Volver</button>
+      <div class="brand">russ.trainer</div>
+      <h1>${escapeHtml(c.displayName)}</h1>
+      ${isAlert ? `<div class="tip" style="border-left-color:#c65f5f; color:#c65f5f;">⚠️ ${lastActive ? 'Última actividad: ' + formatDate(lastActive) + ' (' + gap + ' días)' : 'Todavía no registró actividad'}</div>` : `<div class="sub">Última actividad: ${formatDate(lastActive)}</div>`}
+
+      <h2 style="margin-top:20px;">Ficha</h2>
+      <div class="card">
+        <label>Objetivo</label>
+        <input id="f-objetivo" value="${escapeHtml(f.objetivo)}" placeholder="Ej: Bajar de peso" />
+        <label>Nivel</label>
+        <input id="f-nivel" value="${escapeHtml(f.nivel)}" placeholder="Ej: Intermedio" />
+        <label>Restricciones</label>
+        <input id="f-restricciones" value="${escapeHtml(f.restricciones)}" placeholder="Ej: Sin restricciones" />
+        <div class="row">
+          <div>
+            <label>Fecha de inicio</label>
+            <input type="date" id="f-fechainicio" value="${escapeHtml(f.fechaInicio)}" />
+          </div>
+          <div>
+            <label>Cumpleaños</label>
+            <input type="text" id="f-cumple" value="${escapeHtml(f.cumpleanos)}" placeholder="MM-DD" />
+          </div>
+        </div>
+        <label>Vencimiento del plan</label>
+        <input type="date" id="f-vencimiento" value="${escapeHtml(c.data.vencimiento)}" />
+        <button class="btn-primary" id="f-save-btn" style="margin-top:6px;">Guardar ficha</button>
+      </div>
+
+      ${c.data.bodyWeight.length > 1 ? '<div id="admin-weight-chart-wrap" style="height:180px; background:var(--bg-card); border:1px solid var(--border); border-radius:6px; padding:12px; margin-bottom:16px;"><canvas id="admin-weight-chart"></canvas></div>' : ''}
+
+      <h2>Notas privadas</h2>
+      <div class="card">
+        <textarea id="note-input" rows="2" placeholder="Ej: le cuesta la rodilla derecha, evitar estocadas profundas" style="width:100%; background:var(--bg-elevated); border:1px solid var(--border); color:var(--text); border-radius:6px; padding:10px; font-family:inherit; font-size:14px;"></textarea>
+        <button class="btn-primary" id="note-save-btn" style="margin-top:8px;">Agregar nota</button>
+      </div>
+      <div id="admin-notes"></div>
+
+      <h2 style="margin-top:20px;">Resumen semanal</h2>
+      <button class="btn-ghost" id="report-btn" style="width:100%;">📋 Generar resumen para copiar</button>
+      <textarea id="report-output" rows="6" class="hidden" readonly style="width:100%; margin-top:10px; background:var(--bg-elevated); border:1px solid var(--border); color:var(--text); border-radius:6px; padding:10px; font-family:inherit; font-size:13px;"></textarea>
+
+      <h2 style="margin-top:20px;">Sus días</h2>
+      <div id="admin-days"></div>
+      <h2 style="margin-top:20px;">Comentarios recientes</h2>
+      <div id="admin-comments"></div>
+    `;
+    document.getElementById('back-btn').onclick = ()=>{ state.view='admin-list'; render(); };
+    document.getElementById('f-save-btn').onclick = ()=> onSaveFicha(key);
+    document.getElementById('note-save-btn').onclick = ()=> onAddNote(key);
+    document.getElementById('report-btn').onclick = ()=> onGenerateReport(key);
+
+    if(c.data.bodyWeight.length > 1){
+      const ctx = document.getElementById('admin-weight-chart');
+      new Chart(ctx, {
+        type:'line',
+        data:{
+          labels: c.data.bodyWeight.map(w=>formatDate(w.date)),
+          datasets:[{ label:'Peso (kg)', data:c.data.bodyWeight.map(w=>w.weight), borderColor:'#d4848f', backgroundColor:'rgba(212,132,143,0.15)', fill:true, tension:0.3, pointRadius:3 }]
+        },
+        options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{ticks:{color:'#8a8078'}, grid:{color:'rgba(43,37,33,0.07)'}}, y:{ticks:{color:'#8a8078'}, grid:{color:'rgba(43,37,33,0.07)'}} } }
+      });
+    }
+
+    const notesWrap = document.getElementById('admin-notes');
+    if(c.data.trainerNotes.length === 0){
+      notesWrap.innerHTML = '<div class="empty">Sin notas todavía.</div>';
+    } else {
+      notesWrap.innerHTML = '';
+      c.data.trainerNotes.slice().reverse().forEach(n=>{
+        const box = document.createElement('div');
+        box.className = 'tip';
+        box.innerHTML = `<span class="sub" style="margin:0;">${formatDate(n.date)}</span><br/>${escapeHtml(n.text)}`;
+        notesWrap.appendChild(box);
+      });
+    }
+
+    const daysWrap = document.getElementById('admin-days');
+    const today = todayISO();
+    Object.keys(routine).forEach(dayLabel=>{
+      const items = routine[dayLabel];
+      const doneToday = isDayCompleteOn(c.data, dayLabel, items, today);
+      const lastDate = doneToday ? today : lastCompletionDate(c.data, dayLabel, items);
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `<div style="font-weight:700;">${escapeHtml(dayLabel)}</div><div class="sub" style="margin:2px 0 0;">${doneToday ? '✅ Completado hoy' : (lastDate ? 'Último completo: ' + formatDate(lastDate) : 'Todavía sin completar')}</div>`;
+      daysWrap.appendChild(card);
+    });
+    const commentsWrap = document.getElementById('admin-comments');
+    const comments = [];
+    Object.keys(c.data.exercises).forEach(ex=>{
+      c.data.exercises[ex].forEach(e=>{
+        if(e.comment) comments.push({ exercise: ex, date: e.date, comment: e.comment });
+      });
+    });
+    comments.sort((a,b)=> b.date.localeCompare(a.date));
+    if(comments.length === 0){
+      commentsWrap.innerHTML = '<div class="empty">Todavía no dejó comentarios.</div>';
+    } else {
+      comments.slice(0,15).forEach(cm=>{
+        const box = document.createElement('div');
+        box.className = 'tip';
+        box.innerHTML = `<strong>${escapeHtml(cm.exercise)}</strong> (${formatDate(cm.date)})<br/>💬 ${escapeHtml(cm.comment)}`;
+        commentsWrap.appendChild(box);
+      });
+    }
+  }
+  else if(state.view === 'exercise'){
+    const entries = state.data.exercises[state.exercise] || [];
+    app.innerHTML = `
+      <button class="back" id="back-btn">&larr; Volver</button>
+      <div class="brand">russ.trainer</div>
+      <h1>${escapeHtml(state.exercise)}</h1>
+      <div class="card">
+        <label>Fecha</label>
+        <input type="date" id="f-date" value="${todayISO()}" />
+        <div class="row">
+          <div>
+            <label>Peso (kg)</label>
+            <input type="number" id="f-weight" step="0.5" min="0" placeholder="20" />
+          </div>
+          <div>
+            <label>Reps</label>
+            <input type="number" id="f-reps" min="0" placeholder="10" />
+          </div>
+          <div>
+            <label>Series</label>
+            <input type="number" id="f-sets" min="0" placeholder="3" />
+          </div>
+        </div>
+        <div id="form-error" class="error hidden">Completá peso, reps y series.</div>
+        <button class="btn-primary" id="save-entry-btn">Guardar registro</button>
+      </div>
+      ${entries.length > 1 ? '<div id="chart-wrap"><canvas id="progress-chart" role="img" aria-label="Evolución del peso levantado a lo largo del tiempo"></canvas></div>' : ''}
+      <h2 style="margin-top:22px;">Historial</h2>
+      <div class="card" style="border-left-color:var(--border);">
+        ${entries.length === 0 ? '<div class="empty">Sin registros todavía.</div>' :
+          entries.slice().reverse().map(e=>`
+            <div class="entry-row">
+              <span class="entry-date">${formatDate(e.date)}</span>
+              <span class="entry-detail">${e.weight}kg &times; ${e.reps} &times; ${e.sets}</span>
+            </div>
+          `).join('')}
+      </div>
+    `;
+    document.getElementById('back-btn').onclick = ()=>{ state.view='dashboard'; state.exercise=null; render(); };
+    document.getElementById('save-entry-btn').onclick = onSaveEntry;
+    if(entries.length > 1){
+      drawChart(entries);
+    }
+  }
+  else if(state.view === 'routine-day'){
+    const myRoutine = ROUTINES[routineKey(state.clienta)];
+    const items = (myRoutine && myRoutine[state.routineDay]) || [];
+    const doneToday = (state.data.completados[state.routineDay] || {});
+    let currentSeccion = null;
+    app.innerHTML = `
+      <button class="back" id="back-btn">&larr; Volver</button>
+      <div class="brand">russ.trainer</div>
+      <h1>${escapeHtml(state.routineDay)}</h1>
+      <div id="routine-items"></div>
+    `;
+    const wrap = document.getElementById('routine-items');
+    items.forEach((item, idx)=>{
+      if(item.seccion !== currentSeccion){
+        currentSeccion = item.seccion;
+        const h = document.createElement('h2');
+        h.style.marginTop = '18px';
+        h.textContent = currentSeccion;
+        wrap.appendChild(h);
+      }
+      const videoLink = item.video ? `<a href="${escapeHtml(item.video)}" target="_blank" rel="noopener" class="video-btn">🎥 Ver técnica</a>` : '';
+      const tipShown = state.uiExpanded[`tip-${idx}`];
+      const tipHtml = item.nota ? (
+        tipShown
+          ? `<div class="tip">💡 ${escapeHtml(item.nota)}</div>`
+          : `<button class="tip-toggle" data-tipidx="${idx}">💡 Ver consejo técnico</button>`
+      ) : '';
+
+      if(item.tipo === 'checklist'){
+        const isDone = !!(doneToday[idx] && doneToday[idx].done);
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div style="font-weight:700; margin-bottom:4px;">${escapeHtml(item.ejercicio)}</div>
+          <div class="sub" style="margin:0 0 10px;">${escapeHtml(item.reps)}</div>
+          ${videoLink}
+          ${tipHtml}
+          <button class="btn-primary check-btn" data-idx="${idx}" style="${isDone ? 'background:#5b8f6f;color:#0d1a12;' : ''} margin-top:8px;">${isDone ? 'Hecho ✓' : 'Marcar como hecho'}</button>
+        `;
+        wrap.appendChild(card);
+        return;
+      }
+
+      const repsUnit = isTimeBased(item.reps) ? 'seg' : 'reps';
+      const repsTarget = firstNumber(item.reps);
+      const setsTarget = firstNumber(item.series);
+      const todayEntries = (state.data.exercises[item.ejercicio] || []).filter(e=> e.date === todayISO());
+      const lastToday = todayEntries.length ? todayEntries[todayEntries.length-1] : null;
+      const editing = !!state.uiExpanded[idx];
+      const selectedFeeling = state.uiFeeling[idx] !== undefined ? state.uiFeeling[idx] : (lastToday && lastToday.feeling ? lastToday.feeling : '');
+      const feelings = ['😌 Fácil','👍 Justo','😮‍💨 Difícil','🥵 Al límite'];
+      const card = document.createElement('div');
+      card.className = 'card';
+      let bodyHtml = `
+        <div style="font-weight:700; margin-bottom:4px;">${escapeHtml(item.ejercicio)}</div>
+        <div class="sub" style="margin:0 0 10px;">Objetivo: ${escapeHtml(item.series)} &times; ${escapeHtml(item.reps)}${item.sinPeso ? '' : ' &middot; ' + escapeHtml(item.peso)}</div>
+        ${videoLink}
+        ${tipHtml}
+      `;
+      if(lastToday && !editing){
+        bodyHtml += `
+          <div class="tip" style="border-left-color:#5b8f6f;">✓ Hecho hoy${item.sinPeso ? '' : ' · ' + lastToday.weight + 'kg'}${lastToday.feeling ? ' · ' + lastToday.feeling : ''}${lastToday.comment ? '<br/>💬 ' + escapeHtml(lastToday.comment) : ''}</div>
+          <button class="btn-ghost edit-btn" data-idx="${idx}" style="width:100%;">✏️ Editar registro</button>
+        `;
+      } else {
+        bodyHtml += `
+          <div class="feeling-row">
+            ${feelings.map(f=>`<button class="feeling-btn${selectedFeeling===f ? ' selected':''}" data-idx="${idx}" data-feeling="${escapeHtml(f)}">${f.split(' ')[0]}</button>`).join('')}
+          </div>
+          ${item.sinPeso ? '' : `
+            <label>Peso usado (kg)</label>
+            <input type="number" step="0.5" min="0" id="reg-weight-${idx}" value="${lastToday ? lastToday.weight : ''}" placeholder="0" />
+          `}
+          <input type="text" id="reg-comment-${idx}" value="${lastToday && lastToday.comment ? escapeHtml(lastToday.comment) : ''}" placeholder="💬 Comentario para tu entrenadora (opcional)" />
+          <div class="error hidden" id="reg-error-${idx}">Ingresá el peso usado.</div>
+          <button class="btn-primary registrar-btn" data-idx="${idx}" data-exercise="${escapeHtml(item.ejercicio)}" data-sinpeso="${item.sinPeso ? '1':'0'}" data-reps="${repsTarget !== null ? repsTarget : ''}" data-sets="${setsTarget !== null ? setsTarget : ''}" style="margin-top:4px;">Registrar</button>
+        `;
+      }
+      card.innerHTML = bodyHtml;
+      wrap.appendChild(card);
+    });
+    document.getElementById('back-btn').onclick = ()=>{ state.view='dashboard'; state.routineDay=null; state.uiExpanded={}; state.uiFeeling={}; render(); };
+    wrap.querySelectorAll('.check-btn').forEach(btn=>{
+      btn.onclick = ()=> onToggleChecklist(btn.dataset.idx);
+    });
+    wrap.querySelectorAll('.tip-toggle').forEach(btn=>{
+      btn.onclick = ()=>{ state.uiExpanded[`tip-${btn.dataset.tipidx}`] = true; render(); };
+    });
+    wrap.querySelectorAll('.edit-btn').forEach(btn=>{
+      btn.onclick = ()=>{ state.uiExpanded[btn.dataset.idx] = true; render(); };
+    });
+    wrap.querySelectorAll('.feeling-btn').forEach(btn=>{
+      btn.onclick = ()=>{ state.uiFeeling[btn.dataset.idx] = btn.dataset.feeling; render(); };
+    });
+    wrap.querySelectorAll('.registrar-btn').forEach(btn=>{
+      btn.onclick = ()=>{
+        const idx = btn.dataset.idx;
+        const sinPeso = btn.dataset.sinpeso === '1';
+        const weightInput = document.getElementById(`reg-weight-${idx}`);
+        const err = document.getElementById(`reg-error-${idx}`);
+        if(!sinPeso && (!weightInput || weightInput.value === '')){
+          err.classList.remove('hidden');
+          return;
+        }
+        const weight = sinPeso ? 0 : Number(weightInput.value);
+        const feeling = state.uiFeeling[idx] || '';
+        const commentInput = document.getElementById(`reg-comment-${idx}`);
+        const comment = commentInput ? commentInput.value.trim() : '';
+        onQuickSave(idx, btn.dataset.exercise, weight, btn.dataset.reps, btn.dataset.sets, feeling, comment);
+      };
+    });
+  }
+  const bottomTab = document.getElementById('bottom-tab');
+  const showTab = state.clienta && !['login','welcome'].includes(state.view);
+  bottomTab.classList.toggle('hidden', !showTab);
+  document.getElementById('weight-tab-btn').onclick = ()=>{ state.view = 'weight'; render(); };
+}
+
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+async function onSaveInitialWeight(){
+  const input = document.getElementById('w-weight');
+  const weight = input.value;
+  if(weight === ''){
+    await onSkipInitialWeight();
+    return;
+  }
+  state.data.bodyWeight.push({ date: todayISO(), weight: Number(weight) });
+  state.data.weightPromptSeen = true;
+  await saveClienta(state.clienta, state.data);
+  state.view = 'dashboard';
+  render();
+}
+
+async function onSkipInitialWeight(){
+  state.data.weightPromptSeen = true;
+  await saveClienta(state.clienta, state.data);
+  state.view = 'dashboard';
+  render();
+}
+
+async function onUpdateWeight(){
+  const input = document.getElementById('update-weight-input');
+  const err = document.getElementById('update-weight-error');
+  const weight = input.value;
+  if(weight === ''){
+    err.classList.remove('hidden');
+    return;
+  }
+  err.classList.add('hidden');
+  state.data.bodyWeight.push({ date: todayISO(), weight: Number(weight) });
+  await saveClienta(state.clienta, state.data);
+  state.showWeightForm = false;
+  render();
+}
+
+async function onSaveFicha(key){
+  const c = state.adminData[key];
+  const fresh = await loadClienta(c.displayName);
+  fresh.ficha = {
+    objetivo: document.getElementById('f-objetivo').value.trim(),
+    nivel: document.getElementById('f-nivel').value.trim(),
+    restricciones: document.getElementById('f-restricciones').value.trim(),
+    fechaInicio: document.getElementById('f-fechainicio').value,
+    cumpleanos: document.getElementById('f-cumple').value.trim()
+  };
+  fresh.vencimiento = document.getElementById('f-vencimiento').value;
+  await saveClienta(c.displayName, fresh);
+  c.data = fresh;
+  render();
+}
+
+async function onAddNote(key){
+  const input = document.getElementById('note-input');
+  const text = input.value.trim();
+  if(!text) return;
+  const c = state.adminData[key];
+  const fresh = await loadClienta(c.displayName);
+  fresh.trainerNotes.push({ date: todayISO(), text });
+  await saveClienta(c.displayName, fresh);
+  c.data = fresh;
+  render();
+}
+
+function onGenerateReport(key){
+  const c = state.adminData[key];
+  const streak = computeStreak(c.data);
+  const weekCount = computeWeekCount(c.data);
+  const target = weeklyTarget(c.displayName);
+  const comments = [];
+  Object.keys(c.data.exercises).forEach(ex=>{
+    c.data.exercises[ex].forEach(e=>{
+      const d = daysSince(e.date);
+      if(e.comment && d !== null && d <= 7) comments.push(`- ${ex}: "${e.comment}"`);
+    });
+  });
+  let text = `Resumen semanal de ${c.displayName}\n`;
+  text += `Días entrenados esta semana: ${weekCount}/${target}\n`;
+  text += `Racha actual: ${streak} día${streak===1?'':'s'}\n`;
+  if(comments.length){
+    text += `\nComentarios de la semana:\n` + comments.join('\n');
+  }
+  const output = document.getElementById('report-output');
+  output.value = text;
+  output.classList.remove('hidden');
+  output.focus();
+  output.select();
+}
+
+async function onEnter(){
+  const input = document.getElementById('name-input');
+  const name = input.value.trim();
+  const err = document.getElementById('login-error');
+  if(!name){
+    err.classList.remove('hidden');
+    return;
+  }
+  err.classList.add('hidden');
+  if(name.toLowerCase() === 'panelruss'){
+    state.view = 'admin-list';
+    render();
+    loadAdminData();
+    return;
+  }
+  state.clienta = name;
+  state.data = await loadClienta(name);
+  state.view = state.data.weightPromptSeen ? 'dashboard' : 'welcome';
+  render();
+}
+
+async function onAddExercise(){
+  const exerciseSelect = document.getElementById('exercise-select');
+  const name = exerciseSelect.value;
+  if(!name) return;
+  if(!state.data.exercises[name]){
+    state.data.exercises[name] = [];
+    await saveClienta(state.clienta, state.data);
+  }
+  render();
+}
+
+async function onSaveEntry(){
+  const date = document.getElementById('f-date').value;
+  const weight = document.getElementById('f-weight').value;
+  const reps = document.getElementById('f-reps').value;
+  const sets = document.getElementById('f-sets').value;
+  const err = document.getElementById('form-error');
+  if(!date || weight === '' || reps === '' || sets === ''){
+    err.classList.remove('hidden');
+    return;
+  }
+  err.classList.add('hidden');
+  state.data.exercises[state.exercise].push({
+    date,
+    weight: Number(weight),
+    reps: Number(reps),
+    sets: Number(sets)
+  });
+  state.data.exercises[state.exercise].sort((a,b)=> a.date.localeCompare(b.date));
+  await saveClienta(state.clienta, state.data);
+  render();
+}
+
+async function onQuickSave(idx, exerciseName, weight, reps, sets, feeling, comment){
+  if(!state.data.exercises[exerciseName]){
+    state.data.exercises[exerciseName] = [];
+  }
+  const entry = {
+    date: todayISO(),
+    weight: Number(weight),
+    reps: reps === '' ? 0 : Number(reps),
+    sets: sets === '' ? 0 : Number(sets)
+  };
+  if(feeling) entry.feeling = feeling;
+  if(comment) entry.comment = comment;
+  state.data.exercises[exerciseName].push(entry);
+  state.data.exercises[exerciseName].sort((a,b)=> a.date.localeCompare(b.date));
+  await saveClienta(state.clienta, state.data);
+  delete state.uiExpanded[idx];
+  delete state.uiFeeling[idx];
+  render();
+}
+
+async function onToggleChecklist(idx){
+  const day = state.routineDay;
+  if(!state.data.completados[day]) state.data.completados[day] = {};
+  const current = state.data.completados[day][idx];
+  const isDone = current && current.done;
+  state.data.completados[day][idx] = isDone ? { done:false } : { done:true, date: todayISO() };
+  await saveClienta(state.clienta, state.data);
+  render();
+}
+
+function drawChart(entries){
+  const ctx = document.getElementById('progress-chart');
+  if(chartInstance){ chartInstance.destroy(); }
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: entries.map(e=>formatDate(e.date)),
+      datasets: [{
+        label: 'Peso (kg)',
+        data: entries.map(e=>e.weight),
+        borderColor: '#d4848f',
+        backgroundColor: 'rgba(212,132,143,0.15)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 4,
+        pointBackgroundColor: '#d4848f'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#8a8078' }, grid: { color: 'rgba(43,37,33,0.07)' } },
+        y: { ticks: { color: '#8a8078' }, grid: { color: 'rgba(43,37,33,0.07)' } }
+      }
+    }
+  });
+}
+
+render();
+</script>
+</body>
+</html>
