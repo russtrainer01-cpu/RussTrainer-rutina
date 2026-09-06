@@ -435,6 +435,36 @@
     min-width:56px;
     text-align:center;
   }
+  .rest-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin:0 0 14px;
+  }
+  .rest-start-btn{
+    background:var(--bg-elevated);
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:9px 16px;
+    font-size:13px;
+    font-weight:700;
+    color:var(--text);
+    cursor:pointer;
+  }
+  .rest-timer-display{
+    font-weight:800;
+    font-size:20px;
+    color:var(--rose-dark);
+    letter-spacing:0.02em;
+  }
+  .rest-cancel-btn{
+    background:none;
+    border:none;
+    color:var(--text-muted);
+    font-size:13px;
+    cursor:pointer;
+    text-decoration:underline;
+  }
   .hidden{display:none;}
 </style>
 </head>
@@ -446,6 +476,57 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
+function parseDescansoSeconds(str){
+  if(!str) return 60;
+  const m = String(str).match(/(\d+(\.\d+)?)/);
+  if(!m) return 60;
+  const num = parseFloat(m[1]);
+  if(/min/i.test(str)) return Math.round(num*60);
+  return Math.round(num);
+}
+function formatMMSS(s){
+  const mi = Math.floor(s/60);
+  const se = s % 60;
+  return `${mi}:${String(se).padStart(2,'0')}`;
+}
+let restTimerHandles = {};
+function startRestTimer(idx, seconds){
+  if(restTimerHandles[idx]) clearInterval(restTimerHandles[idx]);
+  state.uiResting[idx] = seconds;
+  render();
+  restTimerHandles[idx] = setInterval(()=>{
+    state.uiResting[idx]--;
+    const lbl = document.getElementById(`rest-timer-${idx}`);
+    if(lbl) lbl.textContent = formatMMSS(state.uiResting[idx]);
+    if(state.uiResting[idx] <= 0){
+      clearInterval(restTimerHandles[idx]);
+      delete restTimerHandles[idx];
+      delete state.uiResting[idx];
+      onRestFinished(idx);
+    }
+  }, 1000);
+}
+function cancelRestTimer(idx){
+  if(restTimerHandles[idx]) clearInterval(restTimerHandles[idx]);
+  delete restTimerHandles[idx];
+  delete state.uiResting[idx];
+  render();
+}
+function onRestFinished(idx){
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    osc.frequency.value = 880;
+    osc.connect(ctx.destination);
+    osc.start();
+    setTimeout(()=>{ osc.stop(); ctx.close(); }, 450);
+  }catch(e){}
+  if(navigator.vibrate) navigator.vibrate([200,100,200]);
+  const current = state.uiSets[idx] !== undefined ? state.uiSets[idx] : 0;
+  state.uiSets[idx] = current + 1;
+  render();
+}
+
 function firstNumber(str){
   const m = String(str).match(/\d+/);
   return m ? Number(m[0]) : null;
@@ -540,48 +621,48 @@ const ROUTINES = {
   },
   'roiner': {
     'Día 1': [
-      { seccion:'🔥 Calentamiento', ejercicio:'Flexiones (calentamiento)', series:'2 series', reps:'12', peso:'Peso corporal', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/YN5pE2JmzHM' },
-      { seccion:'🏋️ Full Body (Hombros + Espalda + Bíceps)', ejercicio:'Jalón al pecho', series:'3 series', reps:'12', peso:'Igual que semana pasada', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/K7L77ubdeMU', nota:'Agarre neutro (agarre en V) — respetar siempre por tu restricción de agarre.' },
-      { seccion:'🏋️ Full Body (Hombros + Espalda + Bíceps)', ejercicio:'Remo en polea baja', series:'3 series', reps:'10', peso:'Igual que semana pasada', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/s1ug3iHJzRc', nota:'Agarre neutro. Este es tu ejercicio de polea del día.' },
-      { seccion:'🏋️ Full Body (Hombros + Espalda + Bíceps)', ejercicio:'Remo unilateral con mancuerna', series:'3 series', reps:'8 por lado', peso:'Igual que semana pasada', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/qTOaWaCxB8U' },
-      { seccion:'🏋️ Full Body (Hombros + Espalda + Bíceps)', ejercicio:'Pájaro con mancuernas', series:'3 series', reps:'10', peso:'Igual que semana pasada', tipo:'carga', sinPeso:false, video:null, nota:'Deltoide posterior.' },
-      { seccion:'🏋️ Full Body (Hombros + Espalda + Bíceps)', ejercicio:'Elevaciones laterales', series:'3 series', reps:'10', peso:'Igual que semana pasada', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/zEANAIh1l9g' },
-      { seccion:'🏋️ Full Body (Hombros + Espalda + Bíceps)', ejercicio:'Curl martillo con mancuernas', series:'3 series', reps:'10', peso:'A definir', tipo:'carga', sinPeso:false, video:null, nota:'Agarre neutro. Reemplaza al curl en polea esta semana para variar el estímulo.' },
+      { seccion:'🔥 Calentamiento', ejercicio:'Flexiones (calentamiento)', series:'2 series', reps:'12', peso:'Peso corporal', descanso:'45 seg', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/YN5pE2JmzHM' },
+      { seccion:'🏋️ Full Body (Hombros + Espalda + Bíceps)', ejercicio:'Jalón al pecho', series:'3 series', reps:'12', peso:'Igual que semana pasada', descanso:'1.5 min', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/K7L77ubdeMU', nota:'Agarre neutro (agarre en V) — respetar siempre por tu restricción de agarre.' },
+      { seccion:'🏋️ Full Body (Hombros + Espalda + Bíceps)', ejercicio:'Remo en polea baja', series:'3 series', reps:'10', peso:'Igual que semana pasada', descanso:'1.5 min', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/s1ug3iHJzRc', nota:'Agarre neutro. Este es tu ejercicio de polea del día.' },
+      { seccion:'🏋️ Full Body (Hombros + Espalda + Bíceps)', ejercicio:'Remo unilateral con mancuerna', series:'3 series', reps:'8 por lado', peso:'Igual que semana pasada', descanso:'1 min', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/qTOaWaCxB8U' },
+      { seccion:'🏋️ Full Body (Hombros + Espalda + Bíceps)', ejercicio:'Pájaro con mancuernas', series:'3 series', reps:'10', peso:'Igual que semana pasada', descanso:'45 seg', tipo:'carga', sinPeso:false, video:null, nota:'Deltoide posterior.' },
+      { seccion:'🏋️ Full Body (Hombros + Espalda + Bíceps)', ejercicio:'Elevaciones laterales', series:'3 series', reps:'10', peso:'Igual que semana pasada', descanso:'45 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/zEANAIh1l9g' },
+      { seccion:'🏋️ Full Body (Hombros + Espalda + Bíceps)', ejercicio:'Curl martillo con mancuernas', series:'3 series', reps:'10', peso:'A definir', descanso:'1 min', tipo:'carga', sinPeso:false, video:null, nota:'Agarre neutro. Reemplaza al curl en polea esta semana para variar el estímulo.' },
       { seccion:'❤️ Cierre', ejercicio:'Caminadora (cierre)', series:'-', reps:'14-15 min', peso:'Sin peso', tipo:'checklist', video:null }
     ],
     'Día 2': [
-      { seccion:'🔥 Calentamiento', ejercicio:'Sentadilla con peso corporal (calentamiento)', series:'2 series', reps:'15', peso:'Peso corporal', tipo:'carga', sinPeso:true, video:null },
-      { seccion:'🦵 Piernas + Tríceps + Abs', ejercicio:'Prensa de piernas', series:'3 series', reps:'12', peso:'Igual que semana pasada', tipo:'carga', sinPeso:false, video:null },
-      { seccion:'🦵 Piernas + Tríceps + Abs', ejercicio:'Zancadas con mancuernas', series:'3 series', reps:'8 por pierna', peso:'Igual que semana pasada', tipo:'carga', sinPeso:false, video:null },
-      { seccion:'🦵 Piernas + Tríceps + Abs', ejercicio:'Extensión de cuádriceps', series:'3 series', reps:'10', peso:'Igual que semana pasada', tipo:'carga', sinPeso:false, video:null },
-      { seccion:'🦵 Piernas + Tríceps + Abs', ejercicio:'Curl femoral (tumbado o sentado)', series:'3 series', reps:'10', peso:'Igual que semana pasada', tipo:'carga', sinPeso:false, video:null },
-      { seccion:'🦵 Piernas + Tríceps + Abs', ejercicio:'Extensión de tríceps en polea con cuerda', series:'3 series', reps:'10', peso:'Igual que semana pasada', tipo:'carga', sinPeso:false, video:null, nota:'Agarre neutro. Este es tu ejercicio de polea del día.' },
-      { seccion:'🦵 Piernas + Tríceps + Abs', ejercicio:'Patada de tríceps con mancuerna', series:'3 series', reps:'8 por brazo', peso:'Igual que semana pasada', tipo:'carga', sinPeso:false, video:null, nota:'Agarre neutro.' },
-      { seccion:'🧩 Abdominales', ejercicio:'Plancha abdominal', series:'3 series', reps:'35-40 seg', peso:'Sin peso', tipo:'carga', sinPeso:true, video:null },
-      { seccion:'🧩 Abdominales', ejercicio:'Elevación de piernas acostado', series:'3 series', reps:'15', peso:'Sin peso', tipo:'carga', sinPeso:true, video:null },
+      { seccion:'🔥 Calentamiento', ejercicio:'Sentadilla con peso corporal (calentamiento)', series:'2 series', reps:'15', peso:'Peso corporal', descanso:'45 seg', tipo:'carga', sinPeso:true, video:null },
+      { seccion:'🦵 Piernas + Tríceps + Abs', ejercicio:'Prensa de piernas', series:'3 series', reps:'12', peso:'Igual que semana pasada', descanso:'1.5 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🦵 Piernas + Tríceps + Abs', ejercicio:'Zancadas con mancuernas', series:'3 series', reps:'8 por pierna', peso:'Igual que semana pasada', descanso:'1 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🦵 Piernas + Tríceps + Abs', ejercicio:'Extensión de cuádriceps', series:'3 series', reps:'10', peso:'Igual que semana pasada', descanso:'1 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🦵 Piernas + Tríceps + Abs', ejercicio:'Curl femoral (tumbado o sentado)', series:'3 series', reps:'10', peso:'Igual que semana pasada', descanso:'1 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🦵 Piernas + Tríceps + Abs', ejercicio:'Extensión de tríceps en polea con cuerda', series:'3 series', reps:'10', peso:'Igual que semana pasada', descanso:'1 min', tipo:'carga', sinPeso:false, video:null, nota:'Agarre neutro. Este es tu ejercicio de polea del día.' },
+      { seccion:'🦵 Piernas + Tríceps + Abs', ejercicio:'Patada de tríceps con mancuerna', series:'3 series', reps:'8 por brazo', peso:'Igual que semana pasada', descanso:'45 seg', tipo:'carga', sinPeso:false, video:null, nota:'Agarre neutro.' },
+      { seccion:'🧩 Abdominales', ejercicio:'Plancha abdominal', series:'3 series', reps:'35-40 seg', peso:'Sin peso', descanso:'30 seg', tipo:'carga', sinPeso:true, video:null },
+      { seccion:'🧩 Abdominales', ejercicio:'Elevación de piernas acostado', series:'3 series', reps:'15', peso:'Sin peso', descanso:'30 seg', tipo:'carga', sinPeso:true, video:null },
       { seccion:'❤️ Cierre', ejercicio:'Caminadora (cierre)', series:'-', reps:'15 min', peso:'Sin peso', tipo:'checklist', video:null }
     ],
     'Día 3': [
-      { seccion:'🔥 Calentamiento', ejercicio:'Flexiones (piernas estiradas)', series:'2 series', reps:'10', peso:'Peso corporal', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/YN5pE2JmzHM' },
-      { seccion:'🫀 Pecho + Bíceps + Glúteos + Abs', ejercicio:'Press de banca con mancuernas', series:'3 series', reps:'8', peso:'12-13 kg/lado', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/PBmuMEatHUI', nota:'Agarre neutro, palmas enfrentadas.' },
-      { seccion:'🫀 Pecho + Bíceps + Glúteos + Abs', ejercicio:'Aperturas con mancuernas', series:'3 series', reps:'10', peso:'12 kg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/WvOpBoKbaaY' },
-      { seccion:'🫀 Pecho + Bíceps + Glúteos + Abs', ejercicio:'Curl concentrado', series:'3 series', reps:'10', peso:'12-13 kg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/fP0JSmbdFNI', nota:'Agarre neutro.' },
-      { seccion:'🫀 Pecho + Bíceps + Glúteos + Abs', ejercicio:'Hip Thrust con barra', series:'3 series', reps:'8 por lado', peso:'Barra + 15 kg/lado', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/bup775DiMUE', nota:'⚠️ Grabate para que revisemos la técnica.' },
-      { seccion:'🫀 Pecho + Bíceps + Glúteos + Abs', ejercicio:'Búlgaras', series:'3 series', reps:'8 por pierna', peso:'Mancuernas 4-6 kg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/bbHPPlQeu6Y', nota:'⚠️ Grabate para que revisemos la técnica.' },
-      { seccion:'🧩 Abdominales', ejercicio:'Russian Twist', series:'3 series', reps:'15 por lado', peso:'Peso corporal o disco liviano', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/Xvm7zSiFyak', nota:'Oblicuos.' },
-      { seccion:'🧩 Abdominales', ejercicio:'Mountain Climbers', series:'3 series', reps:'35-40 seg', peso:'Sin peso', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/tQkpdUWK8KU' }
+      { seccion:'🔥 Calentamiento', ejercicio:'Flexiones (piernas estiradas)', series:'2 series', reps:'10', peso:'Peso corporal', descanso:'30 seg', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/YN5pE2JmzHM' },
+      { seccion:'🫀 Pecho + Bíceps + Glúteos + Abs', ejercicio:'Press de banca con mancuernas', series:'3 series', reps:'8', peso:'12-13 kg/lado', descanso:'1-1.5 min', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/PBmuMEatHUI', nota:'Agarre neutro, palmas enfrentadas.' },
+      { seccion:'🫀 Pecho + Bíceps + Glúteos + Abs', ejercicio:'Aperturas con mancuernas', series:'3 series', reps:'10', peso:'12 kg', descanso:'45 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/WvOpBoKbaaY' },
+      { seccion:'🫀 Pecho + Bíceps + Glúteos + Abs', ejercicio:'Curl concentrado', series:'3 series', reps:'10', peso:'12-13 kg', descanso:'45 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/fP0JSmbdFNI', nota:'Agarre neutro.' },
+      { seccion:'🫀 Pecho + Bíceps + Glúteos + Abs', ejercicio:'Hip Thrust con barra', series:'3 series', reps:'8 por lado', peso:'Barra + 15 kg/lado', descanso:'1 min', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/bup775DiMUE', nota:'⚠️ Grabate para que revisemos la técnica.' },
+      { seccion:'🫀 Pecho + Bíceps + Glúteos + Abs', ejercicio:'Búlgaras', series:'3 series', reps:'8 por pierna', peso:'Mancuernas 4-6 kg', descanso:'45 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/bbHPPlQeu6Y', nota:'⚠️ Grabate para que revisemos la técnica.' },
+      { seccion:'🧩 Abdominales', ejercicio:'Russian Twist', series:'3 series', reps:'15 por lado', peso:'Peso corporal o disco liviano', descanso:'30 seg', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/Xvm7zSiFyak', nota:'Oblicuos.' },
+      { seccion:'🧩 Abdominales', ejercicio:'Mountain Climbers', series:'3 series', reps:'35-40 seg', peso:'Sin peso', descanso:'30 seg', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/tQkpdUWK8KU' }
     ],
     'Día 4': [
       { seccion:'🔥 Calentamiento', ejercicio:'Trote suave + movilidad + zancadas + skipping', series:'-', reps:'8 min', peso:'Sin peso', tipo:'checklist', video:null },
-      { seccion:'💪 Fuerza Full Body', ejercicio:'Peso muerto Unilateral', series:'3 vueltas', reps:'8 por lado', peso:'Mancuerna 6kg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/V0SfMaC_t6c' },
-      { seccion:'💪 Fuerza Full Body', ejercicio:'Sentadilla Goblet', series:'3 vueltas', reps:'10', peso:'Mancuerna 9kg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/E2IoOrR3o6k' },
-      { seccion:'💪 Fuerza Full Body', ejercicio:'Remo con mancuerna', series:'3 vueltas', reps:'10 por lado', peso:'Mancuerna 9kg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/qTOaWaCxB8U' },
-      { seccion:'💪 Fuerza Full Body', ejercicio:'Face Pull', series:'3 vueltas', reps:'8-10', peso:'A evaluar', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/vU30xyp6IYM' },
-      { seccion:'💪 Fuerza Full Body', ejercicio:'Plancha frontal', series:'3 vueltas', reps:'40-45 seg', peso:'Sin peso', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/MczN_Wu94Hc' },
-      { seccion:'💪 Fuerza Full Body', ejercicio:'Remo en polea sentado', series:'3 vueltas', reps:'10', peso:'A definir', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/oLssRgJyv6E', nota:'Agarre neutro (agarre en V). Este es tu ejercicio de polea del día.' },
-      { seccion:'⚡ Pliometría', ejercicio:'Sentadilla con salto', series:'3 vueltas', reps:'6-8', peso:'Sin peso', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/KV8PEe9MgSE', nota:'Aterrizá suave, con las rodillas flexionadas. Priorizamos calidad, no cantidad.' },
-      { seccion:'⚡ Pliometría', ejercicio:'Skater jump', series:'3 vueltas', reps:'8 por lado', peso:'Sin peso', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/watch?v=8fAogMVW-to' },
-      { seccion:'⚡ Pliometría', ejercicio:'Saltos de tobillo (pogo jumps)', series:'3 vueltas', reps:'25-30 seg', peso:'Sin peso', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/1eSXxyBJYXY', nota:'Semana de descarga: bajamos el volumen respecto a semanas anteriores.' }
+      { seccion:'💪 Fuerza Full Body', ejercicio:'Peso muerto Unilateral', series:'3 vueltas', reps:'8 por lado', peso:'Mancuerna 6kg', descanso:'60-75 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/V0SfMaC_t6c' },
+      { seccion:'💪 Fuerza Full Body', ejercicio:'Sentadilla Goblet', series:'3 vueltas', reps:'10', peso:'Mancuerna 9kg', descanso:'60-75 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/E2IoOrR3o6k' },
+      { seccion:'💪 Fuerza Full Body', ejercicio:'Remo con mancuerna', series:'3 vueltas', reps:'10 por lado', peso:'Mancuerna 9kg', descanso:'60-75 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/qTOaWaCxB8U' },
+      { seccion:'💪 Fuerza Full Body', ejercicio:'Face Pull', series:'3 vueltas', reps:'8-10', peso:'A evaluar', descanso:'60-75 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/vU30xyp6IYM' },
+      { seccion:'💪 Fuerza Full Body', ejercicio:'Plancha frontal', series:'3 vueltas', reps:'40-45 seg', peso:'Sin peso', descanso:'60-75 seg', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/MczN_Wu94Hc' },
+      { seccion:'💪 Fuerza Full Body', ejercicio:'Remo en polea sentado', series:'3 vueltas', reps:'10', peso:'A definir', descanso:'60-75 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/oLssRgJyv6E', nota:'Agarre neutro (agarre en V). Este es tu ejercicio de polea del día.' },
+      { seccion:'⚡ Pliometría', ejercicio:'Sentadilla con salto', series:'3 vueltas', reps:'6-8', peso:'Sin peso', descanso:'60-90 seg', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/KV8PEe9MgSE', nota:'Aterrizá suave, con las rodillas flexionadas. Priorizamos calidad, no cantidad.' },
+      { seccion:'⚡ Pliometría', ejercicio:'Skater jump', series:'3 vueltas', reps:'8 por lado', peso:'Sin peso', descanso:'60-90 seg', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/watch?v=8fAogMVW-to' },
+      { seccion:'⚡ Pliometría', ejercicio:'Saltos de tobillo (pogo jumps)', series:'3 vueltas', reps:'25-30 seg', peso:'Sin peso', descanso:'60-90 seg', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/1eSXxyBJYXY', nota:'Semana de descarga: bajamos el volumen respecto a semanas anteriores.' }
     ],
     'Día 5 · Running 🏃': [
       { seccion:'🟢 Trote suave', ejercicio:'Trote suave / regenerativo', series:'-', reps:'25-30 min', peso:'Ritmo cómodo (podés hablar sin ahogarte)', tipo:'checklist', video:null, nota:'Ubicalo después del Día 1 o en un día libre.' },
@@ -591,44 +672,44 @@ const ROUTINES = {
   },
   'braian': {
     'Día 1 - Pecho + Tríceps': [
-      { seccion:'💪 Pecho', ejercicio:'Press plano con barra', series:'4 series', reps:'10 reps', peso:'17.5kg x lado', tipo:'carga', sinPeso:false, video:null },
-      { seccion:'💪 Pecho', ejercicio:'Press de pecho con mancuernas', series:'3 series', reps:'10 reps', peso:'15kg', tipo:'carga', sinPeso:false, video:null },
-      { seccion:'💪 Pecho', ejercicio:'Aperturas con máquina', series:'3 series', reps:'12 reps', peso:'4-5 bloques', tipo:'carga', sinPeso:false, video:null },
-      { seccion:'💪 Pecho', ejercicio:'Flexiones', series:'3 series', reps:'Máx reps', peso:'Sin peso', tipo:'carga', sinPeso:true, video:null },
-      { seccion:'💪 Tríceps', ejercicio:'Fondo de tríceps con disco', series:'3 series', reps:'8 reps', peso:'10kg', tipo:'carga', sinPeso:false, video:null },
-      { seccion:'💪 Tríceps', ejercicio:'Extensión tras cabeza (sentado)', series:'3 series', reps:'12 reps', peso:'15kg', tipo:'carga', sinPeso:false, video:null }
+      { seccion:'💪 Pecho', ejercicio:'Press plano con barra', series:'4 series', reps:'10 reps', peso:'17.5kg x lado', descanso:'1.5 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'💪 Pecho', ejercicio:'Press de pecho con mancuernas', series:'3 series', reps:'10 reps', peso:'15kg', descanso:'1.5 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'💪 Pecho', ejercicio:'Aperturas con máquina', series:'3 series', reps:'12 reps', peso:'4-5 bloques', descanso:'1 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'💪 Pecho', ejercicio:'Flexiones', series:'3 series', reps:'Máx reps', peso:'Sin peso', descanso:'1 min', tipo:'carga', sinPeso:true, video:null },
+      { seccion:'💪 Tríceps', ejercicio:'Fondo de tríceps con disco', series:'3 series', reps:'8 reps', peso:'10kg', descanso:'45 seg', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'💪 Tríceps', ejercicio:'Extensión tras cabeza (sentado)', series:'3 series', reps:'12 reps', peso:'15kg', descanso:'1 min', tipo:'carga', sinPeso:false, video:null }
     ],
     'Día 2 - Espalda + Bíceps': [
-      { seccion:'🏋️ Espalda', ejercicio:'Jalón abierto', series:'4 series', reps:'8 reps', peso:'7 bloques', tipo:'carga', sinPeso:false, video:null },
-      { seccion:'🏋️ Espalda', ejercicio:'Remo en máquina', series:'3 series', reps:'12 reps', peso:'6 bloques', tipo:'carga', sinPeso:false, video:null },
-      { seccion:'🏋️ Espalda', ejercicio:'Pull over en polea', series:'3 series', reps:'10 reps', peso:'7 bloques', tipo:'carga', sinPeso:false, video:null },
-      { seccion:'🏋️ Espalda', ejercicio:'Face Pull', series:'3 series', reps:'15 reps', peso:'5 bloques', tipo:'carga', sinPeso:false, video:null },
-      { seccion:'💪 Bíceps', ejercicio:'Curl con barra Z', series:'3 series', reps:'10 reps', peso:'10kg x lado', tipo:'carga', sinPeso:false, video:null },
-      { seccion:'💪 Bíceps', ejercicio:'Curl alternado con mancuernas', series:'3 series', reps:'10 reps x brazo', peso:'15kg', tipo:'carga', sinPeso:false, video:null }
+      { seccion:'🏋️ Espalda', ejercicio:'Jalón abierto', series:'4 series', reps:'8 reps', peso:'7 bloques', descanso:'1.5 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🏋️ Espalda', ejercicio:'Remo en máquina', series:'3 series', reps:'12 reps', peso:'6 bloques', descanso:'1.5 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🏋️ Espalda', ejercicio:'Pull over en polea', series:'3 series', reps:'10 reps', peso:'7 bloques', descanso:'1 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🏋️ Espalda', ejercicio:'Face Pull', series:'3 series', reps:'15 reps', peso:'5 bloques', descanso:'1 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'💪 Bíceps', ejercicio:'Curl con barra Z', series:'3 series', reps:'10 reps', peso:'10kg x lado', descanso:'2 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'💪 Bíceps', ejercicio:'Curl alternado con mancuernas', series:'3 series', reps:'10 reps x brazo', peso:'15kg', descanso:'1.5 min', tipo:'carga', sinPeso:false, video:null }
     ],
     'Día 3 - Cuádriceps + Cadera + Core': [
-      { seccion:'🦵 Cuádriceps', ejercicio:'Sentadilla libre con barra', series:'4 series (pirámide)', reps:'15 / 12 / 10 / 8 reps', peso:'10kg x lado → 25kg x lado (creciente)', tipo:'carga', sinPeso:false, video:null, nota:'Bajar profundo. Tempo: 3 seg bajar, 2 seg subir. Pirámide de menor a mayor peso.' },
-      { seccion:'🦵 Cuádriceps', ejercicio:'Sentadilla Goblet', series:'4 series', reps:'10 reps', peso:'30kg', tipo:'carga', sinPeso:false, video:null },
-      { seccion:'🦵 Cuádriceps', ejercicio:'Prensa', series:'4 series', reps:'10 reps', peso:'25-30kg x lado', tipo:'carga', sinPeso:false, video:null },
-      { seccion:'🦵 Cuádriceps', ejercicio:'Sillón de cuádriceps', series:'3 series', reps:'15 reps', peso:'4 bloques', tipo:'carga', sinPeso:false, video:null },
-      { seccion:'🦵 Cuádriceps', ejercicio:'Hip thrust con barra', series:'3 series', reps:'10 reps', peso:'30kg', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🦵 Cuádriceps', ejercicio:'Sentadilla libre con barra', series:'4 series (pirámide)', reps:'15 / 12 / 10 / 8 reps', peso:'10kg x lado → 25kg x lado (creciente)', descanso:'1.5 min', tipo:'carga', sinPeso:false, video:null, nota:'Bajar profundo. Tempo: 3 seg bajar, 2 seg subir. Pirámide de menor a mayor peso.' },
+      { seccion:'🦵 Cuádriceps', ejercicio:'Sentadilla Goblet', series:'4 series', reps:'10 reps', peso:'30kg', descanso:'2 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🦵 Cuádriceps', ejercicio:'Prensa', series:'4 series', reps:'10 reps', peso:'25-30kg x lado', descanso:'1.5-2 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🦵 Cuádriceps', ejercicio:'Sillón de cuádriceps', series:'3 series', reps:'15 reps', peso:'4 bloques', descanso:'1 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🦵 Cuádriceps', ejercicio:'Hip thrust con barra', series:'3 series', reps:'10 reps', peso:'30kg', descanso:'1.5 min', tipo:'carga', sinPeso:false, video:null },
       { seccion:'🧱 Core', ejercicio:'Russian Twist', series:'4 series', reps:'12 reps', peso:'Sin peso', tipo:'carga', sinPeso:true, video:null }
     ],
     'Día 4 - Hombros + Core': [
-      { seccion:'🤲 Hombros', ejercicio:'Press militar con mancuernas', series:'3 series', reps:'8 reps', peso:'17.5kg x lado', tipo:'carga', sinPeso:false, video:null },
-      { seccion:'🤲 Hombros', ejercicio:'Elevación lateral', series:'4 series', reps:'12-15 reps', peso:'7.5-12.5kg', tipo:'carga', sinPeso:false, video:null },
-      { seccion:'🤲 Hombros', ejercicio:'Elevación frontal con disco', series:'4 series', reps:'10 reps', peso:'20kg (disco)', tipo:'carga', sinPeso:false, video:null, nota:'Conteo lento: 3 seg bajar, 3 seg subir.' },
-      { seccion:'🤲 Hombros', ejercicio:'Pájaros en máquina', series:'3 series', reps:'10 reps', peso:'6 bloques', tipo:'carga', sinPeso:false, video:null },
-      { seccion:'🧱 Core', ejercicio:'Plancha con toque de hombros', series:'3 series', reps:'60 seg', peso:'Sin peso', tipo:'carga', sinPeso:true, video:null },
+      { seccion:'🤲 Hombros', ejercicio:'Press militar con mancuernas', series:'3 series', reps:'8 reps', peso:'17.5kg x lado', descanso:'1 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🤲 Hombros', ejercicio:'Elevación lateral', series:'4 series', reps:'12-15 reps', peso:'7.5-12.5kg', descanso:'1 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🤲 Hombros', ejercicio:'Elevación frontal con disco', series:'4 series', reps:'10 reps', peso:'20kg (disco)', descanso:'1 min', tipo:'carga', sinPeso:false, video:null, nota:'Conteo lento: 3 seg bajar, 3 seg subir.' },
+      { seccion:'🤲 Hombros', ejercicio:'Pájaros en máquina', series:'3 series', reps:'10 reps', peso:'6 bloques', descanso:'1 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🧱 Core', ejercicio:'Plancha con toque de hombros', series:'3 series', reps:'60 seg', peso:'Sin peso', descanso:'30 seg', tipo:'carga', sinPeso:true, video:null },
       { seccion:'🧱 Core', ejercicio:'Elevación de piernas', series:'4 series', reps:'12 reps', peso:'Sin peso', tipo:'carga', sinPeso:true, video:null },
-      { seccion:'🧱 Core', ejercicio:'Mountain Climbers', series:'4 series', reps:'30 seg', peso:'Sin peso', tipo:'carga', sinPeso:true, video:null }
+      { seccion:'🧱 Core', ejercicio:'Mountain Climbers', series:'4 series', reps:'30 seg', peso:'Sin peso', descanso:'30 seg', tipo:'carga', sinPeso:true, video:null }
     ],
     'Día 5 - Cadena posterior + Brazos': [
-      { seccion:'🍑 Glúteos', ejercicio:'Búlgaras con mancuernas', series:'3 series', reps:'10 reps', peso:'15-17.5kg', tipo:'carga', sinPeso:false, video:null },
-      { seccion:'🍑 Glúteos', ejercicio:'Zancada caminando', series:'3 series', reps:'12 reps', peso:'2x12.5kg', tipo:'carga', sinPeso:false, video:null },
-      { seccion:'💪 Bíceps', ejercicio:'Curl inclinado con mancuernas', series:'3 series', reps:'12-15 reps', peso:'12.5kg', tipo:'carga', sinPeso:false, video:null },
-      { seccion:'💪 Bíceps', ejercicio:'Curl unilateral en polea', series:'3 series', reps:'12-15 reps', peso:'2-3 bloques', tipo:'carga', sinPeso:false, video:null },
-      { seccion:'💪 Tríceps', ejercicio:'Extensión en polea', series:'3 series', reps:'12 reps', peso:'3 bloques', tipo:'carga', sinPeso:false, video:null }
+      { seccion:'🍑 Glúteos', ejercicio:'Búlgaras con mancuernas', series:'3 series', reps:'10 reps', peso:'15-17.5kg', descanso:'1.5 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🍑 Glúteos', ejercicio:'Zancada caminando', series:'3 series', reps:'12 reps', peso:'2x12.5kg', descanso:'45 seg', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'💪 Bíceps', ejercicio:'Curl inclinado con mancuernas', series:'3 series', reps:'12-15 reps', peso:'12.5kg', descanso:'1.5 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'💪 Bíceps', ejercicio:'Curl unilateral en polea', series:'3 series', reps:'12-15 reps', peso:'2-3 bloques', descanso:'1.5 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'💪 Tríceps', ejercicio:'Extensión en polea', series:'3 series', reps:'12 reps', peso:'3 bloques', descanso:'1 min', tipo:'carga', sinPeso:false, video:null }
     ]
   }
 };
@@ -815,7 +896,7 @@ function computeWeekCount(data){
   return count;
 }
 
-let state = { clienta: null, data: null, view: 'login', exercise: null, routineDay: null, uiExpanded: {}, uiFeeling: {}, uiSets: {}, adminData: null, adminSelected: null };
+let state = { clienta: null, data: null, view: 'login', exercise: null, routineDay: null, uiExpanded: {}, uiFeeling: {}, uiSets: {}, uiResting: {}, adminData: null, adminSelected: null };
 let chartInstance = null;
 
 const EXERCISE_LIBRARY = {
@@ -1394,7 +1475,17 @@ function render(){
         `;
       } else {
         const setsDone = state.uiSets[idx] !== undefined ? state.uiSets[idx] : 0;
+        const restSeconds = parseDescansoSeconds(item.descanso);
+        const isResting = state.uiResting[idx] !== undefined;
         bodyHtml += `
+          <div class="rest-row">
+            ${isResting ? `
+              <span class="rest-timer-display" id="rest-timer-${idx}">${formatMMSS(state.uiResting[idx])}</span>
+              <button class="rest-cancel-btn" data-idx="${idx}">cancelar</button>
+            ` : `
+              <button class="rest-start-btn" data-idx="${idx}" data-seconds="${restSeconds}">⏱️ Iniciar descanso${item.descanso ? ' (' + escapeHtml(item.descanso) + ')' : ''}</button>
+            `}
+          </div>
           <div class="sub" style="margin:0 0 6px;">Series hechas</div>
           <div class="set-counter">
             <button class="set-minus" data-idx="${idx}">−</button>
@@ -1416,7 +1507,12 @@ function render(){
       card.innerHTML = bodyHtml;
       wrap.appendChild(card);
     });
-    document.getElementById('back-btn').onclick = ()=>{ state.view='dashboard'; state.routineDay=null; state.uiExpanded={}; state.uiFeeling={}; state.uiSets={}; render(); };
+    document.getElementById('back-btn').onclick = ()=>{
+      Object.keys(restTimerHandles).forEach(k=> clearInterval(restTimerHandles[k]));
+      restTimerHandles = {};
+      state.uiResting = {};
+      state.view='dashboard'; state.routineDay=null; state.uiExpanded={}; state.uiFeeling={}; state.uiSets={}; render();
+    };
     wrap.querySelectorAll('.check-btn').forEach(btn=>{
       btn.onclick = ()=> onToggleChecklist(btn.dataset.idx);
     });
@@ -1428,6 +1524,12 @@ function render(){
     });
     wrap.querySelectorAll('.feeling-btn').forEach(btn=>{
       btn.onclick = ()=>{ state.uiFeeling[btn.dataset.idx] = btn.dataset.feeling; render(); };
+    });
+    wrap.querySelectorAll('.rest-start-btn').forEach(btn=>{
+      btn.onclick = ()=> startRestTimer(btn.dataset.idx, Number(btn.dataset.seconds));
+    });
+    wrap.querySelectorAll('.rest-cancel-btn').forEach(btn=>{
+      btn.onclick = ()=> cancelRestTimer(btn.dataset.idx);
     });
     wrap.querySelectorAll('.set-plus').forEach(btn=>{
       btn.onclick = ()=>{
@@ -1620,6 +1722,7 @@ async function onSaveEntry(){
 }
 
 async function onQuickSave(idx, exerciseName, weight, reps, sets, feeling, comment){
+  if(restTimerHandles[idx]){ clearInterval(restTimerHandles[idx]); delete restTimerHandles[idx]; delete state.uiResting[idx]; }
   if(!state.data.exercises[exerciseName]){
     state.data.exercises[exerciseName] = [];
   }
