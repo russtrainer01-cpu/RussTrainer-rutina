@@ -465,6 +465,28 @@
     cursor:pointer;
     text-decoration:underline;
   }
+  .rest-alert{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:var(--rose);
+    color:#1a0d0f;
+    font-weight:800;
+    font-size:15px;
+    padding:12px 14px;
+    border-radius:8px;
+    margin:0 0 14px;
+    animation:glowPulse 1.4s ease-in-out infinite;
+  }
+  .rest-alert button{
+    background:none;
+    border:none;
+    color:#1a0d0f;
+    font-size:16px;
+    font-weight:800;
+    cursor:pointer;
+    padding:0 0 0 10px;
+  }
   .hidden{display:none;}
 </style>
 </head>
@@ -521,9 +543,10 @@ function onRestFinished(idx){
     osc.start();
     setTimeout(()=>{ osc.stop(); ctx.close(); }, 450);
   }catch(e){}
-  if(navigator.vibrate) navigator.vibrate([200,100,200]);
+  if(navigator.vibrate) navigator.vibrate([300,120,300,120,300]);
   const current = state.uiSets[idx] !== undefined ? state.uiSets[idx] : 0;
   state.uiSets[idx] = current + 1;
+  state.uiRestAlert[idx] = true;
   render();
 }
 
@@ -896,7 +919,7 @@ function computeWeekCount(data){
   return count;
 }
 
-let state = { clienta: null, data: null, view: 'login', exercise: null, routineDay: null, uiExpanded: {}, uiFeeling: {}, uiSets: {}, uiResting: {}, adminData: null, adminSelected: null };
+let state = { clienta: null, data: null, view: 'login', exercise: null, routineDay: null, uiExpanded: {}, uiFeeling: {}, uiSets: {}, uiResting: {}, uiRestAlert: {}, adminData: null, adminSelected: null };
 let chartInstance = null;
 
 const EXERCISE_LIBRARY = {
@@ -1477,7 +1500,14 @@ function render(){
         const setsDone = state.uiSets[idx] !== undefined ? state.uiSets[idx] : 0;
         const restSeconds = parseDescansoSeconds(item.descanso);
         const isResting = state.uiResting[idx] !== undefined;
+        const showRestAlert = !!state.uiRestAlert[idx];
         bodyHtml += `
+          ${showRestAlert ? `
+            <div class="rest-alert">
+              <span>💪 ¡Vamos! Arrancá la siguiente serie</span>
+              <button class="rest-alert-dismiss" data-idx="${idx}">✕</button>
+            </div>
+          ` : ''}
           <div class="rest-row">
             ${isResting ? `
               <span class="rest-timer-display" id="rest-timer-${idx}">${formatMMSS(state.uiResting[idx])}</span>
@@ -1511,6 +1541,7 @@ function render(){
       Object.keys(restTimerHandles).forEach(k=> clearInterval(restTimerHandles[k]));
       restTimerHandles = {};
       state.uiResting = {};
+      state.uiRestAlert = {};
       state.view='dashboard'; state.routineDay=null; state.uiExpanded={}; state.uiFeeling={}; state.uiSets={}; render();
     };
     wrap.querySelectorAll('.check-btn').forEach(btn=>{
@@ -1525,8 +1556,11 @@ function render(){
     wrap.querySelectorAll('.feeling-btn').forEach(btn=>{
       btn.onclick = ()=>{ state.uiFeeling[btn.dataset.idx] = btn.dataset.feeling; render(); };
     });
+    wrap.querySelectorAll('.rest-alert-dismiss').forEach(btn=>{
+      btn.onclick = ()=>{ delete state.uiRestAlert[btn.dataset.idx]; render(); };
+    });
     wrap.querySelectorAll('.rest-start-btn').forEach(btn=>{
-      btn.onclick = ()=> startRestTimer(btn.dataset.idx, Number(btn.dataset.seconds));
+      btn.onclick = ()=>{ delete state.uiRestAlert[btn.dataset.idx]; startRestTimer(btn.dataset.idx, Number(btn.dataset.seconds)); };
     });
     wrap.querySelectorAll('.rest-cancel-btn').forEach(btn=>{
       btn.onclick = ()=> cancelRestTimer(btn.dataset.idx);
@@ -1723,6 +1757,7 @@ async function onSaveEntry(){
 
 async function onQuickSave(idx, exerciseName, weight, reps, sets, feeling, comment){
   if(restTimerHandles[idx]){ clearInterval(restTimerHandles[idx]); delete restTimerHandles[idx]; delete state.uiResting[idx]; }
+  delete state.uiRestAlert[idx];
   if(!state.data.exercises[exerciseName]){
     state.data.exercises[exerciseName] = [];
   }
