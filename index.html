@@ -505,6 +505,48 @@
     border-radius:3px;
     transition:width 0.4s ease;
   }
+  .rest-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(10,10,10,0.9);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    z-index:50;
+  }
+  .rest-overlay-label{
+    color:#fff;
+    opacity:0.7;
+    font-size:16px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    margin-bottom:8px;
+  }
+  .rest-overlay-time{
+    color:#fff;
+    font-size:96px;
+    font-weight:800;
+    line-height:1;
+    font-variant-numeric:tabular-nums;
+  }
+  @keyframes blinkOverlay{
+    0%, 49%{ opacity:1; color:#fff; }
+    50%, 100%{ opacity:1; color:var(--rose); }
+  }
+  .rest-overlay.blinking .rest-overlay-time{
+    animation: blinkOverlay 0.5s steps(1) infinite;
+  }
+  .rest-overlay-cancel{
+    margin-top:28px;
+    background:none;
+    border:1px solid rgba(255,255,255,0.3);
+    color:#fff;
+    border-radius:20px;
+    padding:10px 22px;
+    font-size:14px;
+    cursor:pointer;
+  }
   .hidden{display:none;}
 </style>
 </head>
@@ -550,6 +592,10 @@ function startRestTimer(idx, seconds){
     state.uiResting[idx]--;
     const lbl = document.getElementById(`rest-timer-${idx}`);
     if(lbl) lbl.textContent = formatMMSS(state.uiResting[idx]);
+    const overlayTime = document.getElementById('rest-overlay-time');
+    if(overlayTime) overlayTime.textContent = formatMMSS(state.uiResting[idx]);
+    const overlay = document.getElementById('rest-overlay');
+    if(overlay) overlay.classList.toggle('blinking', state.uiResting[idx] <= 10);
     if(state.uiResting[idx] <= 0){
       clearInterval(restTimerHandles[idx]);
       delete restTimerHandles[idx];
@@ -1490,6 +1536,8 @@ function render(){
       }
     });
     const progressPct = items.length ? Math.round((doneCount / items.length) * 100) : 0;
+    const restingIdxs = Object.keys(state.uiResting);
+    const overlayIdx = restingIdxs.length ? restingIdxs[0] : null;
     let currentSeccion = null;
     app.innerHTML = `
       <button class="back" id="back-btn">&larr; Volver</button>
@@ -1497,7 +1545,17 @@ function render(){
       <div class="brand">russ.trainer</div>
       <h1>${escapeHtml(state.routineDay)}</h1>
       <div id="routine-items"></div>
+      ${overlayIdx !== null ? `
+        <div class="rest-overlay${state.uiResting[overlayIdx] <= 10 ? ' blinking' : ''}" id="rest-overlay">
+          <div class="rest-overlay-label">Descanso</div>
+          <div class="rest-overlay-time" id="rest-overlay-time">${formatMMSS(state.uiResting[overlayIdx])}</div>
+          <button class="rest-overlay-cancel" data-idx="${overlayIdx}">Cancelar</button>
+        </div>
+      ` : ''}
     `;
+    if(overlayIdx !== null){
+      document.querySelector('.rest-overlay-cancel').onclick = ()=> cancelRestTimer(overlayIdx);
+    }
     const wrap = document.getElementById('routine-items');
     items.forEach((item, idx)=>{
       if(item.seccion !== currentSeccion){
