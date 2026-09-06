@@ -555,13 +555,24 @@ function cancelRestTimer(idx){
 function onRestFinished(idx){
   try{
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    osc.frequency.value = 880;
-    osc.connect(ctx.destination);
-    osc.start();
-    setTimeout(()=>{ osc.stop(); ctx.close(); }, 450);
+    const playTone = (freq, startTime, duration)=>{
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(0.12, startTime + 0.05);
+      gain.gain.linearRampToValueAtTime(0, startTime + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + duration);
+    };
+    const now = ctx.currentTime;
+    playTone(880, now, 0.35);
+    playTone(1174.66, now + 0.22, 0.4);
+    setTimeout(()=>{ try{ ctx.close(); }catch(e){} }, 800);
   }catch(e){}
-  if(navigator.vibrate) navigator.vibrate([300,120,300,120,300]);
   const current = state.uiSets[idx] !== undefined ? state.uiSets[idx] : 0;
   state.uiSets[idx] = current + 1;
   state.uiRestAlert[idx] = true;
