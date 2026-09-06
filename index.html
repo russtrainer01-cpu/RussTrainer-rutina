@@ -516,6 +516,17 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
+let audioCtx = null;
+function ensureAudioContext(){
+  if(!audioCtx){
+    try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){ return null; }
+  }
+  if(audioCtx.state === 'suspended'){
+    audioCtx.resume();
+  }
+  return audioCtx;
+}
+
 function parseDescansoSeconds(str){
   if(!str) return 60;
   const m = String(str).match(/(\d+(\.\d+)?)/);
@@ -531,6 +542,7 @@ function formatMMSS(s){
 }
 let restTimerHandles = {};
 function startRestTimer(idx, seconds){
+  ensureAudioContext();
   if(restTimerHandles[idx]) clearInterval(restTimerHandles[idx]);
   state.uiResting[idx] = seconds;
   render();
@@ -554,24 +566,25 @@ function cancelRestTimer(idx){
 }
 function onRestFinished(idx){
   try{
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const playTone = (freq, startTime, duration)=>{
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0, startTime);
-      gain.gain.linearRampToValueAtTime(0.12, startTime + 0.05);
-      gain.gain.linearRampToValueAtTime(0, startTime + duration);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(startTime);
-      osc.stop(startTime + duration);
-    };
-    const now = ctx.currentTime;
-    playTone(880, now, 0.35);
-    playTone(1174.66, now + 0.22, 0.4);
-    setTimeout(()=>{ try{ ctx.close(); }catch(e){} }, 800);
+    const ctx = ensureAudioContext();
+    if(ctx){
+      const playTone = (freq, startTime, duration)=>{
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0, startTime);
+        gain.gain.linearRampToValueAtTime(0.12, startTime + 0.05);
+        gain.gain.linearRampToValueAtTime(0, startTime + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(startTime);
+        osc.stop(startTime + duration);
+      };
+      const now = ctx.currentTime;
+      playTone(880, now, 0.35);
+      playTone(1174.66, now + 0.22, 0.4);
+    }
   }catch(e){}
   const current = state.uiSets[idx] !== undefined ? state.uiSets[idx] : 0;
   state.uiSets[idx] = current + 1;
