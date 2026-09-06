@@ -513,6 +513,8 @@
     flex-direction:column;
     align-items:center;
     justify-content:center;
+    overflow-y:auto;
+    padding:30px 20px;
     z-index:50;
   }
   .rest-overlay-label{
@@ -525,7 +527,7 @@
   }
   .rest-overlay-time{
     color:#fff;
-    font-size:96px;
+    font-size:clamp(56px, 18vw, 96px);
     font-weight:800;
     line-height:1;
     font-variant-numeric:tabular-nums;
