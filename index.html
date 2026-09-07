@@ -599,9 +599,25 @@ function formatMMSS(s){
   const se = s % 60;
   return `${mi}:${String(se).padStart(2,'0')}`;
 }
+let wakeLock = null;
+async function requestWakeLock(){
+  try{
+    if('wakeLock' in navigator){
+      wakeLock = await navigator.wakeLock.request('screen');
+    }
+  }catch(e){}
+}
+function releaseWakeLock(){
+  if(wakeLock){
+    try{ wakeLock.release(); }catch(e){}
+    wakeLock = null;
+  }
+}
+
 let restTimerHandles = {};
 function startRestTimer(idx, seconds){
   ensureAudioContext();
+  requestWakeLock();
   if(restTimerHandles[idx]) clearInterval(restTimerHandles[idx]);
   state.uiResting[idx] = seconds;
   render();
@@ -625,9 +641,11 @@ function cancelRestTimer(idx){
   if(restTimerHandles[idx]) clearInterval(restTimerHandles[idx]);
   delete restTimerHandles[idx];
   delete state.uiResting[idx];
+  releaseWakeLock();
   render();
 }
 function onRestFinished(idx){
+  releaseWakeLock();
   try{
     const ctx = ensureAudioContext();
     if(ctx){
@@ -1685,6 +1703,7 @@ function render(){
     });
     document.getElementById('back-btn').onclick = ()=>{
       Object.keys(restTimerHandles).forEach(k=> clearInterval(restTimerHandles[k]));
+      releaseWakeLock();
       restTimerHandles = {};
       state.uiResting = {};
       state.uiRestAlert = {};
