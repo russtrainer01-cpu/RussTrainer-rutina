@@ -1617,7 +1617,7 @@ function render(){
           <div class="rest-overlay-label">Descanso</div>
           <div class="rest-overlay-time" id="rest-overlay-time">${formatMMSS(state.uiResting[overlayIdx])}</div>
           <button class="rest-overlay-cancel" data-idx="${overlayIdx}">Cancelar</button>
-          ${overlayItem && overlayItem.nota ? `<div class="rest-overlay-mascot">🧑‍🏫</div><div class="rest-overlay-tip">${escapeHtml(overlayItem.nota)}</div>` : ''}
+          ${overlayItem && overlayItem.nota ? `<div class="rest-overlay-tip"><strong>Recordá esto para la próxima serie:</strong><br/>${escapeHtml(overlayItem.nota)}</div>` : ''}
         </div>
       ` : ''}
     `;
