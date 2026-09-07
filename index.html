@@ -839,6 +839,19 @@ const ROUTINES = {
       { seccion:'💪 Bíceps', ejercicio:'Curl unilateral en polea', series:'3 series', reps:'12-15 reps', peso:'2-3 bloques', descanso:'1.5 min', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/XGGO0bUmttw' },
       { seccion:'💪 Tríceps', ejercicio:'Extensión en polea', series:'3 series', reps:'12 reps', peso:'3 bloques', descanso:'1 min', tipo:'carga', sinPeso:false, video:null }
     ]
+  },
+  'rosa': {
+    'Día 1': [
+      { seccion:'🤸 Entrada en calor', ejercicio:'Cinta (entrada en calor)', series:'-', reps:'10 min suave', peso:'Sin peso', tipo:'checklist', video:null, nota:'Elevación 2, ritmo 4 a 4.5.' },
+      { seccion:'🤸 Entrada en calor', ejercicio:'Movilidad cuerpo completo', series:'-', reps:'-', peso:'Sin peso', tipo:'checklist', video:'https://www.youtube.com/shorts/KNPnEmf2Qnc' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Remo sentado', series:'3 series', reps:'12-14', peso:'Poco peso', descanso:'60 seg', tipo:'carga', sinPeso:false, video:null, nota:'Espalda recta, llevá los codos atrás sin balancear el torso.' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Press militar con mancuernas', series:'3 series', reps:'12-14', peso:'Poco peso', descanso:'60 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/H3JwesAsumc', nota:'No arquees la espalda baja, activá el core al empujar.' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Jalón abierto', series:'3 series', reps:'12-14', peso:'Poco peso', descanso:'60 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/-MS6Z88wv5I', nota:'Llevá los codos hacia abajo y atrás, no tires solo con los brazos.' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Elevaciones laterales', series:'3 series', reps:'12-14', peso:'3kg', descanso:'45 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/zEANAIh1l9g', nota:'Subí hasta la altura del hombro, sin impulso ni encoger el cuello.' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Curl alternado', series:'3 series', reps:'12-14', peso:'Mancuernas livianas', descanso:'45 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/c3Pl0072T7Q', nota:'Codos fijos, no balancees el cuerpo para subir el peso.' },
+      { seccion:'🧱 Core', ejercicio:'Plancha inclinada (manos en banco)', series:'3 series', reps:'20-30 seg', peso:'Sin peso', descanso:'30 seg', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/nARfq78Dd-M', nota:'Cuerpo en línea recta, no dejes caer la cadera.' },
+      { seccion:'❤️ Cierre cardio', ejercicio:'Cinta (cierre cardio)', series:'-', reps:'15 min suave', peso:'Sin peso', tipo:'checklist', video:null }
+    ]
   }
 };
 
@@ -973,7 +986,8 @@ const CLIENT_CONFIG = {
   'lorena': { diasPorSemana: 4, genero: 'femenino' },
   'anderson': { diasPorSemana: 4, genero: 'masculino' },
   'roiner': { diasPorSemana: 5, genero: 'masculino' },
-  'braian': { diasPorSemana: 5, genero: 'masculino' }
+  'braian': { diasPorSemana: 5, genero: 'masculino' },
+  'rosa': { diasPorSemana: 3, genero: 'femenino' }
 };
 function weeklyTarget(name){
   const cfg = CLIENT_CONFIG[routineKey(name)];
