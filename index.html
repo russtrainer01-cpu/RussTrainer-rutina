@@ -1344,21 +1344,32 @@ function render(){
       const maxSemana = getMaxSemana(myRoutine);
       if(semanaKeys.length){
         semanaKeys.forEach(sNum=>{
-          const header = document.createElement('h3');
-          header.style.cssText = 'margin:18px 0 8px; font-size:15px; display:flex; align-items:center; gap:8px;';
-          header.innerHTML = `Semana ${sNum}${sNum === maxSemana ? ' <span class="month-badge" style="background:var(--rose);">👉 Actual</span>' : ''}`;
+          const isCurrentSemana = sNum === maxSemana;
+          const toggleKey = 'client-semana-' + sNum;
+          const semanaExpanded = isCurrentSemana || !!state.uiExpanded[toggleKey];
+          const header = document.createElement('button');
+          header.className = 'link-btn';
+          header.style.cssText = 'margin:18px 0 8px; font-size:15px; display:flex; align-items:center; gap:8px; background:none; border:none; cursor:pointer; padding:0; font-family:inherit; color:var(--text);';
+          header.innerHTML = `<span style="font-weight:700;">${semanaExpanded ? '▾' : '▸'} Semana ${sNum}</span>${isCurrentSemana ? ' <span class="month-badge" style="background:#5b8f6f;">👉 Actual</span>' : ''}`;
+          header.onclick = ()=>{
+            if(state.uiExpanded[toggleKey]) delete state.uiExpanded[toggleKey];
+            else state.uiExpanded[toggleKey] = true;
+            render();
+          };
           dayChips.appendChild(header);
-          const rowWrap = document.createElement('div');
-          rowWrap.className = 'day-grid';
-          groups[sNum].forEach(day=>{
-            const chip = document.createElement('button');
-            chip.className = 'day-card' + (day.toLowerCase().includes('running') ? ' running' : '');
-            const { dayName } = parseDayLabel(day);
-            chip.innerHTML = `<div class="dc-label">${escapeHtml(dayName)}</div><div class="dc-sub">Toca para empezar →</div>`;
-            chip.onclick = ()=>{ state.view='routine-day'; state.routineDay=day; render(); };
-            rowWrap.appendChild(chip);
-          });
-          dayChips.appendChild(rowWrap);
+          if(semanaExpanded){
+            const rowWrap = document.createElement('div');
+            rowWrap.className = 'day-grid';
+            groups[sNum].forEach(day=>{
+              const chip = document.createElement('button');
+              chip.className = 'day-card' + (day.toLowerCase().includes('running') ? ' running' : '');
+              const { dayName } = parseDayLabel(day);
+              chip.innerHTML = `<div class="dc-label">${escapeHtml(dayName)}</div><div class="dc-sub">Toca para empezar →</div>`;
+              chip.onclick = ()=>{ state.view='routine-day'; state.routineDay=day; render(); };
+              rowWrap.appendChild(chip);
+            });
+            dayChips.appendChild(rowWrap);
+          }
         });
       }
       if(noSemana.length){
@@ -1760,16 +1771,28 @@ function render(){
       orderedDayLabels.push({ header: sNum, isCurrent: sNum === adminMaxSemana });
       adminGroups[sNum].forEach(d=> orderedDayLabels.push({ dayLabel: d }));
     });
-    adminNoSemana.forEach(d=> orderedDayLabels.push({ dayLabel: d }));
+    adminNoSemana.forEach(d=> orderedDayLabels.push({ dayLabel: d, standalone: true }));
 
+    let lastSemanaExpanded = true;
     orderedDayLabels.forEach(entry=>{
       if(entry.header !== undefined){
-        const header = document.createElement('h3');
-        header.style.cssText = 'margin:18px 0 8px; font-size:15px; display:flex; align-items:center; gap:8px;';
-        header.innerHTML = `Semana ${entry.header}${entry.isCurrent ? ' <span class="month-badge" style="background:var(--rose);">👉 Actual</span>' : ''}`;
+        const toggleKey = 'admin-semana-' + key + '-' + entry.header;
+        const semanaExpanded = entry.isCurrent || !!state.uiExpanded[toggleKey];
+        entry._semanaExpanded = semanaExpanded;
+        const header = document.createElement('button');
+        header.className = 'link-btn';
+        header.style.cssText = 'margin:18px 0 8px; font-size:15px; display:flex; align-items:center; gap:8px; background:none; border:none; cursor:pointer; padding:0; font-family:inherit; color:var(--text);';
+        header.innerHTML = `<span style="font-weight:700;">${semanaExpanded ? '▾' : '▸'} Semana ${entry.header}</span>${entry.isCurrent ? ' <span class="month-badge" style="background:#5b8f6f;">👉 Actual</span>' : ''}`;
+        header.onclick = ()=>{
+          if(state.uiExpanded[toggleKey]) delete state.uiExpanded[toggleKey];
+          else state.uiExpanded[toggleKey] = true;
+          render();
+        };
         daysWrap.appendChild(header);
+        lastSemanaExpanded = semanaExpanded;
         return;
       }
+      if(!entry.standalone && !lastSemanaExpanded) return;
       const dayLabel = entry.dayLabel;
       const { dayName } = parseDayLabel(dayLabel);
       const items = routine[dayLabel];
