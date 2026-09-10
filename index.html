@@ -1540,6 +1540,10 @@ function render(){
     const f = c.data.ficha;
     const weekInfo = weekEndInfo(f.semanaInicio);
     const weekAlert = weekInfo && weekInfo.daysLeft <= 3;
+    const fichaExpanded = !!state.uiExpanded['admin-ficha'];
+    const notesExpanded = !!state.uiExpanded['admin-notes'];
+    const fichaSummary = (f.objetivo || f.nivel) ? [f.objetivo, f.nivel].filter(Boolean).join(' · ') : 'Sin completar todavía';
+
     app.innerHTML = `
       <button class="back" id="back-btn">&larr; Volver</button>
       <div class="brand">russ.trainer</div>
@@ -1548,52 +1552,84 @@ function render(){
       ${weekAlert ? `<div class="tip" style="border-left-color:var(--rose-dark); color:var(--rose-dark);">📅 ${weekInfo.daysLeft < 0 ? 'Su semana ya venció, hay que planificar la próxima' : weekInfo.daysLeft === 0 ? 'Su semana termina hoy' : 'Le queda' + (weekInfo.daysLeft===1?' 1 día':'n ' + weekInfo.daysLeft + ' días') + ' de su semana actual'}</div>` : ''}
 
       <h2 style="margin-top:20px;">Ficha</h2>
-      <div class="card">
-        <label>Objetivo</label>
-        <input id="f-objetivo" value="${escapeHtml(f.objetivo)}" placeholder="Ej: Bajar de peso" />
-        <label>Nivel</label>
-        <input id="f-nivel" value="${escapeHtml(f.nivel)}" placeholder="Ej: Intermedio" />
-        <label>Restricciones</label>
-        <input id="f-restricciones" value="${escapeHtml(f.restricciones)}" placeholder="Ej: Sin restricciones" />
-        <div class="row">
-          <div>
-            <label>Fecha de inicio</label>
-            <input type="date" id="f-fechainicio" value="${escapeHtml(f.fechaInicio)}" />
+      ${!fichaExpanded ? `
+        <button class="card" id="ficha-toggle" style="width:100%; text-align:left; border:1px solid var(--border); border-left:3px solid var(--rose); cursor:pointer; background:var(--bg-card); font-family:inherit;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-weight:700;">📋 ${escapeHtml(c.displayName)}</div>
+              <div class="sub" style="margin:2px 0 0;">${escapeHtml(fichaSummary)}</div>
+            </div>
+            <span class="sub" style="margin:0;">Tocá para editar ›</span>
           </div>
-          <div>
-            <label>Cumpleaños</label>
-            <input type="text" id="f-cumple" value="${escapeHtml(f.cumpleanos)}" placeholder="MM-DD" />
+        </button>
+      ` : `
+        <div class="card">
+          <button class="link-btn" id="ficha-collapse-btn" style="margin-bottom:10px;">‹ Colapsar</button>
+          <label>Objetivo</label>
+          <input id="f-objetivo" value="${escapeHtml(f.objetivo)}" placeholder="Ej: Bajar de peso" />
+          <label>Nivel</label>
+          <input id="f-nivel" value="${escapeHtml(f.nivel)}" placeholder="Ej: Intermedio" />
+          <label>Restricciones</label>
+          <input id="f-restricciones" value="${escapeHtml(f.restricciones)}" placeholder="Ej: Sin restricciones" />
+          <div class="row">
+            <div>
+              <label>Fecha de inicio</label>
+              <input type="date" id="f-fechainicio" value="${escapeHtml(f.fechaInicio)}" />
+            </div>
+            <div>
+              <label>Cumpleaños</label>
+              <input type="text" id="f-cumple" value="${escapeHtml(f.cumpleanos)}" placeholder="MM-DD" />
+            </div>
           </div>
+          <label>Vencimiento del plan</label>
+          <input type="date" id="f-vencimiento" value="${escapeHtml(c.data.vencimiento)}" />
+          <label>Inicio de su semana actual</label>
+          <input type="date" id="f-semanainicio" value="${escapeHtml(f.semanaInicio)}" />
+          <p class="sub" style="margin:-6px 0 12px; font-size:12px;">Actualizá esto cada vez que le armes una semana nueva — así el panel te avisa cuando está por terminar.</p>
+          <button class="btn-primary" id="f-save-btn" style="margin-top:6px;">Guardar ficha</button>
         </div>
-        <label>Vencimiento del plan</label>
-        <input type="date" id="f-vencimiento" value="${escapeHtml(c.data.vencimiento)}" />
-        <label>Inicio de su semana actual</label>
-        <input type="date" id="f-semanainicio" value="${escapeHtml(f.semanaInicio)}" />
-        <p class="sub" style="margin:-6px 0 12px; font-size:12px;">Actualizá esto cada vez que le armes una semana nueva — así el panel te avisa cuando está por terminar.</p>
-        <button class="btn-primary" id="f-save-btn" style="margin-top:6px;">Guardar ficha</button>
-      </div>
+      `}
 
       ${c.data.bodyWeight.length > 1 ? '<div id="admin-weight-chart-wrap" style="height:180px; background:var(--bg-card); border:1px solid var(--border); border-radius:6px; padding:12px; margin-bottom:16px;"><canvas id="admin-weight-chart"></canvas></div>' : ''}
 
       <h2>Notas privadas</h2>
-      <div class="card">
-        <textarea id="note-input" rows="2" placeholder="Ej: le cuesta la rodilla derecha, evitar estocadas profundas" style="width:100%; background:var(--bg-elevated); border:1px solid var(--border); color:var(--text); border-radius:6px; padding:10px; font-family:inherit; font-size:14px;"></textarea>
-        <button class="btn-primary" id="note-save-btn" style="margin-top:8px;">Agregar nota</button>
-      </div>
-      <div id="admin-notes"></div>
+      ${!notesExpanded ? `
+        <button class="card" id="notes-toggle" style="width:100%; text-align:left; border:1px solid var(--border); border-left:3px solid var(--rose); cursor:pointer; background:var(--bg-card); font-family:inherit;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-weight:700;">📝 Notas privadas (${c.data.trainerNotes.length})</div>
+            <span class="sub" style="margin:0;">Tocá para ver ›</span>
+          </div>
+        </button>
+      ` : `
+        <div class="card">
+          <button class="link-btn" id="notes-collapse-btn" style="margin-bottom:10px;">‹ Colapsar</button>
+          <textarea id="note-input" rows="2" placeholder="Ej: le cuesta la rodilla derecha, evitar estocadas profundas" style="width:100%; background:var(--bg-elevated); border:1px solid var(--border); color:var(--text); border-radius:6px; padding:10px; font-family:inherit; font-size:14px;"></textarea>
+          <button class="btn-primary" id="note-save-btn" style="margin-top:8px;">Agregar nota</button>
+        </div>
+        <div id="admin-notes"></div>
+      `}
 
       <h2 style="margin-top:20px;">Resumen semanal</h2>
       <button class="btn-ghost" id="report-btn" style="width:100%;">📋 Generar resumen para copiar</button>
       <textarea id="report-output" rows="6" class="hidden" readonly style="width:100%; margin-top:10px; background:var(--bg-elevated); border:1px solid var(--border); color:var(--text); border-radius:6px; padding:10px; font-family:inherit; font-size:13px;"></textarea>
 
       <h2 style="margin-top:20px;">Sus días</h2>
+      <p class="sub" style="margin:0 0 10px;">Tocá un día para ver los últimos pesos y comentarios de cada ejercicio.</p>
       <div id="admin-days"></div>
-      <h2 style="margin-top:20px;">Comentarios recientes</h2>
-      <div id="admin-comments"></div>
     `;
     document.getElementById('back-btn').onclick = ()=>{ state.view='admin-list'; render(); };
-    document.getElementById('f-save-btn').onclick = ()=> onSaveFicha(key);
-    document.getElementById('note-save-btn').onclick = ()=> onAddNote(key);
+    if(fichaExpanded){
+      document.getElementById('f-save-btn').onclick = ()=> onSaveFicha(key);
+      document.getElementById('ficha-collapse-btn').onclick = ()=>{ delete state.uiExpanded['admin-ficha']; render(); };
+    } else {
+      document.getElementById('ficha-toggle').onclick = ()=>{ state.uiExpanded['admin-ficha'] = true; render(); };
+    }
+    if(notesExpanded){
+      document.getElementById('note-save-btn').onclick = ()=> onAddNote(key);
+      document.getElementById('notes-collapse-btn').onclick = ()=>{ delete state.uiExpanded['admin-notes']; render(); };
+    } else {
+      document.getElementById('notes-toggle').onclick = ()=>{ state.uiExpanded['admin-notes'] = true; render(); };
+    }
     document.getElementById('report-btn').onclick = ()=> onGenerateReport(key);
 
     if(c.data.bodyWeight.length > 1){
@@ -1608,17 +1644,19 @@ function render(){
       });
     }
 
-    const notesWrap = document.getElementById('admin-notes');
-    if(c.data.trainerNotes.length === 0){
-      notesWrap.innerHTML = '<div class="empty">Sin notas todavía.</div>';
-    } else {
-      notesWrap.innerHTML = '';
-      c.data.trainerNotes.slice().reverse().forEach(n=>{
-        const box = document.createElement('div');
-        box.className = 'tip';
-        box.innerHTML = `<span class="sub" style="margin:0;">${formatDate(n.date)}</span><br/>${escapeHtml(n.text)}`;
-        notesWrap.appendChild(box);
-      });
+    if(notesExpanded){
+      const notesWrap = document.getElementById('admin-notes');
+      if(c.data.trainerNotes.length === 0){
+        notesWrap.innerHTML = '<div class="empty">Sin notas todavía.</div>';
+      } else {
+        notesWrap.innerHTML = '';
+        c.data.trainerNotes.slice().reverse().forEach(n=>{
+          const box = document.createElement('div');
+          box.className = 'tip';
+          box.innerHTML = `<span class="sub" style="margin:0;">${formatDate(n.date)}</span><br/>${escapeHtml(n.text)}`;
+          notesWrap.appendChild(box);
+        });
+      }
     }
 
     const daysWrap = document.getElementById('admin-days');
@@ -1627,29 +1665,46 @@ function render(){
       const items = routine[dayLabel];
       const doneToday = isDayCompleteOn(c.data, dayLabel, items, today);
       const lastDate = doneToday ? today : lastCompletionDate(c.data, dayLabel, items);
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.innerHTML = `<div style="font-weight:700;">${escapeHtml(dayLabel)}</div><div class="sub" style="margin:2px 0 0;">${doneToday ? '✅ Completado hoy' : (lastDate ? 'Último completo: ' + formatDate(lastDate) : 'Todavía sin completar')}</div>`;
-      daysWrap.appendChild(card);
+      const dayKey = 'admin-day-' + dayLabel;
+      const dayExpanded = !!state.uiExpanded[dayKey];
+      const box = document.createElement('button');
+      box.className = 'card';
+      box.style.cssText = 'width:100%; text-align:left; border:1px solid var(--border); border-left:3px solid var(--rose); cursor:pointer; background:var(--bg-card); font-family:inherit;';
+      let inner = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-weight:700;">${escapeHtml(dayLabel)}</div>
+          <span class="sub" style="margin:0;">${dayExpanded ? '‹ Colapsar' : 'Ver detalle ›'}</span>
+        </div>
+        <div class="sub" style="margin:2px 0 0;">${doneToday ? '✅ Completado hoy' : (lastDate ? 'Último completo: ' + formatDate(lastDate) : 'Todavía sin completar')}</div>
+      `;
+      if(dayExpanded){
+        inner += `<div style="margin-top:12px; border-top:1px solid var(--border); padding-top:10px;">`;
+        items.forEach(item=>{
+          if(item.tipo === 'mensaje') return;
+          if(item.tipo === 'checklist'){
+            inner += `<div class="sub" style="margin:0 0 8px; color:var(--text);"><strong>${escapeHtml(item.ejercicio)}</strong> — checklist</div>`;
+            return;
+          }
+          const entries = c.data.exercises[item.ejercicio] || [];
+          const last = entries.length ? entries[entries.length-1] : null;
+          inner += `<div style="margin:0 0 10px;">
+            <div style="font-weight:600; color:var(--text);">${escapeHtml(item.ejercicio)}</div>
+            ${last ? `
+              <div class="sub" style="margin:2px 0 0;">${formatDate(last.date)} · ${item.sinPeso ? '' : last.weight + 'kg · '}${last.reps} × ${last.sets}${last.feeling ? ' · ' + last.feeling : ''}</div>
+              ${last.comment ? `<div class="tip" style="margin:4px 0 0;">💬 ${escapeHtml(last.comment)}</div>` : ''}
+            ` : `<div class="sub" style="margin:2px 0 0;">Sin registros todavía</div>`}
+          </div>`;
+        });
+        inner += `</div>`;
+      }
+      box.innerHTML = inner;
+      box.onclick = ()=>{
+        if(dayExpanded) delete state.uiExpanded[dayKey];
+        else state.uiExpanded[dayKey] = true;
+        render();
+      };
+      daysWrap.appendChild(box);
     });
-    const commentsWrap = document.getElementById('admin-comments');
-    const comments = [];
-    Object.keys(c.data.exercises).forEach(ex=>{
-      c.data.exercises[ex].forEach(e=>{
-        if(e.comment) comments.push({ exercise: ex, date: e.date, comment: e.comment });
-      });
-    });
-    comments.sort((a,b)=> b.date.localeCompare(a.date));
-    if(comments.length === 0){
-      commentsWrap.innerHTML = '<div class="empty">Todavía no dejó comentarios.</div>';
-    } else {
-      comments.slice(0,15).forEach(cm=>{
-        const box = document.createElement('div');
-        box.className = 'tip';
-        box.innerHTML = `<strong>${escapeHtml(cm.exercise)}</strong> (${formatDate(cm.date)})<br/>💬 ${escapeHtml(cm.comment)}`;
-        commentsWrap.appendChild(box);
-      });
-    }
   }
   else if(state.view === 'exercise'){
     const entries = state.data.exercises[state.exercise] || [];
