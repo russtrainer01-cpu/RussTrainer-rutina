@@ -1410,8 +1410,9 @@ async function loadClienta(name){
     if(!parsed.completados) parsed.completados = {};
     if(!parsed.bodyWeight) parsed.bodyWeight = [];
     if(!parsed.weightPromptSeen) parsed.weightPromptSeen = false;
-    if(!parsed.ficha) parsed.ficha = { objetivo:'', nivel:'', restricciones:'', fechaInicio:'', cumpleanos:'', semanaInicio:'' };
+    if(!parsed.ficha) parsed.ficha = { objetivo:'', nivel:'', restricciones:'', fechaInicio:'', cumpleanos:'', semanaInicio:'', telefono:'' };
     if(parsed.ficha.semanaInicio === undefined) parsed.ficha.semanaInicio = '';
+    if(parsed.ficha.telefono === undefined) parsed.ficha.telefono = '';
     if(!parsed.vencimiento) parsed.vencimiento = '';
     if(!parsed.trainerNotes) parsed.trainerNotes = [];
     if(!parsed.nextWeekNotes) parsed.nextWeekNotes = {};
@@ -1958,6 +1959,8 @@ function render(){
         + '</select>'
         + '<label>Restricciones</label>'
         + '<input id="f-restricciones" value="' + escapeHtml(f.restricciones) + '" placeholder="Ej: Sin restricciones" />'
+        + '<label>Teléfono (WhatsApp)</label>'
+        + '<input id="f-telefono" value="' + escapeHtml(f.telefono || '') + '" placeholder="Ej: 5491123456789 (con código de país)" />'
         + '<div class="row"><div><label>Fecha de inicio</label>'
         + '<div style="display:flex; gap:6px;"><input type="date" id="f-fechainicio" value="' + escapeHtml(f.fechaInicio) + '" style="flex:1;" />'
         + '<button type="button" class="btn-ghost" id="f-fechainicio-hoy" style="padding:0 12px; white-space:nowrap;">Hoy</button></div></div>'
@@ -1985,11 +1988,14 @@ function render(){
         + '</div><div id="admin-notes"></div>';
 
     const monthBadgeHtml = monthNum ? '<span class="month-badge" style="background:' + monthColor(monthNum) + '; vertical-align:middle;">Mes ' + monthNum + '</span>' : '';
+    const waNumber = f.telefono ? f.telefono.replace(/\D/g,'') : '';
+    const waLink = waNumber ? 'https://wa.me/' + waNumber : '';
 
     app.innerHTML = `
       <button class="back" id="back-btn">&larr; Volver</button>
       <div class="brand">russ.trainer</div>
       <h1>${escapeHtml(c.displayName)} ${monthBadgeHtml}</h1>
+      ${waLink ? `<a href="${waLink}" target="_blank" rel="noopener" class="btn-ghost" style="display:block; text-align:center; text-decoration:none; margin-bottom:14px;">📲 Enviarle WhatsApp</a>` : ''}
       ${isAlert ? `<div class="tip" style="border-left-color:#c65f5f; color:#c65f5f;">⚠️ ${lastActive ? 'Última actividad: ' + formatDate(lastActive) + ' (' + gap + ' días)' : 'Todavía no registró actividad'}</div>` : `<div class="sub">Última actividad: ${formatDate(lastActive)}</div>`}
       ${weekAlert ? `<div class="tip" style="border-left-color:var(--rose-dark); color:var(--rose-dark);">📅 ${weekInfo.daysLeft < 0 ? 'Su semana ya venció, hay que planificar la próxima' : weekInfo.daysLeft === 0 ? 'Su semana termina hoy' : 'Le queda' + (weekInfo.daysLeft===1?' 1 día':'n ' + weekInfo.daysLeft + ' días') + ' de su semana actual'}</div>` : ''}
 
@@ -2451,6 +2457,7 @@ async function onSaveFicha(key){
     objetivo: document.getElementById('f-objetivo').value.trim(),
     nivel: document.getElementById('f-nivel').value.trim(),
     restricciones: document.getElementById('f-restricciones').value.trim(),
+    telefono: document.getElementById('f-telefono').value.trim(),
     fechaInicio: document.getElementById('f-fechainicio').value,
     cumpleanos: document.getElementById('f-cumple').value.trim(),
     semanaInicio: document.getElementById('f-semanainicio').value
