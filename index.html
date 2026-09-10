@@ -608,6 +608,101 @@
     color:#5b8f6f;
     font-weight:700;
   }
+  .cal-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin:6px 0 14px;
+  }
+  .cal-nav-btn{
+    background:var(--bg-elevated);
+    border:1px solid var(--border);
+    color:var(--text);
+    border-radius:50%;
+    width:36px;
+    height:36px;
+    font-size:16px;
+    cursor:pointer;
+  }
+  .cal-month-title{
+    font-weight:800;
+    font-size:17px;
+    text-transform:capitalize;
+  }
+  .cal-grid{
+    display:grid;
+    grid-template-columns:repeat(7, 1fr);
+    gap:4px;
+  }
+  .cal-weekday{
+    text-align:center;
+    font-size:11px;
+    color:var(--text-muted);
+    font-weight:700;
+    padding-bottom:4px;
+  }
+  .cal-day{
+    aspect-ratio:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    border-radius:8px;
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    cursor:pointer;
+    position:relative;
+    padding:2px;
+  }
+  .cal-day.empty{
+    background:none;
+    border:none;
+    cursor:default;
+  }
+  .cal-day.today{
+    border:2px solid var(--rose);
+  }
+  .cal-day.selected{
+    background:var(--rose);
+  }
+  .cal-day.selected .cal-day-num{
+    color:#1a0d0f;
+  }
+  .cal-day-num{
+    font-size:13px;
+    font-weight:700;
+  }
+  .cal-dots{
+    display:flex;
+    gap:2px;
+    margin-top:2px;
+    flex-wrap:wrap;
+    justify-content:center;
+    max-width:100%;
+  }
+  .cal-dot{
+    width:6px;
+    height:6px;
+    border-radius:50%;
+  }
+  .cal-agenda-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 12px;
+    border-radius:8px;
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-left:4px solid var(--rose);
+    margin-bottom:8px;
+    cursor:pointer;
+    text-align:left;
+    width:100%;
+    font-family:inherit;
+  }
+  .cal-agenda-item.static{
+    cursor:default;
+  }
   .hidden{display:none;}
 </style>
 </head>
@@ -974,6 +1069,49 @@ const ROUTINES = {
   }
 };
 
+function getCalendarEventsForMonth(year, month){
+  const map = {};
+  function addEvent(dateStr, ev){
+    if(!map[dateStr]) map[dateStr] = [];
+    map[dateStr].push(ev);
+  }
+  const monthStr = `${year}-${String(month+1).padStart(2,'0')}`;
+  Object.keys(state.adminData || {}).forEach(key=>{
+    const c = state.adminData[key];
+    const f = c.data.ficha;
+    if(f.cumpleanos && /^\d{2}-\d{2}$/.test(f.cumpleanos)){
+      const mm = String(month+1).padStart(2,'0');
+      if(f.cumpleanos.slice(0,2) === mm){
+        const dd = f.cumpleanos.slice(3,5);
+        addEvent(`${year}-${mm}-${dd}`, { type:'cumple', icon:'🎂', label: c.displayName, color:'#c9974a', key });
+      }
+    }
+    if(c.data.vencimiento && c.data.vencimiento.slice(0,7) === monthStr){
+      addEvent(c.data.vencimiento, { type:'vencimiento', icon:'💳', label: c.displayName, color:'#c65f5f', key });
+    }
+    const wi = weekEndInfo(f.semanaInicio);
+    if(wi && wi.endStr.slice(0,7) === monthStr){
+      addEvent(wi.endStr, { type:'semana', icon:'📅', label: c.displayName, color:'#d4848f', key });
+    }
+  });
+  const todayStr = todayISO();
+  if(todayStr.slice(0,7) === monthStr && state.adminData){
+    const feed = buildActivityFeed(state.adminData).filter(i=>i.comment && !i.respondido);
+    const byClient = {};
+    feed.forEach(i=>{ byClient[i.key] = (byClient[i.key]||0) + 1; });
+    Object.keys(byClient).forEach(key=>{
+      const c = state.adminData[key];
+      addEvent(todayStr, { type:'comentario', icon:'💬', label: c.displayName + ' (' + byClient[key] + ')', color:'#4a90b8', key });
+    });
+  }
+  (state.trainerEvents || []).forEach(ev=>{
+    if(ev.date.slice(0,7) === monthStr){
+      addEvent(ev.date, { type:'custom', icon:'📌', label: ev.text, color:'#6fa86f' });
+    }
+  });
+  return map;
+}
+
 function routineKey(name){ return name.trim().toLowerCase(); }
 
 function parseDayLabel(label){
@@ -1130,6 +1268,26 @@ async function markCommentResponded(key, exercise, ts){
   render();
 }
 
+async function loadTrainerEvents(){
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/clientes?nombre=eq.${encodeURIComponent('_trainer_events')}&select=data`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    const rows = await res.json();
+    if(rows.length && rows[0].data && Array.isArray(rows[0].data.events)) return rows[0].data.events;
+    return [];
+  }catch(e){ return []; }
+}
+async function saveTrainerEvents(events){
+  try{
+    await fetch(`${SUPABASE_URL}/rest/v1/clientes`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type':'application/json', Prefer:'resolution=merge-duplicates' },
+      body: JSON.stringify({ nombre: '_trainer_events', data: { events } })
+    });
+  }catch(e){}
+}
+
 async function loadAdminData(){
   state.adminData = {};
   for(const key of Object.keys(ROUTINES)){
@@ -1196,7 +1354,7 @@ function computeWeekCount(data){
   return count;
 }
 
-let state = { clienta: null, data: null, view: 'login', exercise: null, routineDay: null, uiExpanded: {}, uiFeeling: {}, uiSets: {}, uiResting: {}, uiRestAlert: {}, uiWeightPrefill: {}, adminData: null, adminSelected: null };
+let state = { clienta: null, data: null, view: 'login', exercise: null, routineDay: null, uiExpanded: {}, uiFeeling: {}, uiSets: {}, uiResting: {}, uiRestAlert: {}, uiWeightPrefill: {}, adminData: null, adminSelected: null, trainerEvents: null, calendarYear: null, calendarMonth: null, calendarSelectedDate: null };
 let chartInstance = null;
 
 const EXERCISE_LIBRARY = {
@@ -1570,6 +1728,114 @@ function render(){
       });
     }
   }
+  else if(state.view === 'admin-calendar'){
+    const year = state.calendarYear;
+    const month = state.calendarMonth;
+    const monthNames = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    const weekdayLabels = ['D','L','M','M','J','V','S'];
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month+1, 0).getDate();
+    const eventsMap = state.adminData ? getCalendarEventsForMonth(year, month) : {};
+    const todayStr = todayISO();
+    const selected = state.calendarSelectedDate;
+
+    app.innerHTML = `
+      <div class="topbar">
+        <div>
+          <div class="brand">russ.trainer</div>
+          <div class="name">Tu calendario</div>
+        </div>
+        <button class="link-btn" id="cal-exit-btn">Salir</button>
+      </div>
+      <div class="cal-header">
+        <button class="cal-nav-btn" id="cal-prev-btn">‹</button>
+        <span class="cal-month-title">${monthNames[month]} ${year}</span>
+        <button class="cal-nav-btn" id="cal-next-btn">›</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <button class="btn-ghost" id="cal-list-btn" style="width:100%; margin-top:18px;">👥 Ver todas las alumnas</button>
+      <button class="btn-ghost" id="cal-add-event-btn" style="width:100%; margin-top:8px;">+ Agregar evento propio</button>
+      <div id="cal-add-form" class="hidden card" style="margin-top:10px;">
+        <label>Fecha</label>
+        <input type="date" id="cal-event-date" value="${todayStr}" />
+        <label>Descripción</label>
+        <input type="text" id="cal-event-text" placeholder="Ej: Entrenamiento presencial con Ana" />
+        <button class="btn-primary" id="cal-event-save" style="margin-top:8px;">Guardar evento</button>
+      </div>
+      <h2 style="margin-top:22px;">${formatDate(selected)}</h2>
+      <div id="cal-agenda"></div>
+    `;
+
+    document.getElementById('cal-exit-btn').onclick = ()=>{ state.view='login'; state.adminData=null; render(); };
+    document.getElementById('cal-prev-btn').onclick = ()=>{
+      state.calendarMonth--;
+      if(state.calendarMonth < 0){ state.calendarMonth = 11; state.calendarYear--; }
+      render();
+    };
+    document.getElementById('cal-next-btn').onclick = ()=>{
+      state.calendarMonth++;
+      if(state.calendarMonth > 11){ state.calendarMonth = 0; state.calendarYear++; }
+      render();
+    };
+    document.getElementById('cal-list-btn').onclick = ()=>{ state.view='admin-list'; render(); };
+    document.getElementById('cal-add-event-btn').onclick = ()=>{
+      document.getElementById('cal-add-form').classList.toggle('hidden');
+    };
+    document.getElementById('cal-event-save').onclick = async ()=>{
+      const date = document.getElementById('cal-event-date').value;
+      const text = document.getElementById('cal-event-text').value.trim();
+      if(!date || !text) return;
+      state.trainerEvents = state.trainerEvents || [];
+      state.trainerEvents.push({ date, text });
+      await saveTrainerEvents(state.trainerEvents);
+      render();
+    };
+
+    const grid = document.getElementById('cal-grid');
+    weekdayLabels.forEach(w=>{
+      const el = document.createElement('div');
+      el.className = 'cal-weekday';
+      el.textContent = w;
+      grid.appendChild(el);
+    });
+    for(let i=0;i<firstDay;i++){
+      const el = document.createElement('div');
+      el.className = 'cal-day empty';
+      grid.appendChild(el);
+    }
+    for(let d=1; d<=daysInMonth; d++){
+      const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const dayEvents = eventsMap[dateStr] || [];
+      const el = document.createElement('div');
+      el.className = 'cal-day' + (dateStr === todayStr ? ' today' : '') + (dateStr === selected ? ' selected' : '');
+      el.innerHTML = `
+        <div class="cal-day-num">${d}</div>
+        <div class="cal-dots">${dayEvents.slice(0,4).map(e=>`<span class="cal-dot" style="background:${e.color};"></span>`).join('')}</div>
+      `;
+      el.onclick = ()=>{ state.calendarSelectedDate = dateStr; render(); };
+      grid.appendChild(el);
+    }
+
+    const agendaWrap = document.getElementById('cal-agenda');
+    const selectedEvents = eventsMap[selected] || [];
+    if(!state.adminData){
+      agendaWrap.innerHTML = '<div class="empty">Cargando...</div>';
+    } else if(selectedEvents.length === 0){
+      agendaWrap.innerHTML = '<div class="empty">Nada para este día.</div>';
+    } else {
+      selectedEvents.forEach(ev=>{
+        const item = document.createElement(ev.key ? 'button' : 'div');
+        item.className = 'cal-agenda-item' + (ev.key ? '' : ' static');
+        item.style.borderLeftColor = ev.color;
+        const typeLabel = ev.type === 'semana' ? 'Armar semana nueva' : ev.type === 'comentario' ? 'Comentarios pendientes' : ev.type === 'cumple' ? 'Cumpleaños' : ev.type === 'vencimiento' ? 'Vencimiento de plan' : '';
+        item.innerHTML = `<span style="font-size:18px;">${ev.icon}</span><div><div style="font-weight:700;">${escapeHtml(ev.label)}</div>${typeLabel ? `<div class="sub" style="margin:0;">${typeLabel}</div>` : ''}</div>`;
+        if(ev.key){
+          item.onclick = ()=>{ state.adminSelected = ev.key; state.view = 'admin-detail'; render(); };
+        }
+        agendaWrap.appendChild(item);
+      });
+    }
+  }
   else if(state.view === 'admin-list'){
     const commentCount = buildActivityFeed(state.adminData || {}).filter(i=>i.comment && !i.respondido).length;
     app.innerHTML = `
@@ -1584,12 +1850,14 @@ function render(){
         </div>
       </div>
       <div id="admin-today"></div>
+      <button class="btn-ghost" id="cal-back-btn" style="width:100%; margin-top:10px;">📅 Ver calendario</button>
       <button class="btn-ghost" id="summary-btn" style="width:100%; margin-top:10px;">📋 Resumen semanal</button>
       <button class="btn-ghost" id="feed-btn" style="width:100%; margin-top:10px;">🕐 Ver actividad reciente</button>
       <h2 style="margin-top:18px;">Tus alumnas</h2>
       <div id="admin-list-content">${state.adminData ? '' : '<div class="empty">Cargando...</div>'}</div>
     `;
     document.getElementById('admin-exit-btn').onclick = ()=>{ state.view='login'; state.adminData=null; render(); };
+    document.getElementById('cal-back-btn').onclick = ()=>{ state.view='admin-calendar'; render(); };
     document.getElementById('summary-btn').onclick = ()=>{ state.view='admin-summary'; render(); };
     document.getElementById('feed-btn').onclick = ()=>{ state.view='admin-feed'; render(); };
     document.getElementById('comments-bell-btn').onclick = ()=>{ state.view='admin-comments'; render(); };
@@ -2244,9 +2512,14 @@ async function onEnter(){
   }
   err.classList.add('hidden');
   if(name.toLowerCase() === 'panelruss'){
-    state.view = 'admin-list';
+    const now = new Date();
+    state.calendarYear = now.getFullYear();
+    state.calendarMonth = now.getMonth();
+    state.calendarSelectedDate = todayISO();
+    state.view = 'admin-calendar';
     render();
     loadAdminData();
+    loadTrainerEvents().then(events=>{ state.trainerEvents = events; if(state.view==='admin-calendar') render(); });
     return;
   }
   state.clienta = name;
