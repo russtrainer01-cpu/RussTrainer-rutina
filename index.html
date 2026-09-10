@@ -1830,7 +1830,10 @@ function render(){
         const typeLabel = ev.type === 'semana' ? 'Armar semana nueva' : ev.type === 'comentario' ? 'Comentarios pendientes' : ev.type === 'cumple' ? 'Cumpleaños' : ev.type === 'vencimiento' ? 'Vencimiento de plan' : '';
         item.innerHTML = `<span style="font-size:18px;">${ev.icon}</span><div><div style="font-weight:700;">${escapeHtml(ev.label)}</div>${typeLabel ? `<div class="sub" style="margin:0;">${typeLabel}</div>` : ''}</div>`;
         if(ev.key){
-          item.onclick = ()=>{ state.adminSelected = ev.key; state.view = 'admin-detail'; render(); };
+          item.onclick = ()=>{
+            if(ev.type === 'comentario'){ state.view = 'admin-comments'; render(); return; }
+            state.adminSelected = ev.key; state.view = 'admin-detail'; render();
+          };
         }
         agendaWrap.appendChild(item);
       });
