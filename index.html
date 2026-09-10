@@ -936,6 +936,15 @@ const ROUTINES = {
       { seccion:'🧱 Core', ejercicio:'Crunch', series:'3 series', reps:'10', peso:'Sin peso', descanso:'30 seg', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/BzYrN4o5X5o', nota:'Subí solo con el abdomen, sin tirar del cuello con las manos.' },
       { seccion:'🧱 Core', ejercicio:'Mountain Climbers', series:'3 series', reps:'8 por pierna', peso:'Sin peso', descanso:'30 seg', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/tQkpdUWK8KU', nota:'Hacelo lento y controlado — no es una carrera, priorizá la técnica sobre la velocidad.' },
       { seccion:'❤️ Cierre cardio', ejercicio:'Cinta (cierre cardio)', series:'-', reps:'15 min suave', peso:'Sin peso', tipo:'checklist', video:null }
+    ],
+    'Día 5': [
+      { seccion:'🤸 Entrada en calor', ejercicio:'Bici estática (calentamiento)', series:'-', reps:'8 min', peso:'Sin peso', tipo:'checklist', video:null },
+      { seccion:'💪 Bloque principal', ejercicio:'Sentadilla con mancuerna', series:'3 series', reps:'12-14', peso:'5kg', descanso:'60 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/E2IoOrR3o6k' },
+      { seccion:'💪 Bloque principal', ejercicio:'Subida al step', series:'3 series', reps:'12 por pierna', peso:'Mancuernas 2.5kg', descanso:'45 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/Ey2H3-zmzSk' },
+      { seccion:'💪 Bloque principal', ejercicio:'Prensa 45°', series:'3 series', reps:'12-14', peso:'Poco peso', descanso:'60 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/8gPJfr-2aRM' },
+      { seccion:'💪 Bloque principal', ejercicio:'Sillón de cuádriceps', series:'3 series', reps:'12-14', peso:'Poco peso', descanso:'60 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/D-_nNSzsWxY' },
+      { seccion:'💪 Bloque principal', ejercicio:'Aductores en máquina', series:'3 series', reps:'15', peso:'Poco peso', descanso:'45 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/vlViIgtkvh4' },
+      { seccion:'❤️ Cierre cardio', ejercicio:'Cinta (cierre cardio)', series:'-', reps:'15 min suave', peso:'Sin peso', tipo:'checklist', video:null }
     ]
   }
 };
@@ -1072,7 +1081,7 @@ const CLIENT_CONFIG = {
   'anderson': { diasPorSemana: 4, genero: 'masculino' },
   'roiner': { diasPorSemana: 5, genero: 'masculino' },
   'braian': { diasPorSemana: 5, genero: 'masculino' },
-  'rosa': { diasPorSemana: 4, genero: 'femenino' }
+  'rosa': { diasPorSemana: 5, genero: 'femenino' }
 };
 function weeklyTarget(name){
   const cfg = CLIENT_CONFIG[routineKey(name)];
