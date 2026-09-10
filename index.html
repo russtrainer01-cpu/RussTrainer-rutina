@@ -580,6 +580,16 @@
     animation-iteration-count:1, infinite;
     animation-fill-mode:forwards, none;
   }
+  .personal-message-card{
+    background:linear-gradient(135deg, rgba(212,132,143,0.15), rgba(212,132,143,0.05));
+    border:1px solid rgba(212,132,143,0.3);
+    border-radius:10px;
+    padding:18px 20px;
+    margin-bottom:14px;
+    font-style:italic;
+    line-height:1.6;
+    color:var(--text);
+  }
   .hidden{display:none;}
 </style>
 </head>
@@ -912,7 +922,8 @@ const ROUTINES = {
     ],
     'Día 3 · Reto Cardio 🏃‍♀️': [
       { seccion:'🏃‍♀️ Cardio', ejercicio:'Cinta — Intervalos 5x5x5x5x5', series:'-', reps:'25 min (5 min rápido / 5 min lento, x5)', peso:'Sin peso', tipo:'checklist', video:null, nota:'Poné tu música favorita, la que te dé energía. Mantené la espalda derecha y los brazos relajados; en los tramos rápidos, acortá el paso en vez de alargarlo demasiado.' },
-      { seccion:'🧱 Core', ejercicio:'Plancha frontal', series:'4 series', reps:'30 seg', peso:'Sin peso', descanso:'30 seg', tipo:'carga', sinPeso:true, video:null, nota:'Cuerpo en línea recta, no dejes caer la cadera ni levantes la cola.' }
+      { seccion:'🧱 Core', ejercicio:'Plancha frontal', series:'4 series', reps:'30 seg', peso:'Sin peso', descanso:'30 seg', tipo:'carga', sinPeso:true, video:null, nota:'Cuerpo en línea recta, no dejes caer la cadera ni levantes la cola.' },
+      { tipo:'mensaje', texto:'Mami, hoy no hay excusas: solo vos, la cinta y tu música. Cada intervalo rápido te acerca un poquito más a sentirte mejor. Estoy muy orgullosa de vos por seguir metiéndole ganas todos los días. ¡Vamos con todo!' }
     ]
   }
 };
@@ -1619,7 +1630,9 @@ function render(){
     const doneToday = (state.data.completados[state.routineDay] || {});
     const todayStr = todayISO();
     let doneCount = 0;
+    const trackableItems = items.filter(it => it.tipo !== 'mensaje');
     items.forEach((item, i)=>{
+      if(item.tipo === 'mensaje') return;
       if(item.tipo === 'checklist'){
         const c = doneToday[i];
         if(c && c.done && c.date === todayStr) doneCount++;
@@ -1628,7 +1641,7 @@ function render(){
         if(entries.some(e=> e.date === todayStr)) doneCount++;
       }
     });
-    const progressPct = items.length ? Math.round((doneCount / items.length) * 100) : 0;
+    const progressPct = trackableItems.length ? Math.round((doneCount / trackableItems.length) * 100) : 0;
     const restingIdxs = Object.keys(state.uiResting);
     const overlayIdx = restingIdxs.length ? restingIdxs[0] : null;
     const overlayItem = overlayIdx !== null ? items[Number(overlayIdx)] : null;
@@ -1653,6 +1666,13 @@ function render(){
     }
     const wrap = document.getElementById('routine-items');
     items.forEach((item, idx)=>{
+      if(item.tipo === 'mensaje'){
+        const card = document.createElement('div');
+        card.className = 'personal-message-card';
+        card.innerHTML = `💛 ${escapeHtml(item.texto)}`;
+        wrap.appendChild(card);
+        return;
+      }
       if(item.seccion !== currentSeccion){
         currentSeccion = item.seccion;
         const h = document.createElement('h2');
