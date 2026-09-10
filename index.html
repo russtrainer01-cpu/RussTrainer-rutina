@@ -333,8 +333,9 @@
   .day-card.running{
     background:linear-gradient(135deg, #4a90b8, #2c5f7c);
   }
-  .day-card.neutral-menu{
-    background:linear-gradient(135deg, #5a6472, #333b45);
+  body.theme-masculine{
+    --rose:#5a6472;
+    --rose-dark:#333b45;
   }
   .login-wrap{
     min-height:calc(100vh - 64px);
@@ -928,13 +929,12 @@ const ROUTINES = {
     'Día 4 - Pecho + Tríceps + Core': [
       { seccion:'🤸 Entrada en calor', ejercicio:'Cinta (entrada en calor)', series:'-', reps:'10 min suave', peso:'Sin peso', tipo:'checklist', video:null, nota:'Elevación 2, ritmo 4 a 4.5.' },
       { seccion:'🤸 Entrada en calor', ejercicio:'Movilidad cuerpo completo', series:'-', reps:'-', peso:'Sin peso', tipo:'checklist', video:'https://www.youtube.com/shorts/KNPnEmf2Qnc' },
-      { seccion:'💪 Bloque principal', ejercicio:'Press de pecho en máquina', series:'3 series', reps:'12-14', peso:'Poco peso', descanso:'60 seg', tipo:'carga', sinPeso:false, video:null, nota:'Codos a 45° del torso, no los abras del todo al bajar.' },
+      { seccion:'💪 Bloque principal', ejercicio:'Press de pecho en el piso (colchoneta)', series:'3 series', reps:'12-14', peso:'Poco peso', descanso:'60 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/DfzDjXCO2Nw', nota:'Codos a 45° del torso, no los abras del todo al bajar.' },
       { seccion:'💪 Bloque principal', ejercicio:'Aperturas en máquina', series:'3 series', reps:'12-14', peso:'Poco peso', descanso:'45 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/Y4jzm2c3szA', nota:'Movimiento amplio y controlado, sin trabar los codos.' },
-      { seccion:'💪 Bloque principal', ejercicio:'Fondos para pecho', series:'3 series', reps:'10-12', peso:'Asistido/sin peso', descanso:'45 seg', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/lC7lLkjDZ_k', nota:'Bajá controlada, sin hundir los hombros hacia las orejas.' },
       { seccion:'💪 Bloque principal', ejercicio:'Face Pull', series:'3 series', reps:'15', peso:'Poco peso', descanso:'45 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/vU30xyp6IYM', nota:'Tirá hacia la cara, codos altos, para equilibrar el trabajo de pecho.' },
-      { seccion:'💪 Bloque principal', ejercicio:'Extensión en polea', series:'3 series', reps:'12-14', peso:'Poco peso', descanso:'45 seg', tipo:'carga', sinPeso:false, video:null, nota:'Codos fijos pegados al cuerpo, extendé sin balancear el torso.' },
-      { seccion:'🧱 Core', ejercicio:'Crunch', series:'3 series', reps:'15-20', peso:'Sin peso', descanso:'30 seg', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/BzYrN4o5X5o', nota:'Subí solo con el abdomen, sin tirar del cuello con las manos.' },
-      { seccion:'🧱 Core', ejercicio:'Plancha lateral', series:'3 series', reps:'20-30 seg por lado', peso:'Sin peso', descanso:'30 seg', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/GaugOQIlUPs', nota:'Cadera arriba, cuerpo en línea recta de pies a cabeza.' },
+      { seccion:'💪 Bloque principal', ejercicio:'Extensión en polea', series:'3 series', reps:'12-14', peso:'Poco peso', descanso:'45 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/4NWWB0f0vzQ', nota:'Codos fijos pegados al cuerpo, extendé sin balancear el torso.' },
+      { seccion:'🧱 Core', ejercicio:'Crunch', series:'3 series', reps:'10', peso:'Sin peso', descanso:'30 seg', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/BzYrN4o5X5o', nota:'Subí solo con el abdomen, sin tirar del cuello con las manos.' },
+      { seccion:'🧱 Core', ejercicio:'Mountain Climbers', series:'3 series', reps:'8 por pierna', peso:'Sin peso', descanso:'30 seg', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/tQkpdUWK8KU', nota:'Hacelo lento y controlado — no es una carrera, priorizá la técnica sobre la velocidad.' },
       { seccion:'❤️ Cierre cardio', ejercicio:'Cinta (cierre cardio)', series:'-', reps:'15 min suave', peso:'Sin peso', tipo:'checklist', video:null }
     ]
   }
@@ -1203,6 +1203,7 @@ function formatDate(iso){
 
 function render(){
   const app = document.getElementById('app');
+  document.body.classList.toggle('theme-masculine', !!(state.clienta && isMasculino(state.clienta)));
   if(state.view === 'login'){
     app.innerHTML = `
       <div class="login-wrap">
@@ -1269,7 +1270,7 @@ function render(){
       const dayChips = document.getElementById('routine-day-chips');
       Object.keys(myRoutine).forEach(day=>{
         const chip = document.createElement('button');
-        chip.className = 'day-card' + (day.toLowerCase().includes('running') ? ' running' : '') + (routineKey(state.clienta) === 'braian' ? ' neutral-menu' : '');
+        chip.className = 'day-card' + (day.toLowerCase().includes('running') ? ' running' : '');
         chip.innerHTML = `<div class="dc-label">${escapeHtml(day)}</div><div class="dc-sub">Toca para empezar →</div>`;
         chip.onclick = ()=>{ state.view='routine-day'; state.routineDay=day; render(); };
         dayChips.appendChild(chip);
