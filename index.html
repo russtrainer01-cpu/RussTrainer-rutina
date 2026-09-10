@@ -1333,10 +1333,17 @@ function render(){
         <p class="sub" style="margin:14px 0 0;">Tocá tu día para arrancar</p>
         <div class="day-grid" id="routine-day-chips"></div>
       ` : ''}
-      <h2 style="margin-top:26px;">Tu progreso por ejercicio</h2>
-      ${exercises.length === 0 ? '<div class="empty">Todavía no registraste ningún entrenamiento. Entrá a tu rutina para empezar.</div>' : ''}
-      <div class="chip-list" id="chip-list"></div>
+      <button class="link-btn" id="progress-toggle" style="margin-top:26px; font-size:17px; font-weight:700; background:none; border:none; cursor:pointer; padding:0; font-family:inherit; color:var(--text); display:block;">${state.uiExpanded['client-progress'] ? '▾' : '▸'} Tu progreso por ejercicio</button>
+      ${state.uiExpanded['client-progress'] ? `
+        ${exercises.length === 0 ? '<div class="empty">Todavía no registraste ningún entrenamiento. Entrá a tu rutina para empezar.</div>' : ''}
+        <div class="chip-list" id="chip-list"></div>
+      ` : ''}
     `;
+    document.getElementById('progress-toggle').onclick = ()=>{
+      if(state.uiExpanded['client-progress']) delete state.uiExpanded['client-progress'];
+      else state.uiExpanded['client-progress'] = true;
+      render();
+    };
     if(myRoutine){
       const dayChips = document.getElementById('routine-day-chips');
       const { groups, noSemana } = groupDaysBySemana(myRoutine);
@@ -1383,13 +1390,15 @@ function render(){
       }
     }
     const chipList = document.getElementById('chip-list');
-    exercises.forEach(ex=>{
-      const chip = document.createElement('button');
-      chip.className = 'chip';
-      chip.textContent = ex;
-      chip.onclick = ()=>{ state.view='exercise'; state.exercise=ex; render(); };
-      chipList.appendChild(chip);
-    });
+    if(chipList){
+      exercises.forEach(ex=>{
+        const chip = document.createElement('button');
+        chip.className = 'chip';
+        chip.textContent = ex;
+        chip.onclick = ()=>{ state.view='exercise'; state.exercise=ex; render(); };
+        chipList.appendChild(chip);
+      });
+    }
     document.getElementById('switch-btn').onclick = ()=>{ state.view='login'; state.clienta=null; state.data=null; render(); };
   }
   else if(state.view === 'weight'){
