@@ -1220,9 +1220,10 @@ async function loadClienta(name){
     if(parsed.ficha.semanaInicio === undefined) parsed.ficha.semanaInicio = '';
     if(!parsed.vencimiento) parsed.vencimiento = '';
     if(!parsed.trainerNotes) parsed.trainerNotes = [];
+    if(!parsed.nextWeekNotes) parsed.nextWeekNotes = {};
     return parsed;
   }catch(e){
-    return { exercises: {}, completados: {}, bodyWeight: [], weightPromptSeen: false, ficha:{ objetivo:'', nivel:'', restricciones:'', fechaInicio:'', cumpleanos:'', semanaInicio:'' }, vencimiento:'', trainerNotes: [] };
+    return { exercises: {}, completados: {}, bodyWeight: [], weightPromptSeen: false, ficha:{ objetivo:'', nivel:'', restricciones:'', fechaInicio:'', cumpleanos:'', semanaInicio:'' }, vencimiento:'', trainerNotes: [], nextWeekNotes: {} };
   }
 }
 async function saveClienta(name, data){
@@ -1707,11 +1708,11 @@ function render(){
       const lastDate = doneToday ? today : lastCompletionDate(c.data, dayLabel, items);
       const dayKey = 'admin-day-' + dayLabel;
       const dayExpanded = !!state.uiExpanded[dayKey];
-      const box = document.createElement('button');
+      const box = document.createElement('div');
       box.className = 'card';
-      box.style.cssText = 'width:100%; text-align:left; border:1px solid var(--border); border-left:3px solid var(--rose); cursor:pointer; background:var(--bg-card); font-family:inherit;';
+      box.style.cssText = 'border:1px solid var(--border); border-left:3px solid var(--rose); background:var(--bg-card);';
       let inner = `
-        <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="day-toggle-header" data-daykey="${dayKey}" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
           <div style="font-weight:700;">${escapeHtml(dayLabel)}</div>
           <span class="sub" style="margin:0;">${dayExpanded ? '‹ Colapsar' : 'Ver detalle ›'}</span>
         </div>
@@ -1727,22 +1728,27 @@ function render(){
           }
           const entries = c.data.exercises[item.ejercicio] || [];
           const last = entries.length ? entries[entries.length-1] : null;
-          inner += `<div style="margin:0 0 10px;">
+          const nextNote = (c.data.nextWeekNotes && c.data.nextWeekNotes[item.ejercicio]) || '';
+          inner += `<div style="margin:0 0 14px;">
             <div style="font-weight:600; color:var(--text);">${escapeHtml(item.ejercicio)}</div>
             ${last ? `
               <div class="sub" style="margin:2px 0 0;">${formatDate(last.date)} · ${item.sinPeso ? '' : last.weight + 'kg · '}${last.reps} × ${last.sets}${last.feeling ? ' · ' + last.feeling : ''}</div>
               ${last.comment ? `<div class="tip" style="margin:4px 0 0;">💬 ${escapeHtml(last.comment)}</div>` : ''}
             ` : `<div class="sub" style="margin:2px 0 0;">Sin registros todavía</div>`}
+            <input type="text" class="nextweek-input" data-exercise="${escapeHtml(item.ejercicio)}" value="${escapeHtml(nextNote)}" placeholder="📝 Para la próxima semana (ej: subile peso)" style="margin-top:6px; font-size:13px; padding:8px 10px;" />
           </div>`;
         });
         inner += `</div>`;
       }
       box.innerHTML = inner;
-      box.onclick = ()=>{
+      box.querySelector('.day-toggle-header').onclick = ()=>{
         if(dayExpanded) delete state.uiExpanded[dayKey];
         else state.uiExpanded[dayKey] = true;
         render();
       };
+      box.querySelectorAll('.nextweek-input').forEach(inp=>{
+        inp.onblur = ()=> onSaveNextWeekNote(key, inp.dataset.exercise, inp.value.trim());
+      });
       daysWrap.appendChild(box);
     });
   }
@@ -2069,6 +2075,16 @@ async function onSaveFicha(key){
   await saveClienta(c.displayName, fresh);
   c.data = fresh;
   render();
+}
+
+async function onSaveNextWeekNote(key, exerciseName, text){
+  const c = state.adminData[key];
+  const fresh = await loadClienta(c.displayName);
+  if(!fresh.nextWeekNotes) fresh.nextWeekNotes = {};
+  if(text) fresh.nextWeekNotes[exerciseName] = text;
+  else delete fresh.nextWeekNotes[exerciseName];
+  await saveClienta(c.displayName, fresh);
+  c.data = fresh;
 }
 
 async function onAddNote(key){
