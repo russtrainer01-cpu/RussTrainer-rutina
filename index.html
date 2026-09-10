@@ -623,6 +623,13 @@ function ensureAudioContext(){
   return audioCtx;
 }
 
+function parseDefaultWeight(pesoStr){
+  if(!pesoStr) return null;
+  const m = String(pesoStr).match(/(\d+(\.\d+)?)/);
+  if(!m) return null;
+  return parseFloat(m[1]);
+}
+
 function parseDescansoSeconds(str){
   if(!str) return 60;
   const m = String(str).match(/(\d+(\.\d+)?)/);
@@ -1156,7 +1163,7 @@ function computeWeekCount(data){
   return count;
 }
 
-let state = { clienta: null, data: null, view: 'login', exercise: null, routineDay: null, uiExpanded: {}, uiFeeling: {}, uiSets: {}, uiResting: {}, uiRestAlert: {}, adminData: null, adminSelected: null };
+let state = { clienta: null, data: null, view: 'login', exercise: null, routineDay: null, uiExpanded: {}, uiFeeling: {}, uiSets: {}, uiResting: {}, uiRestAlert: {}, uiWeightPrefill: {}, adminData: null, adminSelected: null };
 let chartInstance = null;
 
 const EXERCISE_LIBRARY = {
@@ -1908,13 +1915,14 @@ function render(){
             <button class="set-minus" data-idx="${idx}">−</button>
             <span class="count">${setsDone}${setsTarget !== null ? ' / ' + setsTarget : ''}</span>
             <button class="set-plus" data-idx="${idx}">+</button>
+            <button class="btn-ghost same-btn" data-idx="${idx}" data-settarget="${setsTarget !== null ? setsTarget : ''}" data-defaultweight="${!item.sinPeso ? (parseDefaultWeight(item.peso) !== null ? parseDefaultWeight(item.peso) : '') : ''}" style="margin-left:auto; padding:7px 12px; font-size:12px;">✓ Tal cual</button>
           </div>
           <div class="feeling-row">
             ${feelings.map(f=>`<button class="feeling-btn${selectedFeeling===f ? ' selected':''}" data-idx="${idx}" data-feeling="${escapeHtml(f)}">${f.split(' ')[0]}</button>`).join('')}
           </div>
           ${item.sinPeso ? '' : `
             <label>Peso usado (kg)</label>
-            <input type="number" step="0.5" min="0" id="reg-weight-${idx}" value="${lastToday ? lastToday.weight : ''}" placeholder="0" />
+            <input type="number" step="0.5" min="0" id="reg-weight-${idx}" value="${state.uiWeightPrefill[idx] !== undefined ? state.uiWeightPrefill[idx] : (lastToday ? lastToday.weight : '')}" placeholder="0" />
           `}
           <input type="text" id="reg-comment-${idx}" value="${lastToday && lastToday.comment ? escapeHtml(lastToday.comment) : ''}" placeholder="💬 Comentario para tu entrenadora (opcional)" />
           <div class="error hidden" id="reg-error-${idx}">Ingresá el peso usado.</div>
@@ -1931,7 +1939,7 @@ function render(){
       restTimerEndTimes = {};
       state.uiResting = {};
       state.uiRestAlert = {};
-      state.view='dashboard'; state.routineDay=null; state.uiExpanded={}; state.uiFeeling={}; state.uiSets={}; render();
+      state.view='dashboard'; state.routineDay=null; state.uiExpanded={}; state.uiFeeling={}; state.uiSets={}; state.uiWeightPrefill={}; render();
     };
     wrap.querySelectorAll('.check-btn').forEach(btn=>{
       btn.onclick = ()=> onToggleChecklist(btn.dataset.idx);
@@ -1953,6 +1961,16 @@ function render(){
     });
     wrap.querySelectorAll('.rest-cancel-btn').forEach(btn=>{
       btn.onclick = ()=> cancelRestTimer(btn.dataset.idx);
+    });
+    wrap.querySelectorAll('.same-btn').forEach(btn=>{
+      btn.onclick = ()=>{
+        const idx = btn.dataset.idx;
+        if(btn.dataset.settarget !== '') state.uiSets[idx] = Number(btn.dataset.settarget);
+        if(btn.dataset.defaultweight !== ''){
+          state.uiWeightPrefill[idx] = Number(btn.dataset.defaultweight);
+        }
+        render();
+      };
     });
     wrap.querySelectorAll('.set-plus').forEach(btn=>{
       btn.onclick = ()=>{
@@ -2165,6 +2183,7 @@ async function onQuickSave(idx, exerciseName, weight, reps, sets, feeling, comme
   delete state.uiExpanded[idx];
   delete state.uiFeeling[idx];
   delete state.uiSets[idx];
+  delete state.uiWeightPrefill[idx];
   render();
 }
 
