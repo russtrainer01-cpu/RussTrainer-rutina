@@ -631,31 +631,43 @@ function releaseWakeLock(){
 }
 
 let restTimerHandles = {};
+let restTimerEndTimes = {};
 function startRestTimer(idx, seconds){
   ensureAudioContext();
   requestWakeLock();
   if(restTimerHandles[idx]) clearInterval(restTimerHandles[idx]);
+  restTimerEndTimes[idx] = Date.now() + seconds*1000;
   state.uiResting[idx] = seconds;
   render();
-  restTimerHandles[idx] = setInterval(()=>{
-    state.uiResting[idx]--;
-    const lbl = document.getElementById(`rest-timer-${idx}`);
-    if(lbl) lbl.textContent = formatMMSS(state.uiResting[idx]);
-    const overlayTime = document.getElementById('rest-overlay-time');
-    if(overlayTime) overlayTime.textContent = formatMMSS(state.uiResting[idx]);
-    const overlay = document.getElementById('rest-overlay');
-    if(overlay) overlay.classList.toggle('blinking', state.uiResting[idx] <= 10);
-    if(state.uiResting[idx] <= 0){
-      clearInterval(restTimerHandles[idx]);
-      delete restTimerHandles[idx];
-      delete state.uiResting[idx];
-      onRestFinished(idx);
-    }
-  }, 1000);
+  restTimerHandles[idx] = setInterval(()=> tickRestTimer(idx), 1000);
 }
+function tickRestTimer(idx){
+  if(restTimerEndTimes[idx] === undefined) return;
+  const remaining = Math.max(0, Math.round((restTimerEndTimes[idx] - Date.now()) / 1000));
+  state.uiResting[idx] = remaining;
+  const lbl = document.getElementById(`rest-timer-${idx}`);
+  if(lbl) lbl.textContent = formatMMSS(remaining);
+  const overlayTime = document.getElementById('rest-overlay-time');
+  if(overlayTime) overlayTime.textContent = formatMMSS(remaining);
+  const overlay = document.getElementById('rest-overlay');
+  if(overlay) overlay.classList.toggle('blinking', remaining <= 10);
+  if(remaining <= 0){
+    clearInterval(restTimerHandles[idx]);
+    delete restTimerHandles[idx];
+    delete restTimerEndTimes[idx];
+    delete state.uiResting[idx];
+    onRestFinished(idx);
+  }
+}
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState === 'visible'){
+    Object.keys(restTimerHandles).forEach(idx => tickRestTimer(idx));
+  }
+});
 function cancelRestTimer(idx){
   if(restTimerHandles[idx]) clearInterval(restTimerHandles[idx]);
   delete restTimerHandles[idx];
+  delete restTimerEndTimes[idx];
   delete state.uiResting[idx];
   releaseWakeLock();
   render();
@@ -1722,6 +1734,7 @@ function render(){
       Object.keys(restTimerHandles).forEach(k=> clearInterval(restTimerHandles[k]));
       releaseWakeLock();
       restTimerHandles = {};
+      restTimerEndTimes = {};
       state.uiResting = {};
       state.uiRestAlert = {};
       state.view='dashboard'; state.routineDay=null; state.uiExpanded={}; state.uiFeeling={}; state.uiSets={}; render();
@@ -1938,7 +1951,7 @@ async function onSaveEntry(){
 }
 
 async function onQuickSave(idx, exerciseName, weight, reps, sets, feeling, comment){
-  if(restTimerHandles[idx]){ clearInterval(restTimerHandles[idx]); delete restTimerHandles[idx]; delete state.uiResting[idx]; }
+  if(restTimerHandles[idx]){ clearInterval(restTimerHandles[idx]); delete restTimerHandles[idx]; delete restTimerEndTimes[idx]; delete state.uiResting[idx]; }
   delete state.uiRestAlert[idx];
   if(!state.data.exercises[exerciseName]){
     state.data.exercises[exerciseName] = [];
