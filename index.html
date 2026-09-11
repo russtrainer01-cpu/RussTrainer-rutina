@@ -574,6 +574,64 @@
     0%{ opacity:0; transform:translateY(8px); }
     100%{ opacity:1; transform:translateY(0); }
   }
+  .circuit-banner{
+    background:var(--bg-card);
+    border-left:4px solid var(--rose);
+    border-radius:8px;
+    padding:12px 14px;
+    margin-bottom:14px;
+  }
+  .circuit-round-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:var(--bg-card);
+    border-radius:8px;
+    padding:10px 14px;
+    margin-bottom:14px;
+  }
+  .circuit-round-row button{
+    width:30px; height:30px; border-radius:50%;
+    border:none; font-weight:800; cursor:pointer;
+  }
+  .circuit-round-minus{ background:var(--bg-elevated); color:var(--text); }
+  .circuit-round-plus{ background:var(--rose); color:#fff; }
+  .circuit-list{
+    position:relative;
+    padding-left:16px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .circuit-list::before{
+    content:'';
+    position:absolute;
+    left:5px; top:4px; bottom:4px;
+    width:2px;
+    background:var(--border);
+  }
+  .circuit-item{
+    background:var(--bg-card);
+    border-radius:8px;
+    padding:10px 12px;
+    position:relative;
+  }
+  .circuit-item::before{
+    content:'';
+    position:absolute;
+    left:-16px; top:50%; transform:translateY(-50%);
+    width:9px; height:9px; border-radius:50%;
+    background:var(--border);
+  }
+  .circuit-item.circuit-active{
+    background:var(--bg-elevated);
+    border:1px solid var(--rose);
+  }
+  .circuit-item.circuit-active::before{
+    background:var(--rose);
+    box-shadow:0 0 0 3px var(--bg-card);
+  }
+  .circuit-item.circuit-done{ opacity:0.45; }
   .rest-overlay-tip{
     max-width:320px;
     text-align:center;
@@ -1200,9 +1258,16 @@ function groupDaysBySemana(routine){
 
 function isDayCompleteOn(data, dayLabel, items, dateStr){
   return items.every((item, idx)=>{
+    if(item.tipo === 'mensaje') return true;
     if(item.tipo === 'checklist'){
       const c = data.completados[dayLabel] && data.completados[dayLabel][idx];
       return !!(c && c.done && c.date === dateStr);
+    }
+    if(item.tipo === 'circuito'){
+      return item.ejercicios.every(ex=>{
+        const entries = (data.exercises[ex.ejercicio] || []).filter(e=> e.date === dateStr);
+        return entries.length >= item.rondas;
+      });
     }
     const entries = data.exercises[item.ejercicio] || [];
     return entries.some(e=> e.date === dateStr);
@@ -1415,7 +1480,7 @@ function computeWeekCount(data){
   return count;
 }
 
-let state = { clienta: null, data: null, view: 'login', exercise: null, routineDay: null, uiExpanded: {}, uiFeeling: {}, uiSets: {}, uiResting: {}, uiRestAlert: {}, uiWeightPrefill: {}, adminData: null, adminSelected: null, trainerEvents: null, calendarYear: null, calendarMonth: null, calendarSelectedDate: null };
+let state = { clienta: null, data: null, view: 'login', exercise: null, routineDay: null, uiExpanded: {}, uiFeeling: {}, uiSets: {}, uiResting: {}, uiRestAlert: {}, uiWeightPrefill: {}, uiCircuit: {}, adminData: null, adminSelected: null, trainerEvents: null, calendarYear: null, calendarMonth: null, calendarSelectedDate: null };
 let chartInstance = null;
 
 const EXERCISE_LIBRARY = {
@@ -2174,6 +2239,23 @@ function render(){
             inner += `<div class="sub" style="margin:0 0 8px; color:var(--text);"><strong>${escapeHtml(item.ejercicio)}</strong> — checklist</div>`;
             return;
           }
+          if(item.tipo === 'circuito'){
+            inner += `<div class="sub" style="margin:6px 0 4px; color:var(--text); font-weight:700;">🔄 ${escapeHtml(item.titulo || 'Circuito')} (${item.rondas} rondas)</div>`;
+            item.ejercicios.forEach(ex=>{
+              const entries = c.data.exercises[ex.ejercicio] || [];
+              const last = entries.length ? entries[entries.length-1] : null;
+              const nextNote = (c.data.nextWeekNotes && c.data.nextWeekNotes[ex.ejercicio]) || '';
+              inner += `<div style="margin:0 0 10px; padding-left:10px; border-left:2px solid var(--border);">
+                <div style="font-weight:600; color:var(--text); font-size:13px;">${escapeHtml(ex.ejercicio)}</div>
+                ${last ? `
+                  <div class="sub" style="margin:2px 0 0;">${formatDate(last.date)} · ${ex.sinPeso ? '' : last.weight + 'kg · '}${last.reps}${last.feeling ? ' · ' + last.feeling : ''}</div>
+                  ${last.comment ? `<div class="tip" style="margin:4px 0 0;">💬 ${escapeHtml(last.comment)}</div>` : ''}
+                ` : `<div class="sub" style="margin:2px 0 0;">Sin registros todavía</div>`}
+                <input type="text" class="nextweek-input" data-exercise="${escapeHtml(ex.ejercicio)}" value="${escapeHtml(nextNote)}" placeholder="📝 Para la próxima semana" style="margin-top:6px; font-size:12px; padding:7px 9px;" />
+              </div>`;
+            });
+            return;
+          }
           const entries = c.data.exercises[item.ejercicio] || [];
           const last = entries.length ? entries[entries.length-1] : null;
           const nextNote = (c.data.nextWeekNotes && c.data.nextWeekNotes[item.ejercicio]) || '';
@@ -2256,6 +2338,12 @@ function render(){
       if(item.tipo === 'checklist'){
         const c = doneToday[i];
         if(c && c.done && c.date === todayStr) doneCount++;
+      } else if(item.tipo === 'circuito'){
+        const allDone = item.ejercicios.every(ex=>{
+          const entries = (state.data.exercises[ex.ejercicio] || []).filter(e=> e.date === todayStr);
+          return entries.length >= item.rondas;
+        });
+        if(allDone) doneCount++;
       } else {
         const entries = state.data.exercises[item.ejercicio] || [];
         if(entries.some(e=> e.date === todayStr)) doneCount++;
@@ -2289,6 +2377,90 @@ function render(){
     }
     const wrap = document.getElementById('routine-items');
     items.forEach((item, idx)=>{
+      if(item.tipo === 'circuito'){
+        const feelings = ['😌 Fácil','👍 Justo','😮‍💨 Difícil','🥵 Al límite'];
+        if(item.seccion !== currentSeccion){
+          currentSeccion = item.seccion;
+          const h = document.createElement('h2');
+          h.style.marginTop = '18px';
+          h.textContent = currentSeccion;
+          wrap.appendChild(h);
+        }
+        const today = todayISO();
+        if(!state.uiCircuit[idx]) state.uiCircuit[idx] = { round: 1 };
+        const circuitState = state.uiCircuit[idx];
+        const entriesTodayFor = (exName)=> (state.data.exercises[exName] || []).filter(e=> e.date === today);
+        const doneThisRound = (ex)=> entriesTodayFor(ex.ejercicio).some(e=> e.ronda === circuitState.round);
+        const allDoneThisRound = item.ejercicios.every(doneThisRound);
+        if(allDoneThisRound && circuitState.round < item.rondas){
+          circuitState.round++;
+        }
+        let activeExIdx = item.ejercicios.findIndex(ex=> !doneThisRound(ex));
+        if(activeExIdx === -1) activeExIdx = item.ejercicios.length - 1;
+        const circuitDone = circuitState.round >= item.rondas && item.ejercicios.every(doneThisRound);
+
+        const box = document.createElement('div');
+        let inner = `
+          <div class="circuit-banner">
+            <div style="font-weight:700; font-size:13px;">🔄 ${escapeHtml(item.titulo || 'Circuito')}</div>
+            <div class="sub" style="margin:2px 0 0;">${escapeHtml(item.reglas || 'Hacé cada ejercicio en orden.')}${item.descansoRondas ? ' · ' + escapeHtml(item.descansoRondas) + ' entre rondas' : ''}</div>
+          </div>
+        `;
+        if(circuitDone){
+          inner += `<div class="tip" style="text-align:center; font-weight:700;">✓ Circuito completo — ${item.rondas} rondas</div>`;
+        } else {
+          inner += `
+            <div class="circuit-round-row">
+              <span style="font-weight:700; font-size:13px;">Ronda</span>
+              <div style="display:flex; align-items:center; gap:12px;">
+                <button class="circuit-round-minus" data-cidx="${idx}">−</button>
+                <span style="font-weight:800; color:var(--rose-dark);">${circuitState.round} / ${item.rondas}</span>
+                <button class="circuit-round-plus" data-cidx="${idx}">+</button>
+              </div>
+            </div>
+            <div class="circuit-list">
+          `;
+          item.ejercicios.forEach((ex, exIdx)=>{
+            const isActive = exIdx === activeExIdx;
+            const isDone = doneThisRound(ex);
+            const exKey = `c${idx}-${exIdx}`;
+            if(!isActive){
+              inner += `
+                <div class="circuit-item${isDone ? ' circuit-done' : ''}">
+                  <div style="font-size:12px; font-weight:700;">${exIdx+1}. ${escapeHtml(ex.ejercicio)}</div>
+                  <div class="sub" style="margin:0;">${escapeHtml(ex.reps)}${ex.peso ? ' · ' + escapeHtml(ex.peso) : ''}</div>
+                </div>
+              `;
+            } else {
+              const defaultW = ex.sinPeso ? null : parseDefaultWeight(ex.peso);
+              const prefillKey = 'circ-' + exKey;
+              const weightVal = state.uiWeightPrefill[prefillKey] !== undefined ? state.uiWeightPrefill[prefillKey] : '';
+              const selectedFeeling = state.uiFeeling[prefillKey];
+              inner += `
+                <div class="circuit-item circuit-active">
+                  <div style="font-size:13px; font-weight:800; color:var(--rose-dark);">${exIdx+1}. ${escapeHtml(ex.ejercicio)}</div>
+                  <div class="sub" style="margin:2px 0 8px; color:var(--rose-dark);">Ronda ${circuitState.round} de ${item.rondas} · ${escapeHtml(ex.reps)}${ex.peso ? ' · Objetivo: ' + escapeHtml(ex.peso) : ''}</div>
+                  ${ex.video ? `<a href="${escapeHtml(ex.video)}" target="_blank" rel="noopener" class="video-btn">🎥 Ver técnica</a>` : ''}
+                  ${ex.nota ? `<div class="tip">💡 ${escapeHtml(ex.nota)}</div>` : ''}
+                  ${!ex.sinPeso ? `
+                    <button class="btn-ghost circuit-samebtn" data-cidx="${idx}" data-exidx="${exIdx}" data-defaultweight="${defaultW !== null ? defaultW : ''}" style="margin:8px 0;">✓ Lo cumplí (usa el peso objetivo)</button>
+                    <label>¿Usaste otro peso?</label>
+                    <input type="text" inputmode="decimal" id="circ-weight-${exKey}" value="${weightVal}" placeholder="Dejalo vacío si no cambió" />
+                  ` : ''}
+                  <div class="feeling-row">
+                    ${feelings.map(f=>`<button class="feeling-btn${selectedFeeling===f ? ' selected':''}" data-circfeel="${prefillKey}" data-feeling="${escapeHtml(f)}">${f.split(' ')[0]}</button>`).join('')}
+                  </div>
+                  <button class="btn-primary circuit-register-btn" data-cidx="${idx}" data-exidx="${exIdx}" data-exercise="${escapeHtml(ex.ejercicio)}" data-reps="${escapeHtml(ex.reps)}" data-sinpeso="${ex.sinPeso ? '1':'0'}">✓ Registrar y pasar al siguiente</button>
+                </div>
+              `;
+            }
+          });
+          inner += `</div>`;
+        }
+        box.innerHTML = inner;
+        wrap.appendChild(box);
+        return;
+      }
       if(item.tipo === 'mensaje'){
         const card = document.createElement('div');
         card.className = 'personal-message-card';
@@ -2418,6 +2590,62 @@ function render(){
     });
     wrap.querySelectorAll('.rest-cancel-btn').forEach(btn=>{
       btn.onclick = ()=> cancelRestTimer(btn.dataset.idx);
+    });
+    wrap.querySelectorAll('.circuit-round-minus').forEach(btn=>{
+      btn.onclick = ()=>{
+        const cs = state.uiCircuit[btn.dataset.cidx];
+        cs.round = Math.max(1, cs.round - 1);
+        render();
+      };
+    });
+    wrap.querySelectorAll('.circuit-round-plus').forEach(btn=>{
+      btn.onclick = ()=>{
+        const cs = state.uiCircuit[btn.dataset.cidx];
+        const item = items[Number(btn.dataset.cidx)];
+        cs.round = Math.min(item.rondas, cs.round + 1);
+        render();
+      };
+    });
+    wrap.querySelectorAll('.circuit-samebtn').forEach(btn=>{
+      btn.onclick = ()=>{
+        const key = 'circ-c' + btn.dataset.cidx + '-' + btn.dataset.exidx;
+        if(btn.dataset.defaultweight !== ''){
+          state.uiWeightPrefill[key] = Number(btn.dataset.defaultweight);
+        }
+        render();
+      };
+    });
+    wrap.querySelectorAll('[data-circfeel]').forEach(btn=>{
+      btn.onclick = ()=>{ state.uiFeeling[btn.dataset.circfeel] = btn.dataset.feeling; render(); };
+    });
+    wrap.querySelectorAll('.circuit-register-btn').forEach(btn=>{
+      btn.onclick = async ()=>{
+        const cidx = btn.dataset.cidx;
+        const exidx = btn.dataset.exidx;
+        const key = 'circ-c' + cidx + '-' + exidx;
+        const exercise = btn.dataset.exercise;
+        const sinPeso = btn.dataset.sinpeso === '1';
+        const round = state.uiCircuit[cidx].round;
+        const weightInput = document.getElementById('circ-weight-' + 'c' + cidx + '-' + exidx);
+        let weight = '';
+        if(!sinPeso){
+          weight = (weightInput && weightInput.value.trim()) ? weightInput.value.trim() : (state.uiWeightPrefill[key] !== undefined ? state.uiWeightPrefill[key] : '');
+        }
+        if(!state.data.exercises[exercise]) state.data.exercises[exercise] = [];
+        state.data.exercises[exercise].push({
+          date: todayISO(),
+          ts: new Date().toISOString(),
+          ronda: round,
+          weight: weight,
+          reps: btn.dataset.reps,
+          sets: 1,
+          feeling: state.uiFeeling[key] || ''
+        });
+        delete state.uiWeightPrefill[key];
+        delete state.uiFeeling[key];
+        await saveClienta(state.clienta, state.data);
+        render();
+      };
     });
     wrap.querySelectorAll('.same-btn').forEach(btn=>{
       btn.onclick = ()=>{
