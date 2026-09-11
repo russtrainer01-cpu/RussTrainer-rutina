@@ -728,6 +728,24 @@ function ensureAudioContext(){
   }
   return audioCtx;
 }
+function playTickSound(){
+  try{
+    const ctx = ensureAudioContext();
+    if(!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = 1000;
+    const now = ctx.currentTime;
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.15, now + 0.02);
+    gain.gain.linearRampToValueAtTime(0, now + 0.12);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.12);
+  }catch(e){}
+}
 
 function parseDefaultWeight(pesoStr){
   if(!pesoStr) return null;
@@ -769,6 +787,8 @@ let restTimerEndTimes = {};
 function startRestTimer(idx, seconds){
   ensureAudioContext();
   requestWakeLock();
+  const current = state.uiSets[idx] !== undefined ? state.uiSets[idx] : 0;
+  state.uiSets[idx] = current + 1;
   if(restTimerHandles[idx]) clearInterval(restTimerHandles[idx]);
   restTimerEndTimes[idx] = Date.now() + seconds*1000;
   state.uiResting[idx] = seconds;
@@ -785,6 +805,7 @@ function tickRestTimer(idx){
   if(overlayTime) overlayTime.textContent = formatMMSS(remaining);
   const overlay = document.getElementById('rest-overlay');
   if(overlay) overlay.classList.toggle('blinking', remaining <= 10);
+  if(remaining > 0 && remaining <= 10) playTickSound();
   if(remaining <= 0){
     clearInterval(restTimerHandles[idx]);
     delete restTimerHandles[idx];
@@ -830,8 +851,6 @@ function onRestFinished(idx){
       playTone(1174.66, now + 0.4, 0.5);
     }
   }catch(e){}
-  const current = state.uiSets[idx] !== undefined ? state.uiSets[idx] : 0;
-  state.uiSets[idx] = current + 1;
   state.uiRestAlert[idx] = true;
   setTimeout(()=>{
     if(state.uiRestAlert[idx]){
