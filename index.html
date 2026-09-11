@@ -1625,7 +1625,7 @@ function render(){
         chipList.appendChild(chip);
       });
     }
-    document.getElementById('switch-btn').onclick = ()=>{ state.view='login'; state.clienta=null; state.data=null; render(); };
+    document.getElementById('switch-btn').onclick = ()=>{ localStorage.removeItem('rt_session'); state.view='login'; state.clienta=null; state.data=null; render(); };
   }
   else if(state.view === 'weight'){
     const latestWeight = state.data.bodyWeight.length ? state.data.bodyWeight[state.data.bodyWeight.length-1] : null;
@@ -1825,7 +1825,7 @@ function render(){
       <div id="cal-agenda"></div>
     `;
 
-    document.getElementById('cal-exit-btn').onclick = ()=>{ state.view='login'; state.adminData=null; render(); };
+    document.getElementById('cal-exit-btn').onclick = ()=>{ localStorage.removeItem('rt_session'); state.view='login'; state.adminData=null; render(); };
     document.getElementById('cal-prev-btn').onclick = ()=>{
       state.calendarMonth--;
       if(state.calendarMonth < 0){ state.calendarMonth = 11; state.calendarYear--; }
@@ -1918,7 +1918,7 @@ function render(){
       <h2 style="margin-top:18px;">Tus alumnas</h2>
       <div id="admin-list-content">${state.adminData ? '' : '<div class="empty">Cargando...</div>'}</div>
     `;
-    document.getElementById('admin-exit-btn').onclick = ()=>{ state.view='login'; state.adminData=null; render(); };
+    document.getElementById('admin-exit-btn').onclick = ()=>{ localStorage.removeItem('rt_session'); state.view='login'; state.adminData=null; render(); };
     document.getElementById('cal-back-btn').onclick = ()=>{ state.view='admin-calendar'; render(); };
     document.getElementById('summary-btn').onclick = ()=>{ state.view='admin-summary'; render(); };
     document.getElementById('feed-btn').onclick = ()=>{ state.view='admin-feed'; render(); };
@@ -2583,6 +2583,7 @@ async function onEnter(){
   }
   err.classList.add('hidden');
   if(name.toLowerCase() === 'panelruss'){
+    localStorage.setItem('rt_session', 'panelruss');
     const now = new Date();
     state.calendarYear = now.getFullYear();
     state.calendarMonth = now.getMonth();
@@ -2593,6 +2594,7 @@ async function onEnter(){
     loadTrainerEvents().then(events=>{ state.trainerEvents = events; if(state.view==='admin-calendar') render(); });
     return;
   }
+  localStorage.setItem('rt_session', name);
   state.clienta = name;
   state.data = await loadClienta(name);
   state.view = state.data.weightPromptSeen ? 'dashboard' : 'welcome';
@@ -2697,7 +2699,28 @@ function drawChart(entries){
   });
 }
 
+async function restoreSession(){
+  const saved = localStorage.getItem('rt_session');
+  if(!saved) return;
+  if(saved === 'panelruss'){
+    const now = new Date();
+    state.calendarYear = now.getFullYear();
+    state.calendarMonth = now.getMonth();
+    state.calendarSelectedDate = todayISO();
+    state.view = 'admin-calendar';
+    render();
+    loadAdminData();
+    loadTrainerEvents().then(events=>{ state.trainerEvents = events; if(state.view==='admin-calendar') render(); });
+    return;
+  }
+  state.clienta = saved;
+  state.data = await loadClienta(saved);
+  state.view = state.data.weightPromptSeen ? 'dashboard' : 'welcome';
+  render();
+}
+
 render();
+restoreSession();
 </script>
 </body>
 </html>
