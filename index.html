@@ -2372,7 +2372,7 @@ function render(){
             <button class="set-minus" data-idx="${idx}">−</button>
             <span class="count">${setsDone}${setsTarget !== null ? ' / ' + setsTarget : ''}</span>
             <button class="set-plus" data-idx="${idx}">+</button>
-            <button class="btn-ghost same-btn" data-idx="${idx}" data-settarget="${setsTarget !== null ? setsTarget : ''}" data-defaultweight="${!item.sinPeso ? (parseDefaultWeight(item.peso) !== null ? parseDefaultWeight(item.peso) : '') : ''}" style="margin-left:auto; padding:7px 12px; font-size:12px;">✓ Tal cual</button>
+            <button class="btn-ghost same-btn" data-idx="${idx}" data-settarget="${setsTarget !== null ? setsTarget : ''}" data-defaultweight="${!item.sinPeso ? (parseDefaultWeight(item.peso) !== null ? parseDefaultWeight(item.peso) : '') : ''}" style="margin-left:auto; padding:7px 12px; font-size:12px;">✓ Lo cumplí</button>
           </div>
           <div class="feeling-row">
             ${feelings.map(f=>`<button class="feeling-btn${selectedFeeling===f ? ' selected':''}" data-idx="${idx}" data-feeling="${escapeHtml(f)}">${f.split(' ')[0]}</button>`).join('')}
