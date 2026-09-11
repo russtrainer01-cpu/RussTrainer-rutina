@@ -2406,9 +2406,17 @@ function render(){
           wrap.appendChild(h);
         }
         const today = todayISO();
-        if(!state.uiCircuit[idx]) state.uiCircuit[idx] = { round: 1 };
-        const circuitState = state.uiCircuit[idx];
         const entriesTodayFor = (exName)=> (state.data.exercises[exName] || []).filter(e=> e.date === today);
+        if(!state.uiCircuit[idx]){
+          let derivedRound = 1;
+          for(let r=1; r<=item.rondas; r++){
+            const allDoneForR = item.ejercicios.every(ex=> entriesTodayFor(ex.ejercicio).some(e=> e.ronda === r));
+            if(!allDoneForR){ derivedRound = r; break; }
+            derivedRound = r;
+          }
+          state.uiCircuit[idx] = { round: derivedRound };
+        }
+        const circuitState = state.uiCircuit[idx];
         const doneThisRound = (ex)=> entriesTodayFor(ex.ejercicio).some(e=> e.ronda === circuitState.round);
         const allDoneThisRound = item.ejercicios.every(doneThisRound);
         if(allDoneThisRound && circuitState.round < item.rondas){
