@@ -1123,6 +1123,18 @@ const ROUTINES = {
       { seccion:'🧱 Abs', ejercicio:'Russian Twist', series:'4 series', reps:'12', peso:'5kg', tipo:'carga', sinPeso:false, video:null },
       { seccion:'🧱 Abs', ejercicio:'Piernas elevadas dinámicas', series:'4 series', reps:'12', peso:'Sin peso', tipo:'carga', sinPeso:true, video:null }
     ]
+  },
+  'mae': {
+    'Semana 1 - Día 1 - Full Body': [
+      { seccion:'🦵 Activación', ejercicio:'Activación con tobillera', series:'2 series', reps:'15', peso:'Sin peso', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/hB8P014nc8w', nota:'Lento y controlado.' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Hip Thrust con mancuerna', series:'4 series', reps:'10', peso:'15kg', descanso:'1.5 min', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/wYT_Ru0yGD0' },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Búlgaras', series:'4 series', reps:'8 con peso + 5 rápidas sin peso', peso:'10kg', descanso:'1.5 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🏋️ Bloque principal', ejercicio:'Patada cruzada con tobilleras (finalizador)', series:'1 serie', reps:'Al fallo técnico', peso:'2 tobilleras', descanso:'45 seg', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🤲 Tren superior', ejercicio:'Press con barra', series:'2 series', reps:'8', peso:'Barra + 2.5kg', descanso:'1 min', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/3wmB329ayEI' },
+      { seccion:'🤲 Tren superior', ejercicio:'Elevaciones laterales', series:'2 series', reps:'12', peso:'5kg', descanso:'1 min', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/zEANAIh1l9g' },
+      { seccion:'🤲 Tren superior', ejercicio:'Fondos de tríceps en banco', series:'2 series', reps:'12', peso:'Sin peso', descanso:'1 min', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/oVs-HluNKP0' },
+      { seccion:'❤️ Cardio', ejercicio:'Caminadora', series:'-', reps:'18 min · Elevación 11 · Ritmo 4.5-5', peso:'Sin peso', tipo:'checklist', video:null }
+    ]
   }
 };
 
@@ -1361,7 +1373,8 @@ const CLIENT_CONFIG = {
   'roiner': { diasPorSemana: 5, genero: 'masculino' },
   'braian': { diasPorSemana: 5, genero: 'masculino' },
   'rosa': { diasPorSemana: 5, genero: 'femenino' },
-  'yo': { diasPorSemana: 1, genero: 'femenino' }
+  'yo': { diasPorSemana: 1, genero: 'femenino' },
+  'mae': { diasPorSemana: 5, genero: 'femenino' }
 };
 function weeklyTarget(name){
   const cfg = CLIENT_CONFIG[routineKey(name)];
