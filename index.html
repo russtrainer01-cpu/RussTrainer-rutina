@@ -492,23 +492,39 @@
     cursor:pointer;
     padding:0 0 0 10px;
   }
-  .workout-progress-track{
+  .workout-progress-wrap{
     position:sticky;
     top:0;
     left:0;
     right:0;
-    height:6px;
-    background:var(--bg-elevated);
-    border-radius:3px;
-    overflow:hidden;
-    margin:0 0 20px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:var(--bg);
+    padding:8px 0;
+    margin:0 0 16px;
     z-index:5;
   }
-  .workout-progress-fill{
-    height:100%;
-    background:linear-gradient(90deg, var(--rose), var(--rose-dark));
-    border-radius:3px;
+  .workout-progress-track{
+    position:relative;
+    flex:1;
+    height:11px;
+    border-radius:6px;
+    overflow:hidden;
+    background:linear-gradient(90deg, #d64545, #e0a52c, #4caf6d);
+  }
+  .workout-progress-mask{
+    position:absolute;
+    top:0; right:0; bottom:0;
+    background:var(--bg-elevated);
     transition:width 0.4s ease;
+  }
+  .workout-progress-pct{
+    font-size:12px;
+    font-weight:800;
+    color:var(--text);
+    min-width:34px;
+    text-align:right;
   }
   .rest-overlay{
     position:fixed;
@@ -2249,7 +2265,10 @@ function render(){
     let currentSeccion = null;
     app.innerHTML = `
       <button class="back" id="back-btn">&larr; Volver</button>
-      <div class="workout-progress-track"><div class="workout-progress-fill" style="width:${progressPct}%;"></div></div>
+      <div class="workout-progress-wrap">
+        <div class="workout-progress-track"><div class="workout-progress-mask" style="width:${100-progressPct}%;"></div></div>
+        <span class="workout-progress-pct">${progressPct}%</span>
+      </div>
       <div class="brand">russ.trainer</div>
       <h1>${escapeHtml(state.routineDay)}</h1>
       <div id="routine-items"></div>
