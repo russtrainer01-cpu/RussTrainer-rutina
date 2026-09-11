@@ -1069,6 +1069,18 @@ const ROUTINES = {
       { seccion:'💪 Bloque principal', ejercicio:'Aductores en máquina', series:'3 series', reps:'15', peso:'Poco peso', descanso:'45 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/vlViIgtkvh4' },
       { seccion:'❤️ Cierre cardio', ejercicio:'Cinta (cierre cardio)', series:'-', reps:'15 min suave', peso:'Sin peso', tipo:'checklist', video:null }
     ]
+  },
+  'yo': {
+    'Día 1': [
+      { seccion:'🍑 Piernas y glúteos', ejercicio:'Abducción en máquina', series:'3 series', reps:'20', peso:'A definir', descanso:'30 seg', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🍑 Piernas y glúteos', ejercicio:'Hip Thrust con barra', series:'4 series', reps:'12', peso:'25kg x lado', descanso:'1 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🍑 Piernas y glúteos', ejercicio:'Prensa', series:'3 series', reps:'15', peso:'70kg', descanso:'45 seg', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🍑 Piernas y glúteos', ejercicio:'Sillón de femorales', series:'2 series', reps:'15', peso:'A definir', descanso:'30 seg', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🍑 Piernas y glúteos', ejercicio:'Sillón de cuádriceps', series:'3 series', reps:'15', peso:'A definir', descanso:'30 seg', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🤲 Hombros', ejercicio:'Elevación lateral', series:'3 series', reps:'12', peso:'5kg', descanso:'35 seg', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🧱 Abs', ejercicio:'Russian Twist', series:'4 series', reps:'12', peso:'5kg', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🧱 Abs', ejercicio:'Piernas elevadas dinámicas', series:'4 series', reps:'12', peso:'Sin peso', tipo:'carga', sinPeso:true, video:null }
+    ]
   }
 };
 
@@ -1306,7 +1318,8 @@ const CLIENT_CONFIG = {
   'anderson': { diasPorSemana: 4, genero: 'masculino' },
   'roiner': { diasPorSemana: 5, genero: 'masculino' },
   'braian': { diasPorSemana: 5, genero: 'masculino' },
-  'rosa': { diasPorSemana: 5, genero: 'femenino' }
+  'rosa': { diasPorSemana: 5, genero: 'femenino' },
+  'yo': { diasPorSemana: 1, genero: 'femenino' }
 };
 function weeklyTarget(name){
   const cfg = CLIENT_CONFIG[routineKey(name)];
