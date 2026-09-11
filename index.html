@@ -907,6 +907,7 @@ function cancelRestTimer(idx){
   releaseWakeLock();
   render();
 }
+let pendingCircuitEntries = {};
 function onRestFinished(idx){
   releaseWakeLock();
   try{
@@ -929,8 +930,33 @@ function onRestFinished(idx){
       playTone(659.25, now, 0.3);
       playTone(880, now + 0.2, 0.3);
       playTone(1174.66, now + 0.4, 0.5);
+      playTone(880, now + 0.7, 0.3);
+      playTone(1174.66, now + 0.9, 0.6);
     }
   }catch(e){}
+  if(navigator.vibrate) navigator.vibrate([250,100,250,100,250]);
+  if(String(idx).indexOf('circex-') === 0){
+    const pending = pendingCircuitEntries[idx];
+    if(pending){
+      const exercise = pending.exercise;
+      if(!state.data.exercises[exercise]) state.data.exercises[exercise] = [];
+      const entry = {
+        date: todayISO(),
+        ts: new Date().toISOString(),
+        ronda: state.uiCircuit[pending.cidx] ? state.uiCircuit[pending.cidx].round : 1,
+        weight: pending.peso || '',
+        reps: pending.reps,
+        sets: 1,
+        feeling: pending.feeling || ''
+      };
+      if(pending.comment) entry.comment = pending.comment;
+      state.data.exercises[exercise].push(entry);
+      delete pendingCircuitEntries[idx];
+      saveClienta(state.clienta, state.data);
+    }
+    render();
+    return;
+  }
   state.uiRestAlert[idx] = true;
   setTimeout(()=>{
     if(state.uiRestAlert[idx]){
@@ -1221,6 +1247,13 @@ const ROUTINES = {
       { seccion:'🦵 Aductores', ejercicio:'Sentadilla sumo', series:'3 series', reps:'12', peso:'Mancuerna 15kg', descanso:'1.5 min', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/wxR27cGUNKg' },
       { seccion:'🦵 Aductores', ejercicio:'Sillón de cuádriceps', series:'2 series', reps:'15', peso:'4 bloques', descanso:'45 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/D-_nNSzsWxY' },
       { seccion:'🍑 Finalizador', ejercicio:'Patada cruzada con tobilleras', series:'2 series', reps:'Al fallo técnico', peso:'2 tobilleras', descanso:'45 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/kLGVjfUfxGc' }
+    ],
+    'Semana 1 - Día 4 - Hombros + Abs + Bíceps': [
+      { tipo:'circuito', seccion:'🧱 Abs', titulo:'Abs', rondas:4, reglas:'Hacé cada ejercicio en orden, sin descanso entre ellos.', descansoRondas:'40 seg', ejercicios:[
+        { ejercicio:'Hollow Hold', reps:'35 seg', peso:'Sin peso', sinPeso:true, video:'https://www.youtube.com/shorts/LrfV7jVjdHg' },
+        { ejercicio:'Plancha de oso con traslado', reps:'35 seg', peso:'Sin peso', sinPeso:true, video:'https://www.youtube.com/shorts/klTf5T4JK_E' },
+        { ejercicio:'Russian Twist', reps:'35 seg', peso:'5kg', sinPeso:false, video:'https://www.youtube.com/shorts/Xvm7zSiFyak' }
+      ]}
     ]
   }
 };
@@ -2481,6 +2514,8 @@ function render(){
             } else {
               const prefillKey = 'circ-' + exKey;
               const selectedFeeling = state.uiFeeling[prefillKey];
+              const timeBased = isTimeBased(ex.reps);
+              const exSeconds = timeBased ? firstNumber(ex.reps) : null;
               inner += `
                 <div class="circuit-item circuit-active">
                   <div style="font-size:13px; font-weight:800; color:var(--rose-dark);">${exIdx+1}. ${escapeHtml(ex.ejercicio)}</div>
@@ -2491,7 +2526,11 @@ function render(){
                     ${feelings.map(f=>`<button class="feeling-btn${selectedFeeling===f ? ' selected':''}" data-circfeel="${prefillKey}" data-feeling="${escapeHtml(f)}">${f.split(' ')[0]}</button>`).join('')}
                   </div>
                   <input type="text" id="circ-comment-${exKey}" placeholder="💬 Comentario para tu entrenadora (ej: usé otro peso)" style="margin-top:8px;" />
-                  <button class="btn-primary circuit-register-btn" data-cidx="${idx}" data-exidx="${exIdx}" data-exercise="${escapeHtml(ex.ejercicio)}" data-reps="${escapeHtml(ex.reps)}" data-peso="${escapeHtml(ex.peso || '')}" data-sinpeso="${ex.sinPeso ? '1':'0'}" style="margin-top:8px;">✓ Registrar y pasar al siguiente</button>
+                  ${timeBased ? `
+                    <button class="btn-primary circuit-timer-btn" data-cidx="${idx}" data-exidx="${exIdx}" data-seconds="${exSeconds}" data-exercise="${escapeHtml(ex.ejercicio)}" data-reps="${escapeHtml(ex.reps)}" data-peso="${escapeHtml(ex.peso || '')}" style="margin-top:8px;">▶ Iniciar (${escapeHtml(ex.reps)})</button>
+                  ` : `
+                    <button class="btn-primary circuit-register-btn" data-cidx="${idx}" data-exidx="${exIdx}" data-exercise="${escapeHtml(ex.ejercicio)}" data-reps="${escapeHtml(ex.reps)}" data-peso="${escapeHtml(ex.peso || '')}" data-sinpeso="${ex.sinPeso ? '1':'0'}" style="margin-top:8px;">✓ Registrar y pasar al siguiente</button>
+                  `}
                 </div>
               `;
             }
@@ -2649,6 +2688,25 @@ function render(){
     });
     wrap.querySelectorAll('[data-circfeel]').forEach(btn=>{
       btn.onclick = ()=>{ state.uiFeeling[btn.dataset.circfeel] = btn.dataset.feeling; render(); };
+    });
+    wrap.querySelectorAll('.circuit-timer-btn').forEach(btn=>{
+      btn.onclick = ()=>{
+        const cidx = btn.dataset.cidx;
+        const exidx = btn.dataset.exidx;
+        const key = 'circ-c' + cidx + '-' + exidx;
+        const commentInput = document.getElementById('circ-comment-c' + cidx + '-' + exidx);
+        const timerKey = 'circex-' + cidx + '-' + exidx;
+        pendingCircuitEntries[timerKey] = {
+          cidx, exidx,
+          exercise: btn.dataset.exercise,
+          reps: btn.dataset.reps,
+          peso: btn.dataset.peso,
+          comment: commentInput ? commentInput.value.trim() : '',
+          feeling: state.uiFeeling[key] || ''
+        };
+        delete state.uiFeeling[key];
+        startRestTimer(timerKey, Number(btn.dataset.seconds));
+      };
     });
     wrap.querySelectorAll('.circuit-register-btn').forEach(btn=>{
       btn.onclick = async ()=>{
