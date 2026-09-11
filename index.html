@@ -585,17 +585,21 @@
     display:flex;
     justify-content:space-between;
     align-items:center;
-    background:var(--bg-card);
-    border-radius:8px;
-    padding:10px 14px;
+    background:linear-gradient(90deg, var(--rose), var(--rose-dark));
+    border-radius:10px;
+    padding:12px 16px;
     margin-bottom:14px;
+    box-shadow:0 2px 8px rgba(168,92,104,0.3);
+  }
+  .circuit-round-row span:first-child{
+    color:#fff;
   }
   .circuit-round-row button{
     width:30px; height:30px; border-radius:50%;
     border:none; font-weight:800; cursor:pointer;
   }
-  .circuit-round-minus{ background:var(--bg-elevated); color:var(--text); }
-  .circuit-round-plus{ background:var(--rose); color:#fff; }
+  .circuit-round-minus{ background:rgba(255,255,255,0.25); color:#fff; }
+  .circuit-round-plus{ background:#fff; color:var(--rose-dark); }
   .circuit-list{
     position:relative;
     padding-left:16px;
@@ -1184,7 +1188,7 @@ const ROUTINES = {
   },
   'mae': {
     'Semana 1 - Día 1 - Full Body': [
-      { tipo:'circuito', seccion:'💪 Full Body', titulo:'Full Body', rondas:3, reglas:'Hacé cada ejercicio en orden, sin descanso entre ellos.', descansoRondas:'1 min', ejercicios:[
+      { tipo:'circuito', seccion:'💪 Full Body', titulo:'Full Body', rondas:3, reglas:'Haz cada ejercicio en orden, sin descanso entre ellos.', descansoRondas:'1 min', ejercicios:[
         { ejercicio:'Press militar sentada', reps:'12 reps', peso:'10kg', sinPeso:false, video:'https://www.youtube.com/shorts/H3JwesAsumc' },
         { ejercicio:'Dead bug', reps:'12 reps', peso:'2.5kg', sinPeso:false, video:'https://www.youtube.com/shorts/KfhoH2Q7mpk' },
         { ejercicio:'Búlgaras (glúteos)', reps:'12 reps', peso:'2 mancuernas de 10kg', sinPeso:false, video:'https://www.youtube.com/shorts/YCPbCCMLwNc' },
@@ -2416,7 +2420,7 @@ function render(){
         let inner = `
           <div class="circuit-banner">
             <div style="font-weight:700; font-size:13px;">🔄 ${escapeHtml(item.titulo || 'Circuito')}</div>
-            <div class="sub" style="margin:2px 0 0;">${escapeHtml(item.reglas || 'Hacé cada ejercicio en orden.')}${item.descansoRondas ? ' · ' + escapeHtml(item.descansoRondas) + ' entre rondas' : ''}</div>
+            <div class="sub" style="margin:2px 0 0;">${escapeHtml(item.reglas || 'Realiza cada ejercicio en orden.')}${item.descansoRondas ? ' · ' + escapeHtml(item.descansoRondas) + ' entre rondas' : ''}</div>
           </div>
         `;
         if(circuitDone){
@@ -2424,10 +2428,10 @@ function render(){
         } else {
           inner += `
             <div class="circuit-round-row">
-              <span style="font-weight:700; font-size:13px;">Ronda</span>
-              <div style="display:flex; align-items:center; gap:12px;">
+              <span style="font-weight:800; font-size:15px; text-transform:uppercase; letter-spacing:0.05em;">Ronda</span>
+              <div style="display:flex; align-items:center; gap:14px;">
                 <button class="circuit-round-minus" data-cidx="${idx}">−</button>
-                <span style="font-weight:800; color:var(--rose-dark);">${circuitState.round} / ${item.rondas}</span>
+                <span style="font-weight:900; font-size:22px; color:#fff;">${circuitState.round} / ${item.rondas}</span>
                 <button class="circuit-round-plus" data-cidx="${idx}">+</button>
               </div>
             </div>
