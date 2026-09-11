@@ -2451,9 +2451,7 @@ function render(){
                 </div>
               `;
             } else {
-              const defaultW = ex.sinPeso ? null : parseDefaultWeight(ex.peso);
               const prefillKey = 'circ-' + exKey;
-              const weightVal = state.uiWeightPrefill[prefillKey] !== undefined ? state.uiWeightPrefill[prefillKey] : '';
               const selectedFeeling = state.uiFeeling[prefillKey];
               inner += `
                 <div class="circuit-item circuit-active">
@@ -2461,15 +2459,11 @@ function render(){
                   <div class="sub" style="margin:2px 0 8px; color:var(--rose-dark);">Ronda ${circuitState.round} de ${item.rondas} · ${escapeHtml(ex.reps)}${ex.peso ? ' · Objetivo: ' + escapeHtml(ex.peso) : ''}</div>
                   ${ex.video ? `<a href="${escapeHtml(ex.video)}" target="_blank" rel="noopener" class="video-btn">🎥 Ver técnica</a>` : ''}
                   ${ex.nota ? `<div class="tip">💡 ${escapeHtml(ex.nota)}</div>` : ''}
-                  ${!ex.sinPeso ? `
-                    <button class="btn-ghost circuit-samebtn" data-cidx="${idx}" data-exidx="${exIdx}" data-defaultweight="${defaultW !== null ? defaultW : ''}" style="margin:8px 0;">✓ Lo cumplí (usa el peso objetivo)</button>
-                    <label>¿Usaste otro peso?</label>
-                    <input type="text" inputmode="decimal" id="circ-weight-${exKey}" value="${weightVal}" placeholder="Dejalo vacío si no cambió" />
-                  ` : ''}
                   <div class="feeling-row">
                     ${feelings.map(f=>`<button class="feeling-btn${selectedFeeling===f ? ' selected':''}" data-circfeel="${prefillKey}" data-feeling="${escapeHtml(f)}">${f.split(' ')[0]}</button>`).join('')}
                   </div>
-                  <button class="btn-primary circuit-register-btn" data-cidx="${idx}" data-exidx="${exIdx}" data-exercise="${escapeHtml(ex.ejercicio)}" data-reps="${escapeHtml(ex.reps)}" data-sinpeso="${ex.sinPeso ? '1':'0'}">✓ Registrar y pasar al siguiente</button>
+                  <input type="text" id="circ-comment-${exKey}" placeholder="💬 Comentario para tu entrenadora (ej: usé otro peso)" style="margin-top:8px;" />
+                  <button class="btn-primary circuit-register-btn" data-cidx="${idx}" data-exidx="${exIdx}" data-exercise="${escapeHtml(ex.ejercicio)}" data-reps="${escapeHtml(ex.reps)}" data-peso="${escapeHtml(ex.peso || '')}" data-sinpeso="${ex.sinPeso ? '1':'0'}" style="margin-top:8px;">✓ Registrar y pasar al siguiente</button>
                 </div>
               `;
             }
@@ -2625,15 +2619,6 @@ function render(){
         render();
       };
     });
-    wrap.querySelectorAll('.circuit-samebtn').forEach(btn=>{
-      btn.onclick = ()=>{
-        const key = 'circ-c' + btn.dataset.cidx + '-' + btn.dataset.exidx;
-        if(btn.dataset.defaultweight !== ''){
-          state.uiWeightPrefill[key] = Number(btn.dataset.defaultweight);
-        }
-        render();
-      };
-    });
     wrap.querySelectorAll('[data-circfeel]').forEach(btn=>{
       btn.onclick = ()=>{ state.uiFeeling[btn.dataset.circfeel] = btn.dataset.feeling; render(); };
     });
@@ -2643,24 +2628,21 @@ function render(){
         const exidx = btn.dataset.exidx;
         const key = 'circ-c' + cidx + '-' + exidx;
         const exercise = btn.dataset.exercise;
-        const sinPeso = btn.dataset.sinpeso === '1';
         const round = state.uiCircuit[cidx].round;
-        const weightInput = document.getElementById('circ-weight-' + 'c' + cidx + '-' + exidx);
-        let weight = '';
-        if(!sinPeso){
-          weight = (weightInput && weightInput.value.trim()) ? weightInput.value.trim() : (state.uiWeightPrefill[key] !== undefined ? state.uiWeightPrefill[key] : '');
-        }
+        const commentInput = document.getElementById('circ-comment-c' + cidx + '-' + exidx);
+        const comment = commentInput ? commentInput.value.trim() : '';
         if(!state.data.exercises[exercise]) state.data.exercises[exercise] = [];
-        state.data.exercises[exercise].push({
+        const entry = {
           date: todayISO(),
           ts: new Date().toISOString(),
           ronda: round,
-          weight: weight,
+          weight: btn.dataset.peso || '',
           reps: btn.dataset.reps,
           sets: 1,
           feeling: state.uiFeeling[key] || ''
-        });
-        delete state.uiWeightPrefill[key];
+        };
+        if(comment) entry.comment = comment;
+        state.data.exercises[exercise].push(entry);
         delete state.uiFeeling[key];
         await saveClienta(state.clienta, state.data);
         render();
