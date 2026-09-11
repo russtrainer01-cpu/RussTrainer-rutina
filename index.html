@@ -2645,7 +2645,13 @@ function render(){
         state.data.exercises[exercise].push(entry);
         delete state.uiFeeling[key];
         await saveClienta(state.clienta, state.data);
-        render();
+        const item = items[Number(cidx)];
+        const isLastExercise = Number(exidx) === item.ejercicios.length - 1;
+        if(isLastExercise && round < item.rondas && item.descansoRondas){
+          startRestTimer('circuit-' + cidx, parseDescansoSeconds(item.descansoRondas));
+        } else {
+          render();
+        }
       };
     });
     wrap.querySelectorAll('.same-btn').forEach(btn=>{
