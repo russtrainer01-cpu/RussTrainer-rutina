@@ -264,6 +264,67 @@
     color:#fff;
     opacity:0.9;
   }
+  .hero-today-card{
+    background:linear-gradient(135deg, var(--rose-dark), var(--rose));
+    border-radius:16px;
+    padding:20px;
+    color:#fff;
+    margin:6px 0 14px;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero-today-card.hero-done{
+    background:linear-gradient(135deg, #3f6b3f, #5b8f6f);
+  }
+  .hero-kicker{
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:1px;
+    opacity:0.9;
+  }
+  .hero-title{
+    font-size:21px;
+    font-weight:800;
+    margin:4px 0 2px;
+  }
+  .hero-sub{
+    font-size:13px;
+    opacity:0.9;
+    margin-bottom:16px;
+  }
+  .hero-btn{
+    background:#fff;
+    color:var(--rose-dark);
+    border:none;
+    border-radius:10px;
+    padding:11px 22px;
+    font-weight:800;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .stat-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  .stat-card{
+    background:var(--bg-card);
+    border-radius:12px;
+    padding:14px;
+    text-align:center;
+  }
+  .stat-num{
+    font-size:21px;
+    font-weight:800;
+    color:var(--rose-dark);
+  }
+  .stat-label{
+    font-size:10px;
+    font-weight:700;
+    color:var(--text-muted);
+    margin-top:2px;
+    letter-spacing:0.03em;
+  }
   .streak-banner{
     display:flex;
     align-items:center;
@@ -1692,25 +1753,66 @@ function render(){
     const weekCount = computeWeekCount(state.data);
     const target = weeklyTarget(state.clienta);
     const monthNum = computeMonthNumber(state.data.ficha.fechaInicio);
+    const initials = state.clienta.trim().slice(0,2).toUpperCase();
+
+    let heroDay = null, heroLabel = null, heroCount = 0;
+    if(myRoutine){
+      const { groups, noSemana } = groupDaysBySemana(myRoutine);
+      const semanaKeys = Object.keys(groups).map(Number).sort((a,b)=>a-b);
+      const maxSemana = getMaxSemana(myRoutine);
+      const candidateDays = semanaKeys.length ? (groups[maxSemana] || []).concat(noSemana) : noSemana;
+      const todayStr = todayISO();
+      heroDay = candidateDays.find(d=> !isDayCompleteOn(state.data, d, myRoutine[d], todayStr)) || null;
+      if(heroDay){
+        heroLabel = parseDayLabel(heroDay).dayName;
+        heroCount = myRoutine[heroDay].filter(it=> it.tipo !== 'mensaje').length;
+      }
+    }
+
     app.innerHTML = `
-      <div class="topbar">
+      <div class="topbar" style="align-items:flex-start;">
         <div>
           <div class="brand">russ.trainer</div>
-          <div class="name">Hola, ${escapeHtml(state.clienta)}</div>
+          <div style="font-size:26px; font-weight:800; margin-top:4px;">Hola, ${escapeHtml(state.clienta)} 👋</div>
         </div>
         <div style="display:flex; align-items:center; gap:10px;">
           ${monthNum ? `<span class="month-badge" style="background:${monthColor(monthNum)};">Mes ${monthNum}</span>` : ''}
-          <button class="link-btn" id="switch-btn">Cambiar</button>
+          <div style="width:38px; height:38px; border-radius:50%; background:var(--rose); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; flex-shrink:0;">${escapeHtml(initials)}</div>
         </div>
       </div>
-      <h1 style="font-size:20px; margin:4px 0 6px;">Tu espacio de entrenamiento</h1>
-      <div class="streak-banner">
-        <span>${streak > 0 ? '🔥 ' + streak : streak} ${streak === 1 ? 'día seguido' : 'días seguidos'}</span>
-        <span class="dim">&middot; ${weekCount}/${target} esta semana</span>
+      <button class="link-btn" id="switch-btn" style="margin:-6px 0 14px; font-size:12px;">Cambiar de usuaria</button>
+
+      ${heroDay ? `
+        <div class="hero-today-card">
+          <div class="hero-kicker">HOY TOCA</div>
+          <div class="hero-title">${escapeHtml(heroLabel)}</div>
+          <div class="hero-sub">${heroCount} ejercicio${heroCount===1?'':'s'}</div>
+          <button class="hero-btn" id="hero-start-btn">Empezar →</button>
+        </div>
+      ` : myRoutine ? `
+        <div class="hero-today-card hero-done">
+          <div class="hero-kicker">¡GRAN TRABAJO!</div>
+          <div class="hero-title">Ya completaste todo hoy 🎉</div>
+        </div>
+      ` : ''}
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-num">${weekCount}/${target}</div>
+          <div class="stat-label">DÍAS ESTA SEMANA</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" style="color:#3f6b3f;">${streak > 0 ? '🔥 ' + streak : streak}</div>
+          <div class="stat-label">${streak === 1 ? 'DÍA SEGUIDO' : 'DÍAS SEGUIDOS'}</div>
+        </div>
       </div>
+
       ${myRoutine ? `
-        <p class="sub" style="margin:14px 0 0;">Tocá tu día para arrancar</p>
-        <div class="day-grid" id="routine-day-chips"></div>
+        <button class="link-btn" id="alldays-toggle" style="margin:22px 0 8px; font-size:15px; font-weight:700; background:none; border:none; cursor:pointer; padding:0; font-family:inherit; color:var(--text); display:block;">${state.uiExpanded['client-alldays'] ? '▾' : '▸'} Ver todos tus días</button>
+        ${state.uiExpanded['client-alldays'] ? `
+          <p class="sub" style="margin:0 0 8px;">Tocá tu día para arrancar</p>
+          <div class="day-grid" id="routine-day-chips"></div>
+        ` : ''}
       ` : ''}
       <button class="link-btn" id="progress-toggle" style="margin-top:26px; font-size:17px; font-weight:700; background:none; border:none; cursor:pointer; padding:0; font-family:inherit; color:var(--text); display:block;">${state.uiExpanded['client-progress'] ? '▾' : '▸'} Tu progreso por ejercicio</button>
       ${state.uiExpanded['client-progress'] ? `
@@ -1718,12 +1820,22 @@ function render(){
         <div class="chip-list" id="chip-list"></div>
       ` : ''}
     `;
+    if(heroDay){
+      document.getElementById('hero-start-btn').onclick = ()=>{ state.view='routine-day'; state.routineDay=heroDay; render(); };
+    }
+    if(myRoutine){
+      document.getElementById('alldays-toggle').onclick = ()=>{
+        if(state.uiExpanded['client-alldays']) delete state.uiExpanded['client-alldays'];
+        else state.uiExpanded['client-alldays'] = true;
+        render();
+      };
+    }
     document.getElementById('progress-toggle').onclick = ()=>{
       if(state.uiExpanded['client-progress']) delete state.uiExpanded['client-progress'];
       else state.uiExpanded['client-progress'] = true;
       render();
     };
-    if(myRoutine){
+    if(myRoutine && state.uiExpanded['client-alldays']){
       const dayChips = document.getElementById('routine-day-chips');
       const { groups, noSemana } = groupDaysBySemana(myRoutine);
       const semanaKeys = Object.keys(groups).map(Number).sort((a,b)=>a-b);
