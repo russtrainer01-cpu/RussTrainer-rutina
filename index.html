@@ -875,18 +875,18 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 let audioCtx = null;
-function ensureAudioContext(){
+async function ensureAudioContext(){
   if(!audioCtx){
     try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){ return null; }
   }
   if(audioCtx.state === 'suspended'){
-    audioCtx.resume();
+    try{ await audioCtx.resume(); }catch(e){}
   }
   return audioCtx;
 }
-function playTickSound(){
+async function playTickSound(){
   try{
-    const ctx = ensureAudioContext();
+    const ctx = await ensureAudioContext();
     if(!ctx) return;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -984,10 +984,10 @@ function cancelRestTimer(idx){
   render();
 }
 let pendingCircuitEntries = {};
-function onRestFinished(idx){
+async function onRestFinished(idx){
   releaseWakeLock();
   try{
-    const ctx = ensureAudioContext();
+    const ctx = await ensureAudioContext();
     if(ctx){
       const playTone = (freq, startTime, duration)=>{
         const osc = ctx.createOscillator();
