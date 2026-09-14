@@ -2524,7 +2524,7 @@ function render(){
         <div class="row">
           <div>
             <label>Peso (kg)</label>
-            <input type="text" inputmode="decimal" id="f-weight" placeholder="Ej: 20 o 9 bloques" />
+            <input type="text" id="f-weight" placeholder="Ej: 20 o 9 bloques" />
           </div>
           <div>
             <label>Reps</label>
@@ -2789,7 +2789,7 @@ function render(){
           </div>
           ${item.sinPeso ? '' : `
             <label>Peso usado (kg)</label>
-            <input type="text" inputmode="decimal" id="reg-weight-${idx}" value="${state.uiWeightPrefill[idx] !== undefined ? state.uiWeightPrefill[idx] : (lastToday ? lastToday.weight : '')}" placeholder="Ej: 10 o 9 bloques" />
+            <input type="text" id="reg-weight-${idx}" value="${state.uiWeightPrefill[idx] !== undefined ? state.uiWeightPrefill[idx] : (lastToday ? lastToday.weight : '')}" placeholder="Ej: 10 o 9 bloques" />
           `}
           <input type="text" id="reg-comment-${idx}" value="${lastToday && lastToday.comment ? escapeHtml(lastToday.comment) : ''}" placeholder="💬 Comentario para tu entrenadora (opcional)" />
           <div class="error hidden" id="reg-error-${idx}">Ingresá el peso usado.</div>
