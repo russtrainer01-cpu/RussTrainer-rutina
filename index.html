@@ -17,6 +17,9 @@
     --danger:#b85c5c;
   }
   *{box-sizing:border-box;}
+  html{
+    overflow-x:hidden;
+  }
   body{
     margin:0;
     background:var(--bg);
@@ -25,11 +28,13 @@
     min-height:100vh;
     display:flex;
     justify-content:center;
+    overflow-x:hidden;
   }
   #app{
     width:100%;
     max-width:440px;
     padding:32px 20px 90px;
+    overflow-x:hidden;
   }
   .brand{
     font-size:13px;
@@ -569,17 +574,31 @@
     padding:0 0 0 10px;
   }
   .workout-progress-wrap{
-    position:sticky;
+    position:fixed;
     top:0;
-    left:0;
-    right:0;
+    left:50%;
+    transform:translateX(-50%);
+    width:100%;
+    max-width:440px;
+    box-sizing:border-box;
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    background:var(--bg);
+    padding:10px 20px 8px;
+    z-index:50;
+    box-shadow:0 2px 6px rgba(43,37,33,0.08);
+  }
+  .workout-progress-label{
+    font-size:11px;
+    font-weight:700;
+    color:var(--text-muted);
+    letter-spacing:0.03em;
+  }
+  .workout-progress-row{
     display:flex;
     align-items:center;
     gap:10px;
-    background:var(--bg);
-    padding:8px 0;
-    margin:0 0 16px;
-    z-index:5;
   }
   .workout-progress-track{
     position:relative;
@@ -2585,11 +2604,15 @@ function render(){
     const overlayItem = overlayIdx !== null ? items[Number(overlayIdx)] : null;
     let currentSeccion = null;
     app.innerHTML = `
-      <button class="back" id="back-btn">&larr; Volver</button>
       <div class="workout-progress-wrap">
-        <div class="workout-progress-track"><div class="workout-progress-mask" style="width:${100-progressPct}%;"></div></div>
-        <span class="workout-progress-pct">${progressPct}%</span>
+        <div class="workout-progress-label">🏋️ Rutina de hoy</div>
+        <div class="workout-progress-row">
+          <div class="workout-progress-track"><div class="workout-progress-mask" style="width:${100-progressPct}%;"></div></div>
+          <span class="workout-progress-pct">${progressPct}%</span>
+        </div>
       </div>
+      <div style="height:54px;"></div>
+      <button class="back" id="back-btn">&larr; Volver</button>
       <div class="brand">russ.trainer</div>
       <h1>${escapeHtml(state.routineDay)}</h1>
       <div id="routine-items"></div>
