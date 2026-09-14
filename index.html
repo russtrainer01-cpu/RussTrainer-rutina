@@ -995,7 +995,7 @@ async function onRestFinished(idx){
         osc.type = 'sine';
         osc.frequency.value = freq;
         gain.gain.setValueAtTime(0, startTime);
-        gain.gain.linearRampToValueAtTime(0.4, startTime + 0.04);
+        gain.gain.linearRampToValueAtTime(0.9, startTime + 0.04);
         gain.gain.linearRampToValueAtTime(0, startTime + duration);
         osc.connect(gain);
         gain.connect(ctx.destination);
