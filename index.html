@@ -2816,7 +2816,7 @@ function render(){
           `}
           <input type="text" id="reg-comment-${idx}" value="${lastToday && lastToday.comment ? escapeHtml(lastToday.comment) : ''}" placeholder="💬 Comentario para tu entrenadora (opcional)" />
           <div class="error hidden" id="reg-error-${idx}">Ingresá el peso usado.</div>
-          <button class="btn-primary registrar-btn" data-idx="${idx}" data-exercise="${escapeHtml(item.ejercicio)}" data-sinpeso="${item.sinPeso ? '1':'0'}" data-reps="${repsTarget !== null ? repsTarget : ''}" data-sets="${setsDone}" style="margin-top:4px;">Registrar</button>
+          <button class="btn-primary registrar-btn" data-idx="${idx}" data-exercise="${escapeHtml(item.ejercicio)}" data-sinpeso="${item.sinPeso ? '1':'0'}" data-reps="${repsTarget !== null ? repsTarget : ''}" data-sets="${setsTarget !== null ? Math.max(setsDone, setsTarget) : setsDone}" style="margin-top:4px;">Registrar</button>
         `;
       }
       card.innerHTML = bodyHtml;
@@ -2957,7 +2957,7 @@ function render(){
           err.classList.remove('hidden');
           return;
         }
-        const weight = sinPeso ? 0 : Number(weightInput.value);
+        const weight = sinPeso ? '' : weightInput.value;
         const feeling = state.uiFeeling[idx] || '';
         const commentInput = document.getElementById(`reg-comment-${idx}`);
         const comment = commentInput ? commentInput.value.trim() : '';
