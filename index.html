@@ -375,6 +375,24 @@
     border-radius:20px;
     text-decoration:none;
     margin:0 0 12px;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .video-embed-wrap{
+    position:relative;
+    width:100%;
+    padding-top:56.25%;
+    border-radius:10px;
+    overflow:hidden;
+    margin:0 0 12px;
+    background:#000;
+  }
+  .video-embed-wrap iframe{
+    position:absolute;
+    top:0; left:0;
+    width:100%;
+    height:100%;
+    border:none;
   }
   .feeling-row{
     display:flex;
@@ -1673,7 +1691,7 @@ function computeWeekCount(data){
   return count;
 }
 
-let state = { clienta: null, data: null, view: 'login', exercise: null, routineDay: null, uiExpanded: {}, uiFeeling: {}, uiSets: {}, uiResting: {}, uiRestAlert: {}, uiWeightPrefill: {}, uiCircuit: {}, adminData: null, adminSelected: null, trainerEvents: null, calendarYear: null, calendarMonth: null, calendarSelectedDate: null };
+let state = { clienta: null, data: null, view: 'login', exercise: null, routineDay: null, uiExpanded: {}, uiFeeling: {}, uiSets: {}, uiResting: {}, uiRestAlert: {}, uiWeightPrefill: {}, uiCircuit: {}, uiVideoOpen: {}, adminData: null, adminSelected: null, trainerEvents: null, calendarYear: null, calendarMonth: null, calendarSelectedDate: null };
 let chartInstance = null;
 
 const EXERCISE_LIBRARY = {
@@ -2701,7 +2719,10 @@ function render(){
                 <div class="circuit-item circuit-active">
                   <div style="font-size:13px; font-weight:800; color:var(--rose-dark);">${exIdx+1}. ${escapeHtml(ex.ejercicio)}</div>
                   <div class="sub" style="margin:2px 0 8px; color:var(--rose-dark);">Ronda ${circuitState.round} de ${item.rondas} · ${escapeHtml(ex.reps)}${ex.peso ? ' · Objetivo: ' + escapeHtml(ex.peso) : ''}</div>
-                  ${ex.video ? `<a href="${escapeHtml(ex.video)}" target="_blank" rel="noopener" class="video-btn">🎥 Ver técnica</a>` : ''}
+                  ${ex.video ? `
+                    <button class="video-btn" data-videotoggle="${exKey}">🎥 ${state.uiVideoOpen[exKey] ? 'Ocultar técnica' : 'Ver técnica'}</button>
+                    ${state.uiVideoOpen[exKey] ? `<div class="video-embed-wrap"><iframe src="${escapeHtml(youtubeEmbedUrl(ex.video))}" allow="autoplay; encrypted-media" allowfullscreen></iframe></div>` : ''}
+                  ` : ''}
                   ${ex.nota ? `<div class="tip">💡 ${escapeHtml(ex.nota)}</div>` : ''}
                   <div class="feeling-row">
                     ${feelings.map(f=>`<button class="feeling-btn${selectedFeeling===f ? ' selected':''}" data-circfeel="${prefillKey}" data-feeling="${escapeHtml(f)}">${f.split(' ')[0]}</button>`).join('')}
@@ -2736,7 +2757,11 @@ function render(){
         h.textContent = currentSeccion;
         wrap.appendChild(h);
       }
-      const videoLink = item.video ? `<a href="${escapeHtml(item.video)}" target="_blank" rel="noopener" class="video-btn">🎥 Ver técnica</a>` : '';
+      const videoKey = 'ex-' + idx;
+      const videoLink = item.video ? `
+        <button class="video-btn" data-videotoggle="${videoKey}">🎥 ${state.uiVideoOpen[videoKey] ? 'Ocultar técnica' : 'Ver técnica'}</button>
+        ${state.uiVideoOpen[videoKey] ? `<div class="video-embed-wrap"><iframe src="${escapeHtml(youtubeEmbedUrl(item.video))}" allow="autoplay; encrypted-media" allowfullscreen></iframe></div>` : ''}
+      ` : '';
       const tipShown = state.uiExpanded[`tip-${idx}`];
       const tipHtml = item.nota ? (
         tipShown
@@ -2851,6 +2876,14 @@ function render(){
     });
     wrap.querySelectorAll('.rest-cancel-btn').forEach(btn=>{
       btn.onclick = ()=> cancelRestTimer(btn.dataset.idx);
+    });
+    wrap.querySelectorAll('[data-videotoggle]').forEach(btn=>{
+      btn.onclick = ()=>{
+        const key = btn.dataset.videotoggle;
+        if(state.uiVideoOpen[key]) delete state.uiVideoOpen[key];
+        else state.uiVideoOpen[key] = true;
+        render();
+      };
     });
     wrap.querySelectorAll('.circuit-round-minus').forEach(btn=>{
       btn.onclick = ()=>{
