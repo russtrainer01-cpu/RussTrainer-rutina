@@ -1222,6 +1222,53 @@ const ROUTINES = {
       { seccion:'🟢 Trote suave', ejercicio:'Trote suave / regenerativo', series:'-', reps:'25-30 min', peso:'Ritmo cómodo (podés hablar sin ahogarte)', tipo:'checklist', video:null, nota:'Ubicalo después del Día 1 o en un día libre.' },
       { seccion:'🟡 Fartlek', ejercicio:'Fartlek / cambios de ritmo', series:'-', reps:'5 min trote + 6-8 series de 2 min fuerte / 2 min suave + 5 min trote', peso:'Sin peso', tipo:'checklist', video:null, nota:'Ubicalo después del Día 3.' },
       { seccion:'🔴 Fondo largo', ejercicio:'Fondo largo', series:'-', reps:'7 km', peso:'Sin peso', tipo:'checklist', video:null, nota:'Semana de descarga: 7km. Día libre, alejado del Día 2 y Día 4. Nunca el mismo día ni al día siguiente del Día 4.' }
+    ],
+    'Semana 2 - Día 2 - Piernas + Abs': [
+      { seccion:'🦵 Piernas', ejercicio:'Sentadilla con Smith', series:'3 series', reps:'12', peso:'15kg x lado', descanso:'1.5 min', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/rQw8GUzpj1I' },
+      { seccion:'🦵 Piernas', ejercicio:'Sentadilla Goblet', series:'3 series', reps:'12', peso:'Mancuerna 17.5kg', descanso:'1.5 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🦵 Piernas', ejercicio:'Zancadas caminando', series:'4 rondas', reps:'8 por pierna', peso:'10kg x lado', descanso:'45 seg', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🦵 Piernas', ejercicio:'Prensa', series:'4 series', reps:'8', peso:'70kg', descanso:'1.5 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🦵 Piernas', ejercicio:'Sillón de cuádriceps', series:'4 series progresivas: 15-12-10-8 reps', reps:'15-12-10-8', peso:'30kg', descanso:'45 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/D-_nNSzsWxY' },
+      { tipo:'circuito', seccion:'🧱 Abs', titulo:'Abs', rondas:3, reglas:'Haz cada ejercicio en orden, sin descanso entre ellos.', descansoRondas:'45 seg', ejercicios:[
+        { ejercicio:'Plancha con toque de hombro', reps:'16 (8 por lado)', peso:'Sin peso', sinPeso:true, video:null },
+        { ejercicio:'Bicycle Crunch', reps:'20 (10 por lado)', peso:'Sin peso', sinPeso:true, video:null },
+        { ejercicio:'Elevación de piernas acostado', reps:'15', peso:'Sin peso', sinPeso:true, video:null }
+      ]}
+    ],
+    'Semana 2 - Día 4 - Espalda + Bíceps + Tríceps': [
+      { seccion:'🔥 Calentamiento', ejercicio:'Flexiones (calentamiento)', series:'2 series', reps:'14', peso:'Peso corporal', descanso:'45 seg', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/YN5pE2JmzHM' },
+      { seccion:'🏋️ Espalda', ejercicio:'Remo unilateral con mancuerna', series:'3 series', reps:'8 por lado', peso:'15kg', descanso:'1.5 min', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/qTOaWaCxB8U' },
+      { seccion:'🏋️ Espalda', ejercicio:'Jalón al pecho', series:'3 series', reps:'12', peso:'5 bloques', descanso:'1.5 min', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/K7L77ubdeMU', nota:'Agarre neutro. Único ejercicio de polea del día.' },
+      { seccion:'🏋️ Espalda', ejercicio:'Pájaro con mancuernas', series:'3 series', reps:'10', peso:'7.5kg', descanso:'45 seg', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'💪 Bíceps', ejercicio:'Curl martillo con mancuernas', series:'3 series', reps:'10', peso:'10kg', descanso:'1 min', tipo:'carga', sinPeso:false, video:null, nota:'Agarre neutro.' },
+      { seccion:'💪 Bíceps', ejercicio:'Curl alternado', series:'3 series', reps:'10', peso:'10kg', descanso:'1 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'💪 Tríceps', ejercicio:'Fondos en banco', series:'3 series', reps:'10-12', peso:'Sin peso', descanso:'45 seg', tipo:'carga', sinPeso:true, video:null },
+      { seccion:'💪 Tríceps', ejercicio:'Patada de tríceps con mancuerna', series:'3 series', reps:'12', peso:'5kg', descanso:'45 seg', tipo:'carga', sinPeso:false, video:null }
+    ],
+    'Semana 2 - Día 5 - Pliometría (running)': [
+      { seccion:'🔥 Entrada en calor (8-10 min)', ejercicio:'Trote suave', series:'-', reps:'3 min', peso:'Sin peso', tipo:'checklist', video:null },
+      { seccion:'🔥 Entrada en calor (8-10 min)', ejercicio:'Movilidad dinámica de tobillo/cadera', series:'-', reps:'2 min', peso:'Sin peso', tipo:'checklist', video:null },
+      { seccion:'🔥 Entrada en calor (8-10 min)', ejercicio:'Skipping bajo', series:'2 series', reps:'20 m', peso:'Sin peso', tipo:'carga', sinPeso:true, video:null },
+      { seccion:'🔥 Entrada en calor (8-10 min)', ejercicio:'Skipping alto', series:'2 series', reps:'20 m', peso:'Sin peso', tipo:'carga', sinPeso:true, video:null },
+      { seccion:'🔥 Entrada en calor (8-10 min)', ejercicio:'Talones a glúteos', series:'2 series', reps:'20 m', peso:'Sin peso', tipo:'carga', sinPeso:true, video:null },
+      { seccion:'🔥 Entrada en calor (8-10 min)', ejercicio:'Pogos suaves', series:'2 series', reps:'15', peso:'Sin peso', tipo:'carga', sinPeso:true, video:null },
+      { seccion:'⚡ Reactividad de tobillo', ejercicio:'Pogos bilaterales', series:'3 series', reps:'15', peso:'Sin peso', descanso:'45-60 seg', tipo:'carga', sinPeso:true, video:null },
+      { seccion:'⚡ Reactividad de tobillo', ejercicio:'Pogos unilaterales', series:'3 series', reps:'8 por pierna', peso:'Sin peso', descanso:'60 seg', tipo:'carga', sinPeso:true, video:null, nota:'Que piense en "rebotar", no en saltar alto. Contacto con el piso rápido y cuerpo firme.' },
+      { seccion:'🏃 Saltos horizontales', ejercicio:'Salto horizontal desde parado', series:'3 series', reps:'4', peso:'Sin peso', descanso:'90 seg', tipo:'carga', sinPeso:true, video:null },
+      { seccion:'🏃 Saltos horizontales', ejercicio:'Bounds alternados', series:'3 series', reps:'20 m', peso:'Sin peso', descanso:'90 seg', tipo:'carga', sinPeso:true, video:null, nota:'Buscamos proyección hacia adelante, más específico para un corredor que solo saltos verticales.' },
+      { seccion:'💥 Potencia unilateral', ejercicio:'Salto a una pierna hacia adelante + estabilización', series:'3 series', reps:'4 por pierna', peso:'Sin peso', descanso:'60-90 seg', tipo:'carga', sinPeso:true, video:null },
+      { seccion:'💥 Potencia unilateral', ejercicio:'Skater jump', series:'3 series', reps:'6 por lado', peso:'Sin peso', descanso:'60-90 seg', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/1eSXxyBJYXY', nota:'Aterrizar estable, no acumular repeticiones por acumular.' },
+      { seccion:'🎯 Pliometría reactiva', ejercicio:'Drop jump bajo', series:'3 series', reps:'4', peso:'Cajón de 20-30 cm', descanso:'90-120 seg', tipo:'carga', sinPeso:true, video:null, nota:'Caída → contacto corto → salto inmediato. Si la técnica se deteriora, se termina la serie.' },
+      { seccion:'🏁 Cierre específico de carrera', ejercicio:'Aceleraciones', series:'4 series', reps:'30 m al 80→90→95%', peso:'Sin peso', descanso:'Caminando + 60-90 seg', tipo:'carga', sinPeso:true, video:null, nota:'No a máxima velocidad — terminar potente y fresco, cerca de la carrera.' }
+    ],
+    'Semana 2 - Día 3 - Hombros + Tríceps + Running': [
+      { seccion:'🤲 Hombros', ejercicio:'Elevaciones laterales', series:'3 series', reps:'12', peso:'A definir', descanso:'45 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/zEANAIh1l9g' },
+      { seccion:'🤲 Hombros', ejercicio:'Face Pull', series:'3 series', reps:'15', peso:'A definir', descanso:'1 min', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/vU30xyp6IYM', nota:'Agarre neutro. Único ejercicio de polea del día.' },
+      { seccion:'🤲 Hombros', ejercicio:'Elevación frontal con mancuernas', series:'3 series', reps:'10', peso:'A definir', descanso:'45 seg', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🤲 Hombros', ejercicio:'Encogimientos de hombros', series:'3 series', reps:'15', peso:'A definir', descanso:'45 seg', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'💪 Tríceps', ejercicio:'Patada de tríceps con mancuerna', series:'3 series', reps:'12', peso:'A definir', descanso:'45 seg', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'💪 Tríceps', ejercicio:'Extensión de tríceps detrás de la cabeza', series:'3 series', reps:'10', peso:'A definir', descanso:'1 min', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/b_r_LW4HEcM' },
+      { seccion:'🏃 Running', ejercicio:'Running', series:'-', reps:'7 km · buscar bajar el ritmo a 5:30 min/km', peso:'Sin peso', tipo:'checklist', video:null }
     ]
   },
   'braian': {
