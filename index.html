@@ -979,6 +979,7 @@ function startRestTimer(idx, seconds){
   requestWakeLock();
   const current = state.uiSets[idx] !== undefined ? state.uiSets[idx] : 0;
   state.uiSets[idx] = current + 1;
+  persistUiProgress();
   if(restTimerHandles[idx]) clearInterval(restTimerHandles[idx]);
   restTimerEndTimes[idx] = Date.now() + seconds*1000;
   state.uiResting[idx] = seconds;
@@ -1757,6 +1758,26 @@ async function loadClienta(name){
   }catch(e){
     return { exercises: {}, completados: {}, bodyWeight: [], weightPromptSeen: false, ficha:{ objetivo:'', nivel:'', restricciones:'', fechaInicio:'', cumpleanos:'', semanaInicio:'' }, vencimiento:'', trainerNotes: [], nextWeekNotes: {} };
   }
+}
+function persistUiProgress(){
+  if(!state.clienta) return;
+  try{
+    localStorage.setItem('rt_progress_' + state.clienta, JSON.stringify({ date: todayISO(), uiSets: state.uiSets, uiFeeling: state.uiFeeling }));
+  }catch(e){}
+}
+function restoreUiProgress(){
+  if(!state.clienta) return;
+  try{
+    const raw = localStorage.getItem('rt_progress_' + state.clienta);
+    if(!raw) return;
+    const parsed = JSON.parse(raw);
+    if(parsed.date === todayISO()){
+      state.uiSets = parsed.uiSets || {};
+      state.uiFeeling = parsed.uiFeeling || {};
+    } else {
+      localStorage.removeItem('rt_progress_' + state.clienta);
+    }
+  }catch(e){}
 }
 async function saveClienta(name, data){
   try{
@@ -2964,6 +2985,7 @@ function render(){
         if(btn.dataset.defaultweight !== ''){
           state.uiWeightPrefill[idx] = Number(btn.dataset.defaultweight);
         }
+        persistUiProgress();
         render();
       };
     });
@@ -2972,6 +2994,7 @@ function render(){
         const idx = btn.dataset.idx;
         const current = state.uiSets[idx] !== undefined ? state.uiSets[idx] : 0;
         state.uiSets[idx] = current + 1;
+        persistUiProgress();
         render();
       };
     });
@@ -2980,6 +3003,7 @@ function render(){
         const idx = btn.dataset.idx;
         const current = state.uiSets[idx] !== undefined ? state.uiSets[idx] : 0;
         state.uiSets[idx] = Math.max(0, current - 1);
+        persistUiProgress();
         render();
       };
     });
@@ -3138,6 +3162,7 @@ async function onEnter(){
   localStorage.setItem('rt_session', name);
   state.clienta = name;
   state.data = await loadClienta(name);
+  restoreUiProgress();
   state.view = state.data.weightPromptSeen ? 'dashboard' : 'welcome';
   render();
 }
@@ -3197,6 +3222,7 @@ async function onQuickSave(idx, exerciseName, weight, reps, sets, feeling, comme
   delete state.uiFeeling[idx];
   delete state.uiSets[idx];
   delete state.uiWeightPrefill[idx];
+  persistUiProgress();
   render();
 }
 
@@ -3256,6 +3282,7 @@ async function restoreSession(){
   }
   state.clienta = saved;
   state.data = await loadClienta(saved);
+  restoreUiProgress();
   state.view = state.data.weightPromptSeen ? 'dashboard' : 'welcome';
   render();
 }
