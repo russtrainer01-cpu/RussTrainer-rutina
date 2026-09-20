@@ -1888,16 +1888,11 @@ function render(){
     let heroDay = null, heroLabel = null, heroCount = 0;
     if(myRoutine){
       const todayStr = todayISO();
-      const pinnedDay = Object.keys(myRoutine).find(d=> d.includes('💕') && !isDayCompleteOn(state.data, d, myRoutine[d], todayStr));
-      if(pinnedDay){
-        heroDay = pinnedDay;
-      } else {
-        const { groups, groupLabels, noSemana } = groupDaysBySemana(myRoutine);
-        const semanaKeys = Object.keys(groups).map(Number).sort((a,b)=>a-b);
-        const maxSemana = getMaxSemana(myRoutine);
-        const candidateDays = semanaKeys.length ? (groups[maxSemana] || []).concat(noSemana) : noSemana;
-        heroDay = candidateDays.find(d=> !isDayCompleteOn(state.data, d, myRoutine[d], todayStr)) || null;
-      }
+      const { groups, groupLabels, noSemana } = groupDaysBySemana(myRoutine);
+      const semanaKeys = Object.keys(groups).map(Number).sort((a,b)=>a-b);
+      const maxSemana = getMaxSemana(myRoutine);
+      const candidateDays = semanaKeys.length ? (groups[maxSemana] || []).concat(noSemana) : noSemana;
+      heroDay = candidateDays.find(d=> !isDayCompleteOn(state.data, d, myRoutine[d], todayStr)) || null;
       if(heroDay){
         heroLabel = parseDayLabel(heroDay).dayName;
         heroCount = myRoutine[heroDay].filter(it=> it.tipo !== 'mensaje').length;
