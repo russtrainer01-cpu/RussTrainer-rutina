@@ -2032,6 +2032,9 @@ function render(){
       const { groups, groupLabels, noSemana } = groupDaysBySemana(myRoutine);
       const semanaKeys = Object.keys(groups).map(Number).sort((a,b)=>a-b);
       const maxSemana = getMaxSemana(myRoutine);
+      const rotationCandidates = semanaKeys.length ? (groups[maxSemana] || []).concat(noSemana) : noSemana;
+      const rotationHeroDay = getNextRotationDay(state.data, myRoutine, rotationCandidates);
+      const rotationHeroIdx = rotationHeroDay ? rotationCandidates.indexOf(rotationHeroDay) : -1;
       if(semanaKeys.length){
         semanaKeys.forEach(sNum=>{
           const isCurrentSemana = sNum === maxSemana;
@@ -2052,7 +2055,9 @@ function render(){
             rowWrap.className = 'day-grid';
             groups[sNum].forEach(day=>{
               const chip = document.createElement('button');
-              const doneTodayChip = isDayCompleteOn(state.data, day, myRoutine[day], todayISO());
+              const doneTodayChip = isCurrentSemana
+                ? (rotationHeroIdx === -1 || rotationCandidates.indexOf(day) < rotationHeroIdx)
+                : isDayCompleteOn(state.data, day, myRoutine[day], todayISO());
               chip.className = 'day-card' + (day.toLowerCase().includes('running') ? ' running' : '') + (doneTodayChip ? ' done' : '');
               const { dayName } = parseDayLabel(day);
               chip.innerHTML = `<div class="dc-label">${escapeHtml(dayName)}</div><div class="dc-sub">${doneTodayChip ? '✓ Completado' : 'Toca para empezar →'}</div>`;
@@ -2066,7 +2071,7 @@ function render(){
       if(noSemana.length){
         noSemana.forEach(day=>{
           const chip = document.createElement('button');
-          const doneTodayChip = isDayCompleteOn(state.data, day, myRoutine[day], todayISO());
+          const doneTodayChip = rotationHeroIdx === -1 || rotationCandidates.indexOf(day) < rotationHeroIdx;
           chip.className = 'day-card' + (day.toLowerCase().includes('running') ? ' running' : '') + (doneTodayChip ? ' done' : '');
           chip.innerHTML = `<div class="dc-label">${escapeHtml(day)}</div><div class="dc-sub">${doneTodayChip ? '✓ Completado' : 'Toca para empezar →'}</div>`;
           chip.onclick = ()=>{ state.view='routine-day'; state.routineDay=day; render(); };
