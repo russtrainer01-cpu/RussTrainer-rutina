@@ -1571,6 +1571,21 @@ function lastCompletionDate(data, dayLabel, items){
   return null;
 }
 
+function getNextRotationDay(data, routine, candidateDays){
+  if(!candidateDays.length) return null;
+  let lastCompletedIdx = -1;
+  let lastCompletedDateStr = null;
+  candidateDays.forEach((d, i)=>{
+    const dateStr = lastCompletionDate(data, d, routine[d]);
+    if(dateStr && (!lastCompletedDateStr || dateStr > lastCompletedDateStr || (dateStr === lastCompletedDateStr && i > lastCompletedIdx))){
+      lastCompletedDateStr = dateStr;
+      lastCompletedIdx = i;
+    }
+  });
+  if(lastCompletedIdx === -1) return candidateDays[0];
+  return candidateDays[(lastCompletedIdx + 1) % candidateDays.length];
+}
+
 function lastActivityDate(data){
   const dates = getActivityDates(data);
   if(dates.size === 0) return null;
@@ -1715,7 +1730,7 @@ const CLIENT_CONFIG = {
   'roiner': { diasPorSemana: 5, genero: 'masculino' },
   'braian': { diasPorSemana: 5, genero: 'masculino' },
   'rosa': { diasPorSemana: 5, genero: 'femenino' },
-  'yo': { diasPorSemana: 1, genero: 'femenino' },
+  'yo': { diasPorSemana: 5, genero: 'femenino' },
   'mae': { diasPorSemana: 5, genero: 'femenino' }
 };
 function weeklyTarget(name){
@@ -1933,12 +1948,11 @@ function render(){
 
     let heroDay = null, heroLabel = null, heroCount = 0;
     if(myRoutine){
-      const todayStr = todayISO();
       const { groups, groupLabels, noSemana } = groupDaysBySemana(myRoutine);
       const semanaKeys = Object.keys(groups).map(Number).sort((a,b)=>a-b);
       const maxSemana = getMaxSemana(myRoutine);
       const candidateDays = semanaKeys.length ? (groups[maxSemana] || []).concat(noSemana) : noSemana;
-      heroDay = candidateDays.find(d=> !isDayCompleteOn(state.data, d, myRoutine[d], todayStr)) || null;
+      heroDay = getNextRotationDay(state.data, myRoutine, candidateDays);
       if(heroDay){
         heroLabel = parseDayLabel(heroDay).dayName;
         heroCount = myRoutine[heroDay].filter(it=> it.tipo !== 'mensaje').length;
