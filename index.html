@@ -1812,21 +1812,26 @@ async function dbSet(nombre, data){
 }
 
 async function loadClienta(name){
-  try{
-    const parsed = (await dbGet(storageKey(name))) || { exercises: {} };
-    if(!parsed.completados) parsed.completados = {};
-    if(!parsed.bodyWeight) parsed.bodyWeight = [];
-    if(!parsed.weightPromptSeen) parsed.weightPromptSeen = false;
-    if(!parsed.ficha) parsed.ficha = { objetivo:'', nivel:'', restricciones:'', fechaInicio:'', cumpleanos:'', semanaInicio:'', telefono:'' };
-    if(parsed.ficha.semanaInicio === undefined) parsed.ficha.semanaInicio = '';
-    if(parsed.ficha.telefono === undefined) parsed.ficha.telefono = '';
-    if(!parsed.vencimiento) parsed.vencimiento = '';
-    if(!parsed.trainerNotes) parsed.trainerNotes = [];
-    if(!parsed.nextWeekNotes) parsed.nextWeekNotes = {};
-    return parsed;
-  }catch(e){
-    return { exercises: {}, completados: {}, bodyWeight: [], weightPromptSeen: false, ficha:{ objetivo:'', nivel:'', restricciones:'', fechaInicio:'', cumpleanos:'', semanaInicio:'' }, vencimiento:'', trainerNotes: [], nextWeekNotes: {} };
+  let lastError = null;
+  for(let attempt=0; attempt<3; attempt++){
+    try{
+      const parsed = (await dbGet(storageKey(name))) || { exercises: {} };
+      if(!parsed.completados) parsed.completados = {};
+      if(!parsed.bodyWeight) parsed.bodyWeight = [];
+      if(!parsed.weightPromptSeen) parsed.weightPromptSeen = false;
+      if(!parsed.ficha) parsed.ficha = { objetivo:'', nivel:'', restricciones:'', fechaInicio:'', cumpleanos:'', semanaInicio:'', telefono:'' };
+      if(parsed.ficha.semanaInicio === undefined) parsed.ficha.semanaInicio = '';
+      if(parsed.ficha.telefono === undefined) parsed.ficha.telefono = '';
+      if(!parsed.vencimiento) parsed.vencimiento = '';
+      if(!parsed.trainerNotes) parsed.trainerNotes = [];
+      if(!parsed.nextWeekNotes) parsed.nextWeekNotes = {};
+      return parsed;
+    }catch(e){
+      lastError = e;
+      if(attempt < 2) await new Promise(r=>setTimeout(r, 700));
+    }
   }
+  throw lastError;
 }
 function persistUiProgress(){
   if(!state.clienta) return;
@@ -1867,6 +1872,18 @@ function formatDate(iso){
 function render(){
   const app = document.getElementById('app');
   document.body.classList.toggle('theme-masculine', !!(state.clienta && isMasculino(state.clienta)));
+  if(state.view === 'session-error'){
+    app.innerHTML = `
+      <div class="login-wrap">
+        <div class="brand">russ.trainer</div>
+        <h1>⚠️ No pudimos conectar</h1>
+        <p class="sub">Hubo un problema de conexión al cargar tus datos. Tu información está a salvo, no se perdió nada — solo hace falta volver a intentar.</p>
+        <button class="btn-primary" id="retry-session-btn" style="margin-top:14px;">Reintentar</button>
+      </div>
+    `;
+    document.getElementById('retry-session-btn').onclick = ()=>{ restoreSession(); };
+    return;
+  }
   if(state.view === 'login'){
     app.innerHTML = `
       <div class="login-wrap">
@@ -3225,7 +3242,14 @@ async function onEnter(){
   }
   localStorage.setItem('rt_session', name);
   state.clienta = name;
-  state.data = await loadClienta(name);
+  try{
+    state.data = await loadClienta(name);
+  }catch(e){
+    err.textContent = '⚠️ No se pudo conectar con la base de datos. Revisá tu conexión a internet y volvé a intentar — tu información no se perdió.';
+    err.classList.remove('hidden');
+    state.clienta = null;
+    return;
+  }
   restoreUiProgress();
   state.view = state.data.weightPromptSeen ? 'dashboard' : 'welcome';
   render();
@@ -3345,7 +3369,14 @@ async function restoreSession(){
     return;
   }
   state.clienta = saved;
-  state.data = await loadClienta(saved);
+  try{
+    state.data = await loadClienta(saved);
+  }catch(e){
+    state.clienta = null;
+    state.view = 'session-error';
+    render();
+    return;
+  }
   restoreUiProgress();
   state.view = state.data.weightPromptSeen ? 'dashboard' : 'welcome';
   render();
