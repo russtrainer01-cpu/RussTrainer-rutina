@@ -1551,6 +1551,8 @@ function isDayCompleteOn(data, dayLabel, items, dateStr){
       return !!(c && c.done && c.date === dateStr);
     }
     if(item.tipo === 'circuito'){
+      const forced = data.completados[dayLabel] && data.completados[dayLabel]['circuit-' + idx];
+      if(forced && forced.done && forced.date === dateStr) return true;
       return item.ejercicios.every(ex=>{
         const entries = (data.exercises[ex.ejercicio] || []).filter(e=> e.date === dateStr);
         return entries.length >= item.rondas;
@@ -2728,7 +2730,8 @@ function render(){
         const c = doneToday[i];
         if(c && c.done && c.date === todayStr) doneCount++;
       } else if(item.tipo === 'circuito'){
-        const allDone = item.ejercicios.every(ex=>{
+        const forced = doneToday['circuit-' + i];
+        const allDone = (forced && forced.done && forced.date === todayStr) || item.ejercicios.every(ex=>{
           const entries = (state.data.exercises[ex.ejercicio] || []).filter(e=> e.date === todayStr);
           return entries.length >= item.rondas;
         });
@@ -2798,7 +2801,8 @@ function render(){
         }
         let activeExIdx = item.ejercicios.findIndex(ex=> !doneThisRound(ex));
         if(activeExIdx === -1) activeExIdx = item.ejercicios.length - 1;
-        const circuitDone = circuitState.round >= item.rondas && item.ejercicios.every(doneThisRound);
+        const forcedDone = !!(state.data.completados[state.routineDay] && state.data.completados[state.routineDay]['circuit-'+idx] && state.data.completados[state.routineDay]['circuit-'+idx].date === todayISO());
+        const circuitDone = forcedDone || (circuitState.round >= item.rondas && item.ejercicios.every(doneThisRound));
 
         const box = document.createElement('div');
         let inner = `
@@ -2808,7 +2812,9 @@ function render(){
           </div>
         `;
         if(circuitDone){
-          inner += `<div class="tip" style="text-align:center; font-weight:700;">✓ Circuito completo — ${item.rondas} rondas</div>`;
+          inner += forcedDone && circuitState.round < item.rondas
+            ? `<div class="tip" style="text-align:center; font-weight:700;">✓ Circuito finalizado (${circuitState.round} de ${item.rondas} rondas)</div>`
+            : `<div class="tip" style="text-align:center; font-weight:700;">✓ Circuito completo — ${item.rondas} rondas</div>`;
         } else {
           inner += `
             <div class="circuit-round-row">
@@ -2819,6 +2825,7 @@ function render(){
                 <button class="circuit-round-plus" data-cidx="${idx}">+</button>
               </div>
             </div>
+            <button class="link-btn circuit-finish-btn" data-idx="${idx}" style="width:100%; text-align:center; font-size:11px; margin:4px 0 10px;">Finalizar circuito acá (no voy a completar todas las rondas)</button>
             <div class="circuit-list">
           `;
           item.ejercicios.forEach((ex, exIdx)=>{
@@ -3004,6 +3011,16 @@ function render(){
         const key = btn.dataset.videotoggle;
         if(state.uiVideoOpen[key]) delete state.uiVideoOpen[key];
         else state.uiVideoOpen[key] = true;
+        render();
+      };
+    });
+    wrap.querySelectorAll('.circuit-finish-btn').forEach(btn=>{
+      btn.onclick = async ()=>{
+        if(!confirm('¿Finalizar este circuito acá? Se va a marcar como hecho por hoy, aunque no hayas completado todas las rondas.')) return;
+        const dayLabel = state.routineDay;
+        if(!state.data.completados[dayLabel]) state.data.completados[dayLabel] = {};
+        state.data.completados[dayLabel]['circuit-' + btn.dataset.idx] = { done:true, date: todayISO() };
+        await saveClienta(state.clienta, state.data);
         render();
       };
     });
