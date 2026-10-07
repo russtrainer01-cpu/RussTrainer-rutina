@@ -805,6 +805,36 @@
     color:#9c9c9c;
     font-weight:700;
   }
+  /* ===== Inicio con línea de tiempo por semana ===== */
+  .wk-head{ display:flex; align-items:center; gap:10px; margin:24px 0 12px; }
+  .wk-title{ margin:0; font-size:22px; font-weight:800; color:var(--text); }
+  .wk-chip{ background:#3f6b3f; color:#fff; font-size:12px; font-weight:700; padding:4px 10px; border-radius:99px; }
+  .wk-count{ margin-left:auto; font-size:14px; font-weight:700; color:#6e655d; }
+  .wk-bar{ display:grid; gap:6px; margin-bottom:18px; }
+  .wk-seg{ height:8px; border-radius:4px; background:#E4DFD0; }
+  .wk-seg.done{ background:#5b8f6f; }
+  .wk-seg.today{ background:#a85c68; }
+  .wk-row{ display:flex; gap:14px; }
+  .wk-rail{ display:flex; flex-direction:column; align-items:center; width:32px; flex-shrink:0; }
+  .wk-dot{ width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-sizing:border-box; flex-shrink:0; }
+  .wk-dot.done{ background:#5b8f6f; }
+  .wk-dot.today{ background:#a85c68; color:#fff; font-weight:800; font-size:14px; }
+  .wk-dot.pending{ width:28px; height:28px; margin:2px 0; border:2px solid #b9b0a0; color:#6e655d; font-weight:800; font-size:14px; }
+  .wk-dot.extra{ border:2px dashed #a85c68; }
+  .wk-line{ width:2px; flex:1; min-height:12px; background:#d8d1c0; }
+  .wk-line.done{ background:#5b8f6f; }
+  .wk-line.none{ background:transparent; }
+  .wk-card{ flex:1; min-width:0; display:flex; align-items:center; gap:8px; min-height:58px; margin-bottom:10px; padding:0 14px; border:0; border-radius:14px; background:var(--bg-card); cursor:pointer; text-align:left; color:var(--text); font-family:inherit; }
+  .wk-card.today{ background:#F3E3E5; }
+  .wk-card-text{ flex:1; min-width:0; }
+  .wk-name{ font-size:15px; font-weight:700; }
+  .wk-sub{ font-size:13px; font-weight:600; color:#6e655d; }
+  .wk-sub.done{ color:#3f6b3f; }
+  .wk-sub.today{ color:#a85c68; }
+  .wk-prev-label{ font-size:12px; font-weight:700; letter-spacing:0.08em; color:#6e655d; margin:22px 0 8px; }
+  .wk-prev-btn{ width:100%; display:flex; align-items:center; gap:8px; min-height:56px; margin-bottom:8px; padding:0 16px; border:0; border-radius:14px; background:var(--bg-card); cursor:pointer; text-align:left; color:var(--text); font-family:inherit; }
+  .wk-prev-day{ width:100%; display:flex; align-items:center; gap:12px; min-height:46px; padding:0 6px; border:0; border-bottom:1px solid #E4DFD0; background:none; cursor:pointer; text-align:left; color:#6e655d; font-size:14px; font-weight:600; font-family:inherit; }
+  .wk-prev-day .wk-empty{ width:14px; height:14px; border-radius:50%; border:2px solid #b9b0a0; box-sizing:border-box; flex-shrink:0; margin:0 1px; }
   .cal-header{
     display:flex;
     justify-content:space-between;
@@ -1127,40 +1157,6 @@ function youtubeEmbedUrl(url){
 }
 
 const ROUTINES = {
-  'lorena': {
-    'Día 1': [
-      { seccion:'🤸 Entrada en calor', ejercicio:'Cinta (entrada en calor)', series:'-', reps:'5-8 min suave', peso:'Sin peso', tipo:'checklist', video:null },
-      { seccion:'🤸 Entrada en calor', ejercicio:'Movilidad cuerpo completo', series:'-', reps:'-', peso:'Sin peso', tipo:'checklist', video:'https://www.youtube.com/shorts/KNPnEmf2Qnc' },
-      { seccion:'🏋️ Bloque principal', ejercicio:'Jalón abierto', series:'3 series', reps:'14', peso:'Poco peso', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/-MS6Z88wv5I', nota:'Llevá los codos hacia abajo y atrás, no tires solo con los brazos.' },
-      { seccion:'🏋️ Bloque principal', ejercicio:'Peso muerto rumano con mancuernas livianas', series:'3 series', reps:'14', peso:'Livianas', tipo:'carga', sinPeso:false, video:null, nota:'Espalda recta todo el movimiento, la bisagra es de cadera, no de rodilla.' },
-      { seccion:'🏋️ Bloque principal', ejercicio:'Sentadilla a banco', series:'3 series', reps:'14', peso:'Sin peso (técnica)', tipo:'carga', sinPeso:true, video:null, nota:'Bajá controlada hasta tocar el banco, no te dejes caer.' },
-      { seccion:'🏋️ Bloque principal', ejercicio:'Puente de glúteos', series:'3 series', reps:'12 a 14', peso:'Sin peso', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/Cxp6D7LEqjM', nota:'Apretá bien el glúteo arriba, no arquees la zona lumbar.' },
-      { seccion:'🏋️ Bloque principal', ejercicio:'Press militar con mancuernas', series:'3 series', reps:'14', peso:'Poco peso', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/H3JwesAsumc', nota:'No arquees la espalda baja, activá el core al empujar.' },
-      { seccion:'🏋️ Bloque principal', ejercicio:'Press de hombros sentado', series:'3 series', reps:'14', peso:'Poco peso', tipo:'carga', sinPeso:false, video:null },
-      { seccion:'🏋️ Bloque principal', ejercicio:'Plancha inclinada (manos en banco)', series:'3 series', reps:'30-40 seg', peso:'Sin peso', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/nARfq78Dd-M', nota:'Cuerpo en línea recta, no dejes caer la cadera.' }
-    ],
-    'Día 2': [
-      { seccion:'🤸 Entrada en calor', ejercicio:'Cinta (entrada en calor)', series:'-', reps:'5-8 min suave', peso:'Sin peso', tipo:'checklist', video:null },
-      { seccion:'🤸 Entrada en calor', ejercicio:'Movilidad cuerpo completo', series:'-', reps:'-', peso:'Sin peso', tipo:'checklist', video:'https://www.youtube.com/shorts/KNPnEmf2Qnc' },
-      { seccion:'🏋️ Bloque principal', ejercicio:'Curl alternado', series:'3 series', reps:'14', peso:'Mancuernas livianas', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/c3Pl0072T7Q' },
-      { seccion:'🏋️ Bloque principal', ejercicio:'Sentadilla Goblet', series:'3 series', reps:'14', peso:'Mancuerna liviana', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/E2IoOrR3o6k' },
-      { seccion:'🏋️ Bloque principal', ejercicio:'Remo con mancuerna', series:'3 series', reps:'14', peso:'Mancuernas livianas', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/qTOaWaCxB8U' },
-      { seccion:'🏋️ Bloque principal', ejercicio:'Press de pecho con mancuernas', series:'3 series', reps:'14', peso:'Mancuernas livianas', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/VHtP8icWGaI' },
-      { seccion:'🏋️ Bloque principal', ejercicio:'Hip Thrust con mancuerna', series:'3 series', reps:'14', peso:'Mancuerna liviana', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/wYT_Ru0yGD0' },
-      { seccion:'🏋️ Bloque principal', ejercicio:'Superman', series:'3 series', reps:'14', peso:'Sin peso', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/e_VshMf5eGg' }
-    ],
-    'Día 3': [
-      { seccion:'🤸 Entrada en calor', ejercicio:'Cinta (entrada en calor)', series:'-', reps:'5 min suave', peso:'Sin peso', tipo:'checklist', video:null },
-      { seccion:'🤸 Entrada en calor', ejercicio:'Movilidad cuerpo completo', series:'-', reps:'-', peso:'Sin peso', tipo:'checklist', video:'https://www.youtube.com/shorts/KNPnEmf2Qnc' },
-      { seccion:'🏋️ Bloque principal', ejercicio:'Jalón agarre cerrado', series:'3 series', reps:'14', peso:'Poco peso', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/eaKV50dVxK4' },
-      { seccion:'🏋️ Bloque principal', ejercicio:'Zancada estática', series:'3 series', reps:'12 por pierna', peso:'Mancuernas livianas', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/K69_pVU11qs' },
-      { seccion:'🏋️ Bloque principal', ejercicio:'Patada de tríceps', series:'3 series', reps:'14', peso:'Mancuernas livianas', tipo:'carga', sinPeso:false, video:null },
-      { seccion:'🏋️ Bloque principal', ejercicio:'Aperturas con mancuernas', series:'3 series', reps:'14', peso:'Mancuernas livianas', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/WvOpBoKbaaY' },
-      { seccion:'🏋️ Bloque principal', ejercicio:'Elevaciones laterales', series:'3 series', reps:'14', peso:'Mancuernas muy livianas', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/zEANAIh1l9g' },
-      { seccion:'🏋️ Bloque principal', ejercicio:'Plancha frontal', series:'3 series', reps:'30-40 seg', peso:'Sin peso', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/MczN_Wu94Hc' },
-      { seccion:'🏋️ Bloque principal', ejercicio:'Cinta (cierre cardio)', series:'-', reps:'10 min suave', peso:'Sin peso', tipo:'checklist', video:null }
-    ]
-  },
   'anderson': {
     'Semana 2 - Día 1': [
       { seccion:'🤸 Entrada en calor', ejercicio:'Movilidad cuerpo completo', series:'-', reps:'-', peso:'Sin peso', tipo:'checklist', video:'https://www.youtube.com/shorts/KNPnEmf2Qnc' },
@@ -1304,55 +1300,6 @@ const ROUTINES = {
       ]}
     ]
   },
-  'rosa': {
-    'Día 1': [
-      { seccion:'🤸 Entrada en calor', ejercicio:'Cinta (entrada en calor)', series:'-', reps:'10 min suave', peso:'Sin peso', tipo:'checklist', video:null, nota:'Elevación 2, ritmo 4 a 4.5.' },
-      { seccion:'🤸 Entrada en calor', ejercicio:'Movilidad cuerpo completo', series:'-', reps:'-', peso:'Sin peso', tipo:'checklist', video:'https://www.youtube.com/shorts/KNPnEmf2Qnc' },
-      { seccion:'🏋️ Bloque principal', ejercicio:'Remo sentado', series:'3 series', reps:'12-14', peso:'Poco peso', descanso:'60 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/I3Wi6GK0QMk', nota:'Espalda recta, llevá los codos atrás sin balancear el torso.' },
-      { seccion:'🏋️ Bloque principal', ejercicio:'Press militar con mancuernas', series:'3 series', reps:'12-14', peso:'Poco peso', descanso:'60 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/H3JwesAsumc', nota:'No arquees la espalda baja, activá el core al empujar.' },
-      { seccion:'🏋️ Bloque principal', ejercicio:'Jalón abierto', series:'3 series', reps:'12-14', peso:'Poco peso', descanso:'60 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/-MS6Z88wv5I', nota:'Llevá los codos hacia abajo y atrás, no tires solo con los brazos.' },
-      { seccion:'🏋️ Bloque principal', ejercicio:'Elevaciones laterales', series:'3 series', reps:'12-14', peso:'3kg', descanso:'45 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/zEANAIh1l9g', nota:'Subí hasta la altura del hombro, sin impulso ni encoger el cuello.' },
-      { seccion:'🏋️ Bloque principal', ejercicio:'Curl alternado', series:'3 series', reps:'12-14', peso:'Mancuernas livianas', descanso:'45 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/c3Pl0072T7Q', nota:'Codos fijos, no balancees el cuerpo para subir el peso.' },
-      { seccion:'🧱 Core', ejercicio:'Plancha inclinada (manos en banco)', series:'3 series', reps:'20-30 seg', peso:'Sin peso', descanso:'30 seg', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/nARfq78Dd-M', nota:'Cuerpo en línea recta, no dejes caer la cadera.' },
-      { seccion:'❤️ Cierre cardio', ejercicio:'Cinta (cierre cardio)', series:'-', reps:'15 min suave', peso:'Sin peso', tipo:'checklist', video:null }
-    ],
-    'Día 2': [
-      { seccion:'🤸 Entrada en calor', ejercicio:'Cinta (entrada en calor)', series:'-', reps:'10 min suave', peso:'Sin peso', tipo:'checklist', video:null, nota:'Elevación 2, ritmo 4 a 4.5.' },
-      { seccion:'🤸 Entrada en calor', ejercicio:'Movilidad cuerpo completo', series:'-', reps:'-', peso:'Sin peso', tipo:'checklist', video:'https://www.youtube.com/shorts/KNPnEmf2Qnc' },
-      { seccion:'🍑 Tren inferior', ejercicio:'Abducción en máquina', series:'3 series', reps:'15', peso:'Poco peso', descanso:'45 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/ghrWOwqn5eM', nota:'Movimiento controlado, sin impulso ni balanceo de cadera.' },
-      { seccion:'🍑 Tren inferior', ejercicio:'Aductores en máquina', series:'3 series', reps:'15', peso:'Poco peso', descanso:'45 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/vlViIgtkvh4', nota:'Espalda apoyada, cerrá las piernas de forma controlada sin soltar de golpe.' },
-      { seccion:'🍑 Tren inferior', ejercicio:'Sentadilla Smith', series:'3 series', reps:'12-14', peso:'Sin peso', descanso:'60 seg', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/rQw8GUzpj1I', nota:'Rodillas alineadas con los pies, bajá controlado sin hundir la espalda baja.' },
-      { seccion:'🍑 Tren inferior', ejercicio:'Puente de glúteos', series:'3 series', reps:'12-14', peso:'Mancuerna 5kg', descanso:'60 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/Cxp6D7LEqjM', nota:'Apretá glúteo arriba, sin arquear de más la zona lumbar.' },
-      { seccion:'🍑 Tren inferior', ejercicio:'Prensa 45°', series:'3 series', reps:'12-14', peso:'Poco peso', descanso:'60 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/8gPJfr-2aRM', nota:'No bloquees las rodillas al extender, bajá con control.' },
-      { seccion:'🍑 Tren inferior', ejercicio:'Sillón de cuádriceps', series:'2 series', reps:'12-14', peso:'Poco peso', descanso:'60 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/D-_nNSzsWxY', nota:'Subí sin impulso y bajá controlado, sin trabar de golpe la rodilla.' },
-      { seccion:'❤️ Cierre cardio', ejercicio:'Cinta (cierre cardio)', series:'-', reps:'15 min suave', peso:'Sin peso', tipo:'checklist', video:null }
-    ],
-    'Día 3 · Reto Cardio 🏃‍♀️': [
-      { seccion:'🏃‍♀️ Cardio', ejercicio:'Cinta — Intervalos 5x5x5x5x5', series:'-', reps:'25 min (5 min rápido / 5 min lento, x5)', peso:'Sin peso', tipo:'checklist', video:null, nota:'Poné tu música favorita, la que te dé energía. Mantené la espalda derecha y los brazos relajados; en los tramos rápidos, acortá el paso en vez de alargarlo demasiado.' },
-      { seccion:'🧱 Core', ejercicio:'Plancha frontal', series:'4 series', reps:'30 seg', peso:'Sin peso', descanso:'30 seg', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/MczN_Wu94Hc', nota:'Cuerpo en línea recta, no dejes caer la cadera ni levantes la cola.' },
-      { tipo:'mensaje', texto:'Mami, hoy no hay excusas: solo vos, la cinta y tu música. Cada intervalo rápido te acerca un poquito más a sentirte mejor. Estoy muy orgullosa de vos por seguir metiéndole ganas todos los días. ¡Vamos con todo!' }
-    ],
-    'Día 4 - Pecho + Tríceps + Core': [
-      { seccion:'🤸 Entrada en calor', ejercicio:'Cinta (entrada en calor)', series:'-', reps:'10 min suave', peso:'Sin peso', tipo:'checklist', video:null, nota:'Elevación 2, ritmo 4 a 4.5.' },
-      { seccion:'🤸 Entrada en calor', ejercicio:'Movilidad cuerpo completo', series:'-', reps:'-', peso:'Sin peso', tipo:'checklist', video:'https://www.youtube.com/shorts/KNPnEmf2Qnc' },
-      { seccion:'💪 Bloque principal', ejercicio:'Press de pecho en el piso (colchoneta)', series:'3 series', reps:'12-14', peso:'Poco peso', descanso:'60 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/DfzDjXCO2Nw', nota:'Codos a 45° del torso, no los abras del todo al bajar.' },
-      { seccion:'💪 Bloque principal', ejercicio:'Aperturas en máquina', series:'3 series', reps:'12-14', peso:'Poco peso', descanso:'45 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/Y4jzm2c3szA', nota:'Movimiento amplio y controlado, sin trabar los codos.' },
-      { seccion:'💪 Bloque principal', ejercicio:'Face Pull', series:'3 series', reps:'15', peso:'Poco peso', descanso:'45 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/vU30xyp6IYM', nota:'Tirá hacia la cara, codos altos, para equilibrar el trabajo de pecho.' },
-      { seccion:'💪 Bloque principal', ejercicio:'Extensión en polea', series:'3 series', reps:'12-14', peso:'Poco peso', descanso:'45 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/4NWWB0f0vzQ', nota:'Codos fijos pegados al cuerpo, extendé sin balancear el torso.' },
-      { seccion:'🧱 Core', ejercicio:'Crunch', series:'3 series', reps:'10', peso:'Sin peso', descanso:'30 seg', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/BzYrN4o5X5o', nota:'Subí solo con el abdomen, sin tirar del cuello con las manos.' },
-      { seccion:'🧱 Core', ejercicio:'Mountain Climbers', series:'3 series', reps:'8 por pierna', peso:'Sin peso', descanso:'30 seg', tipo:'carga', sinPeso:true, video:'https://www.youtube.com/shorts/tQkpdUWK8KU', nota:'Hacelo lento y controlado — no es una carrera, priorizá la técnica sobre la velocidad.' },
-      { seccion:'❤️ Cierre cardio', ejercicio:'Cinta (cierre cardio)', series:'-', reps:'15 min suave', peso:'Sin peso', tipo:'checklist', video:null }
-    ],
-    'Día 5': [
-      { seccion:'🤸 Entrada en calor', ejercicio:'Bici estática (calentamiento)', series:'-', reps:'8 min', peso:'Sin peso', tipo:'checklist', video:null },
-      { seccion:'💪 Bloque principal', ejercicio:'Sentadilla con mancuerna', series:'3 series', reps:'12-14', peso:'5kg', descanso:'60 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/E2IoOrR3o6k' },
-      { seccion:'💪 Bloque principal', ejercicio:'Subida al step', series:'3 series', reps:'12 por pierna', peso:'Mancuernas 2.5kg', descanso:'45 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/Ey2H3-zmzSk' },
-      { seccion:'💪 Bloque principal', ejercicio:'Prensa 45°', series:'3 series', reps:'12-14', peso:'Poco peso', descanso:'60 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/8gPJfr-2aRM' },
-      { seccion:'💪 Bloque principal', ejercicio:'Sillón de cuádriceps', series:'3 series', reps:'12-14', peso:'Poco peso', descanso:'60 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/D-_nNSzsWxY' },
-      { seccion:'💪 Bloque principal', ejercicio:'Aductores en máquina', series:'3 series', reps:'15', peso:'Poco peso', descanso:'45 seg', tipo:'carga', sinPeso:false, video:'https://www.youtube.com/shorts/vlViIgtkvh4' },
-      { seccion:'❤️ Cierre cardio', ejercicio:'Cinta (cierre cardio)', series:'-', reps:'15 min suave', peso:'Sin peso', tipo:'checklist', video:null }
-    ]
-  },
   'yo': {
     'Semana 1 - Día 1 - Glúteos': [
       { seccion:'🍑 Glúteos', ejercicio:'Clamshell con mancuerna', series:'3 series', reps:'12', peso:'5kg', descanso:'35 seg', tipo:'carga', sinPeso:false, video:null },
@@ -1459,6 +1406,50 @@ const ROUTINES = {
       { seccion:'🦵 Piernas', ejercicio:'Prensa', series:'3 series', reps:'10', peso:'80kg', descanso:'1 min', tipo:'carga', sinPeso:false, video:null },
       { seccion:'🦵 Piernas', ejercicio:'Camilla femoral', series:'3 series', reps:'15', peso:'2 bloques', descanso:'1 min', tipo:'carga', sinPeso:false, video:null },
       { seccion:'🦵 Aductores', ejercicio:'Aductor con pelota en puente', series:'3 series', reps:'20', peso:'Sin peso (pelota)', descanso:'1 min', tipo:'carga', sinPeso:true, video:null }
+    ],
+    'Semana 3 - Día 1 - Glúteos': [
+      { seccion:'🍑 Glúteos', ejercicio:'Clamshell con mancuerna', series:'3 series', reps:'15', peso:'10kg', descanso:'35 seg', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🍑 Glúteos', ejercicio:'Hip Thrust en máquina', series:'4 series', reps:'10', peso:'25kg x lado', descanso:'2 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🍑 Glúteos', ejercicio:'Peso muerto con mancuernas', series:'4 series', reps:'10', peso:'17.5kg x lado', descanso:'1.5 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🍑 Glúteos', ejercicio:'Zancadas hacia atrás en Smith', series:'3 series', reps:'12 por pierna', peso:'10kg x lado', descanso:'1 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🍑 Glúteos', ejercicio:'Sentadilla sumo (dropset)', series:'4 series', reps:'12', peso:'35kg → baja a 20kg', descanso:'1 min', tipo:'carga', sinPeso:false, video:null }
+    ],
+    'Semana 3 - Día 2 - Espalda + Hombros + Abs': [
+      { seccion:'🏋️ Espalda', ejercicio:'Jalón cerrado', series:'4 series', reps:'8', peso:'30kg', descanso:'1 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🏋️ Espalda', ejercicio:'Remo con máquina', series:'4 series', reps:'10', peso:'20kg', descanso:'1 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🏋️ Espalda', ejercicio:'Pull over con polea', series:'3 series', reps:'12', peso:'20kg', descanso:'1 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🏋️ Espalda', ejercicio:'Dominadas asistidas', series:'3 series', reps:'4-5', peso:'Asistidas 20.4kg', descanso:'20 seg', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🤲 Hombros', ejercicio:'Press militar', series:'3 series', reps:'10', peso:'8kg', descanso:'45 seg', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🤲 Hombros', ejercicio:'Elevaciones laterales', series:'4 series', reps:'8', peso:'6kg', descanso:'40 seg', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🤲 Hombros', ejercicio:'Pájaros', series:'4 series', reps:'10', peso:'5kg', descanso:'45 seg', tipo:'carga', sinPeso:false, video:null },
+      { tipo:'circuito', seccion:'🧱 Abs', titulo:'Abs', rondas:4, reglas:'Haz cada ejercicio en orden, sin descanso entre ellos.', descansoRondas:'40 seg', ejercicios:[
+        { ejercicio:'Crunch con peso', reps:'15', peso:'Disco 5kg', sinPeso:false, video:null },
+        { ejercicio:'Tijeras abs', reps:'15', peso:'Sin peso', sinPeso:true, video:null },
+        { ejercicio:'Mountain Climber', reps:'30 seg', peso:'Sin peso', sinPeso:true, video:null }
+      ]}
+    ],
+    'Semana 3 - Día 3 - Glúteos y Piernas': [
+      { seccion:'🍑 Activación', ejercicio:'Activación con tobilleras', series:'2 series', reps:'15', peso:'Tobilleras 5kg', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🍑 Glúteos', ejercicio:'Hip Thrust unilateral', series:'4 series', reps:'10', peso:'12kg', descanso:'1 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🍑 Glúteos', ejercicio:'Búlgaras con giro (1x1)', series:'4 series', reps:'8', peso:'Mancuerna 12kg', descanso:'1 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🦵 Piernas', ejercicio:'Zancadas caminadas', series:'3 series', reps:'12', peso:'10kg', descanso:'1 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🦵 Piernas', ejercicio:'Prensa', series:'3 series', reps:'10', peso:'80kg', descanso:'1 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🦵 Piernas', ejercicio:'Camilla femoral', series:'3 series', reps:'15', peso:'2 bloques', descanso:'1 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🦵 Aductores', ejercicio:'Aductor con pelota en puente', series:'3 series', reps:'20', peso:'Sin peso (pelota)', descanso:'1 min', tipo:'carga', sinPeso:true, video:null }
+    ],
+    'Semana 3 - Día 4 - Tríceps + Espalda + Abs': [
+      { seccion:'🏋️ Espalda', ejercicio:'Remo unilateral', series:'4 series', reps:'12', peso:'12.5kg', descanso:'45 seg', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🏋️ Espalda', ejercicio:'Face pull con polea', series:'4 series', reps:'12', peso:'23kg', descanso:'1 min', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🏋️ Espalda', ejercicio:'Elevación unilateral con polea', series:'3 series', reps:'12', peso:'1 bloque', descanso:'45 seg', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'💪 Tríceps', ejercicio:'Fondo de tríceps', series:'4 series', reps:'12', peso:'Sin peso', descanso:'40 seg', tipo:'carga', sinPeso:true, video:null },
+      { seccion:'💪 Tríceps', ejercicio:'Flexiones con banda', series:'3 series', reps:'8', peso:'Banda', descanso:'45 seg', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'💪 Tríceps', ejercicio:'Extensión con polea', series:'3 series', reps:'12', peso:'2 bloques', descanso:'45 seg', tipo:'carga', sinPeso:false, video:null },
+      { seccion:'🏋️ Espalda', ejercicio:'Superman', series:'2 series', reps:'12', peso:'Sin peso', descanso:'30 seg', tipo:'carga', sinPeso:true, video:null },
+      { tipo:'circuito', seccion:'🧱 Abs', titulo:'Abs', rondas:4, reglas:'Haz cada ejercicio en orden, sin descanso entre ellos.', descansoRondas:'45 seg', ejercicios:[
+        { ejercicio:'Pelota (1 y 1)', reps:'12', peso:'Sin peso', sinPeso:true, video:null },
+        { ejercicio:'Crunch unilateral con mancuerna', reps:'12', peso:'5kg', sinPeso:false, video:null },
+        { ejercicio:'Elevación dinámica en banco', reps:'12', peso:'Sin peso', sinPeso:true, video:null }
+      ]}
     ],
     'Día Juntos 💕': [
       { seccion:'💕 Con Braian', ejercicio:'Press militar con Smith', series:'3 series', reps:'12', peso:'A definir', descanso:'1 min', tipo:'carga', sinPeso:false, video:null },
@@ -1780,12 +1771,10 @@ async function loadAdminData(){
 }
 
 const CLIENT_CONFIG = {
-  'lorena': { diasPorSemana: 4, genero: 'femenino' },
   'anderson': { diasPorSemana: 4, genero: 'masculino' },
   'roiner': { diasPorSemana: 5, genero: 'masculino' },
   'braian': { diasPorSemana: 5, genero: 'masculino' },
-  'rosa': { diasPorSemana: 5, genero: 'femenino' },
-  'yo': { diasPorSemana: 5, genero: 'femenino' },
+  'yo': { diasPorSemana: 4, genero: 'femenino' },
   'mae': { diasPorSemana: 5, genero: 'femenino' }
 };
 function weeklyTarget(name){
@@ -1835,6 +1824,159 @@ function computeWeekCount(data){
     cursor.setDate(cursor.getDate()-1);
   }
   return count;
+}
+
+// ===== Inicio con línea de tiempo (Braian, Mae y yo) =====
+const NEW_HOME_USERS = ['braian','mae','yo'];
+function usesNewHome(name){ return NEW_HOME_USERS.indexOf(routineKey(name)) !== -1; }
+
+// Igual que computeWeekCount, pero un día en que solo se hizo el extra (Día Juntos) no cuenta.
+function computeWeekCountNoExtra(data, routine){
+  const { noSemana } = groupDaysBySemana(routine);
+  const extraNames = new Set();
+  noSemana.forEach(d=> routine[d].forEach(it=>{
+    if(it.tipo === 'circuito') it.ejercicios.forEach(e=> extraNames.add(e.ejercicio));
+    else if(it.ejercicio) extraNames.add(it.ejercicio);
+  }));
+  const dates = getActivityDates(data);
+  let count = 0;
+  const cursor = new Date();
+  for(let i=0;i<7;i++){
+    const ds = cursor.toISOString().slice(0,10);
+    if(dates.has(ds)){
+      const names = Object.keys(data.exercises || {}).filter(n=> (data.exercises[n] || []).some(e=> e.date === ds));
+      const doneLabels = Object.keys(data.completados || {}).filter(l=> Object.values(data.completados[l] || {}).some(v=> v && v.done && v.date === ds));
+      const regularLabel = doneLabels.some(l=> noSemana.indexOf(l) === -1);
+      const regularName = names.some(n=> !extraNames.has(n));
+      // Un día solo con actividad del extra (Día Juntos) no suma al conteo semanal.
+      if(regularLabel || regularName || (names.length === 0 && doneLabels.length === 0)) count++;
+    }
+    cursor.setDate(cursor.getDate()-1);
+  }
+  return count;
+}
+
+function isDayEverComplete(data, day, items){
+  const dates = Array.from(getActivityDates(data));
+  return dates.some(ds=> isDayCompleteOn(data, day, items, ds));
+}
+
+function renderWeekTimeline(box, routine){
+  const svgCheck = (color, size)=> `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
+  const svgChevron = (down)=> `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6e655d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="${down ? 'M6 9l6 6 6-6' : 'M9 6l6 6-6 6'}"/></svg>`;
+  const svgPlus = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a85c68" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>`;
+  const openDay = (day)=>{ state.view='routine-day'; state.routineDay=day; render(); };
+
+  const { groups, groupLabels, noSemana } = groupDaysBySemana(routine);
+  const semanaKeys = Object.keys(groups).map(Number).sort((a,b)=>a-b);
+  const maxSemana = getMaxSemana(routine);
+  const currentDays = semanaKeys.length ? (groups[maxSemana] || []) : [];
+  const candidates = currentDays.concat(noSemana);
+  const heroDay = getNextRotationDay(state.data, routine, candidates);
+  const heroIdx = heroDay ? candidates.indexOf(heroDay) : -1;
+
+  const status = currentDays.map((day, i)=>{
+    if(heroIdx === -1) return 'done';
+    if(i < heroIdx) return 'done';
+    return day === heroDay ? 'today' : 'pending';
+  });
+  const doneCount = status.filter(s=> s === 'done').length;
+
+  if(currentDays.length){
+    const head = document.createElement('div');
+    head.className = 'wk-head';
+    head.innerHTML = `<h2 class="wk-title">${escapeHtml(groupLabels[maxSemana])}</h2><span class="wk-chip">Actual</span><span class="wk-count">${doneCount} de ${currentDays.length}</span>`;
+    box.appendChild(head);
+
+    const bar = document.createElement('div');
+    bar.className = 'wk-bar';
+    bar.style.gridTemplateColumns = `repeat(${currentDays.length}, minmax(0, 1fr))`;
+    bar.innerHTML = status.map(s=> `<div class="wk-seg ${s === 'pending' ? '' : s}"></div>`).join('');
+    box.appendChild(bar);
+  }
+
+  const list = document.createElement('div');
+  currentDays.forEach((day, i)=>{
+    const s = status[i];
+    const isLastOfAll = (i === currentDays.length - 1) && noSemana.length === 0;
+    const { dayName } = parseDayLabel(day);
+    const row = document.createElement('div');
+    row.className = 'wk-row';
+    const dotInner = s === 'done' ? svgCheck('#fff', 16) : String(i + 1);
+    row.innerHTML = `
+      <div class="wk-rail">
+        <div class="wk-dot ${s}">${dotInner}</div>
+        <div class="wk-line ${isLastOfAll ? 'none' : (s === 'done' ? 'done' : '')}"></div>
+      </div>
+      <button class="wk-card ${s === 'today' ? 'today' : ''}">
+        <div class="wk-card-text">
+          <div class="wk-name">${escapeHtml(dayName)}</div>
+          <div class="wk-sub ${s === 'pending' ? '' : s}">${s === 'done' ? 'Completado' : (s === 'today' ? 'Hoy toca' : 'Pendiente')}</div>
+        </div>
+        ${svgChevron(false)}
+      </button>`;
+    row.querySelector('.wk-card').onclick = ()=> openDay(day);
+    list.appendChild(row);
+  });
+  noSemana.forEach((day, i)=>{
+    const isToday = day === heroDay;
+    const doneToday = isDayCompleteOn(state.data, day, routine[day], todayISO());
+    const row = document.createElement('div');
+    row.className = 'wk-row';
+    row.innerHTML = `
+      <div class="wk-rail">
+        <div class="wk-dot extra">${svgPlus}</div>
+        <div class="wk-line none"></div>
+      </div>
+      <button class="wk-card ${isToday ? 'today' : ''}">
+        <div class="wk-card-text">
+          <div class="wk-name">${escapeHtml(day)}</div>
+          <div class="wk-sub ${doneToday ? 'done' : (isToday ? 'today' : '')}">${doneToday ? 'Hecho hoy' : (isToday ? 'Hoy toca · extra de la semana' : 'Extra de la semana')}</div>
+        </div>
+        ${svgChevron(false)}
+      </button>`;
+    row.querySelector('.wk-card').onclick = ()=> openDay(day);
+    list.appendChild(row);
+  });
+  box.appendChild(list);
+
+  const prevKeys = semanaKeys.filter(k=> k !== maxSemana).sort((a,b)=> b - a);
+  if(prevKeys.length){
+    const label = document.createElement('div');
+    label.className = 'wk-prev-label';
+    label.textContent = 'SEMANAS ANTERIORES';
+    box.appendChild(label);
+    prevKeys.forEach(sNum=>{
+      const days = groups[sNum];
+      const doneFlags = days.map(d=> isDayEverComplete(state.data, d, routine[d]));
+      const nDone = doneFlags.filter(Boolean).length;
+      const toggleKey = 'client-semana-' + sNum;
+      const open = !!state.uiExpanded[toggleKey];
+      const btn = document.createElement('button');
+      btn.className = 'wk-prev-btn';
+      btn.innerHTML = `
+        <div class="wk-card-text">
+          <div class="wk-name">${escapeHtml(groupLabels[sNum])}</div>
+          <div class="wk-sub ${nDone === days.length ? 'done' : ''}">${nDone === days.length ? 'Completada' : 'Hechos'} · ${nDone} de ${days.length}</div>
+        </div>
+        ${svgChevron(open)}`;
+      btn.onclick = ()=>{
+        if(state.uiExpanded[toggleKey]) delete state.uiExpanded[toggleKey];
+        else state.uiExpanded[toggleKey] = true;
+        render();
+      };
+      box.appendChild(btn);
+      if(open){
+        days.forEach((d, i)=>{
+          const b = document.createElement('button');
+          b.className = 'wk-prev-day';
+          b.innerHTML = `${doneFlags[i] ? svgCheck('#3f6b3f', 16) : '<span class="wk-empty"></span>'}<span style="flex:1;">${escapeHtml(parseDayLabel(d).dayName)}</span>`;
+          b.onclick = ()=> openDay(d);
+          box.appendChild(b);
+        });
+      }
+    });
+  }
 }
 
 let state = { clienta: null, data: null, view: 'login', exercise: null, routineDay: null, uiExpanded: {}, uiFeeling: {}, uiSets: {}, uiResting: {}, uiRestAlert: {}, uiWeightPrefill: {}, uiCircuit: {}, uiVideoOpen: {}, adminData: null, adminSelected: null, trainerEvents: null, calendarYear: null, calendarMonth: null, calendarSelectedDate: null };
@@ -1996,7 +2138,8 @@ function render(){
     const exercises = Object.keys(state.data.exercises);
     const myRoutine = ROUTINES[routineKey(state.clienta)];
     const streak = computeStreak(state.data);
-    const weekCount = computeWeekCount(state.data);
+    const newHome = !!myRoutine && usesNewHome(state.clienta);
+    const weekCount = newHome ? computeWeekCountNoExtra(state.data, myRoutine) : computeWeekCount(state.data);
     const target = weeklyTarget(state.clienta);
     const monthNum = computeMonthNumber(state.data.ficha.fechaInicio);
     const initials = state.clienta.trim().slice(0,2).toUpperCase();
@@ -2052,7 +2195,8 @@ function render(){
         </div>
       </div>
 
-      ${myRoutine ? `
+      ${newHome ? `<div id="week-timeline"></div>` : ''}
+      ${myRoutine && !newHome ? `
         <button class="link-btn" id="alldays-toggle" style="margin:22px 0 8px; font-size:15px; font-weight:700; background:none; border:none; cursor:pointer; padding:0; font-family:inherit; color:var(--text); display:block;">${state.uiExpanded['client-alldays'] ? '▾' : '▸'} Ver todos tus días</button>
         ${state.uiExpanded['client-alldays'] ? `
           <p class="sub" style="margin:0 0 8px;">Tocá tu día para arrancar</p>
@@ -2068,7 +2212,10 @@ function render(){
     if(heroDay){
       document.getElementById('hero-start-btn').onclick = ()=>{ state.view='routine-day'; state.routineDay=heroDay; render(); };
     }
-    if(myRoutine){
+    if(newHome){
+      renderWeekTimeline(document.getElementById('week-timeline'), myRoutine);
+    }
+    if(myRoutine && !newHome){
       document.getElementById('alldays-toggle').onclick = ()=>{
         if(state.uiExpanded['client-alldays']) delete state.uiExpanded['client-alldays'];
         else state.uiExpanded['client-alldays'] = true;
@@ -2080,7 +2227,7 @@ function render(){
       else state.uiExpanded['client-progress'] = true;
       render();
     };
-    if(myRoutine && state.uiExpanded['client-alldays']){
+    if(myRoutine && !newHome && state.uiExpanded['client-alldays']){
       const dayChips = document.getElementById('routine-day-chips');
       const { groups, groupLabels, noSemana } = groupDaysBySemana(myRoutine);
       const semanaKeys = Object.keys(groups).map(Number).sort((a,b)=>a-b);
