@@ -1610,7 +1610,7 @@ function isDayCompleteOn(data, dayLabel, items, dateStr){
 function lastCompletionDate(data, dayLabel, items){
   const cursor = new Date();
   for(let i=0;i<30;i++){
-    const ds = cursor.toISOString().slice(0,10);
+    const ds = localISO(cursor);
     if(isDayCompleteOn(data, dayLabel, items, ds)) return ds;
     cursor.setDate(cursor.getDate()-1);
   }
@@ -1665,7 +1665,7 @@ function weekEndInfo(semanaInicio){
   const start = new Date(semanaInicio + 'T00:00:00');
   const end = new Date(start);
   end.setDate(end.getDate() + 7);
-  const endStr = end.toISOString().slice(0,10);
+  const endStr = localISO(end);
   const daysLeft = daysUntil(endStr);
   return { endStr, daysLeft };
 }
@@ -1802,7 +1802,7 @@ function getActivityDates(data){
 function computeStreak(data){
   const dates = getActivityDates(data);
   if(dates.size === 0) return 0;
-  const iso = d => d.toISOString().slice(0,10);
+  const iso = localISO;
   let cursor = new Date();
   if(!dates.has(iso(cursor))){
     cursor.setDate(cursor.getDate()-1);
@@ -1820,7 +1820,7 @@ function computeWeekCount(data){
   let count = 0;
   const cursor = new Date();
   for(let i=0;i<7;i++){
-    if(dates.has(cursor.toISOString().slice(0,10))) count++;
+    if(dates.has(localISO(cursor))) count++;
     cursor.setDate(cursor.getDate()-1);
   }
   return count;
@@ -1842,7 +1842,7 @@ function computeWeekCountNoExtra(data, routine){
   let count = 0;
   const cursor = new Date();
   for(let i=0;i<7;i++){
-    const ds = cursor.toISOString().slice(0,10);
+    const ds = localISO(cursor);
     if(dates.has(ds)){
       const names = Object.keys(data.exercises || {}).filter(n=> (data.exercises[n] || []).some(e=> e.date === ds));
       const doneLabels = Object.keys(data.completados || {}).filter(l=> Object.values(data.completados[l] || {}).some(v=> v && v.done && v.date === ds));
@@ -2076,8 +2076,14 @@ async function saveClienta(name, data){
   }
 }
 
+// Fecha local (YYYY-MM-DD) en la zona horaria del dispositivo, no en UTC.
+function localISO(d){
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return d.getFullYear() + '-' + m + '-' + day;
+}
 function todayISO(){
-  return new Date().toISOString().slice(0,10);
+  return localISO(new Date());
 }
 function formatDate(iso){
   const d = new Date(iso + 'T00:00:00');
