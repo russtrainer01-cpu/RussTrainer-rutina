@@ -76,6 +76,15 @@
   }
   /* 16px minimo: con menos, el iPhone hace zoom al tocar el campo y corre la pantalla */
   input, select, textarea{ font-size:16px !important; }
+  .dropset-steps{ display:flex; flex-direction:column; margin:4px 0 12px; }
+  .dropset-step{ padding:12px; border-radius:10px; }
+  .dropset-step input{ margin:8px 0 0; }
+  .dropset-heavy{ background:rgba(168,92,104,0.16); }
+  .dropset-light{ background:var(--bg-elevated); margin-left:20px; }
+  .dropset-top{ display:flex; align-items:baseline; gap:10px; }
+  .dropset-kg{ font-size:22px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .dropset-meta{ font-size:13px; color:var(--text-muted); }
+  .dropset-arrow{ margin:0 0 0 16px; padding:4px 0; font-size:13px; font-weight:700; color:var(--rose-dark); }
   button{ touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
   input:focus, select:focus{
     outline:none;
@@ -981,6 +990,20 @@ function parseDefaultWeight(pesoStr){
   const m = String(pesoStr).match(/(\d+(\.\d+)?)/);
   if(!m) return null;
   return parseFloat(m[1]);
+}
+
+// Dropset: devuelve { heavy, light, repsHeavy, repsLight } si el ejercicio es un dropset
+// con peso tipo "35kg → baja a 25kg" y reps tipo "10 + 8"; si no, null.
+function parseDropset(item){
+  if(!item || item.sinPeso || !/dropset/i.test(item.ejercicio || '')) return null;
+  const m = String(item.peso || '').match(/(\d+(?:\.\d+)?)\s*kg[^\d]*?(\d+(?:\.\d+)?)\s*kg/i);
+  if(!m) return null;
+  const r = String(item.reps || '').match(/(\d+)\s*\+\s*(\d+)/);
+  return { heavy: m[1], light: m[2], repsHeavy: r ? r[1] : '', repsLight: r ? r[2] : '' };
+}
+function dropsetValues(weightStr, drop){
+  const parts = String(weightStr || '').split(/\s*(?:y|→|\/)\s*/).map(x=>x.replace(/[^\d.]/g,''));
+  return [parts[0] || '', parts[1] || ''];
 }
 
 function parseDescansoSeconds(str){
@@ -3200,12 +3223,13 @@ function render(){
       `;
       if(lastToday && !editing){
         bodyHtml += `
-          <div class="tip" style="border-left-color:#5b8f6f;">✓ Hecho hoy${item.sinPeso ? '' : ' · ' + lastToday.weight + 'kg'}${lastToday.feeling ? ' · ' + lastToday.feeling : ''}${lastToday.comment ? '<br/>💬 ' + escapeHtml(lastToday.comment) : ''}</div>
+          <div class="tip" style="border-left-color:#5b8f6f;">✓ Hecho hoy${item.sinPeso ? '' : ' · ' + (parseDropset(item) ? dropsetValues(lastToday.weight).filter(Boolean).join(' → ') : lastToday.weight) + 'kg'}${lastToday.feeling ? ' · ' + lastToday.feeling : ''}${lastToday.comment ? '<br/>💬 ' + escapeHtml(lastToday.comment) : ''}</div>
           <button class="btn-ghost edit-btn" data-idx="${idx}" style="width:100%;">✏️ Editar registro</button>
         `;
       } else {
         const setsDone = state.uiSets[idx] !== undefined ? state.uiSets[idx] : 0;
         const restSeconds = parseDescansoSeconds(item.descanso);
+        const drop = parseDropset(item);
         const isResting = state.uiResting[idx] !== undefined;
         const showRestAlert = !!state.uiRestAlert[idx];
         bodyHtml += `
@@ -3233,10 +3257,25 @@ function render(){
           <div class="feeling-row">
             ${feelings.map(f=>`<button class="feeling-btn${selectedFeeling===f ? ' selected':''}" data-idx="${idx}" data-feeling="${escapeHtml(f)}">${f.split(' ')[0]}</button>`).join('')}
           </div>
-          ${item.sinPeso ? '' : `
+          ${item.sinPeso ? '' : (drop ? (()=>{
+            const prev = lastToday ? dropsetValues(lastToday.weight, drop) : ['', ''];
+            const v1 = state.uiWeightPrefill[idx] !== undefined ? state.uiWeightPrefill[idx] : prev[0];
+            return `
+            <div class="dropset-steps">
+              <div class="dropset-step dropset-heavy">
+                <div class="dropset-top"><span class="dropset-kg">${escapeHtml(drop.heavy)} kg</span><span class="dropset-meta">${drop.repsHeavy ? escapeHtml(drop.repsHeavy) + ' reps · ' : ''}pesado</span></div>
+                <input type="text" inputmode="decimal" id="reg-weight-${idx}" value="${escapeHtml(String(v1))}" placeholder="Peso que usaste (kg)" />
+              </div>
+              <div class="dropset-arrow">↓ baja sin descansar</div>
+              <div class="dropset-step dropset-light">
+                <div class="dropset-top"><span class="dropset-kg">${escapeHtml(drop.light)} kg</span><span class="dropset-meta">${drop.repsLight ? escapeHtml(drop.repsLight) + ' reps · ' : ''}liviano</span></div>
+                <input type="text" inputmode="decimal" id="reg-weight2-${idx}" value="${escapeHtml(String(prev[1]))}" placeholder="Peso que usaste (kg)" />
+              </div>
+            </div>`;
+          })() : `
             <label>Peso usado (kg)</label>
             <input type="text" id="reg-weight-${idx}" value="${state.uiWeightPrefill[idx] !== undefined ? state.uiWeightPrefill[idx] : (lastToday ? lastToday.weight : '')}" placeholder="Ej: 10 o 9 bloques" />
-          `}
+          `)}
           <input type="text" id="reg-comment-${idx}" value="${lastToday && lastToday.comment ? escapeHtml(lastToday.comment) : ''}" placeholder="💬 Comentario para tu entrenadora (opcional)" />
           <div class="error hidden" id="reg-error-${idx}">Ingresá el peso usado.</div>
           <button class="btn-primary registrar-btn" data-idx="${idx}" data-exercise="${escapeHtml(item.ejercicio)}" data-sinpeso="${item.sinPeso ? '1':'0'}" data-reps="${repsTarget !== null ? repsTarget : ''}" data-sets="${setsTarget !== null ? Math.max(setsDone, setsTarget) : setsDone}" style="margin-top:4px;">Registrar</button>
@@ -3403,7 +3442,12 @@ function render(){
           err.classList.remove('hidden');
           return;
         }
-        const weight = sinPeso ? '' : weightInput.value;
+        let weight = sinPeso ? '' : weightInput.value;
+        const weight2Input = document.getElementById(`reg-weight2-${idx}`);
+        if(!sinPeso && weight2Input){
+          if(weight2Input.value === ''){ err.classList.remove('hidden'); return; }
+          weight = weightInput.value.trim() + ' y ' + weight2Input.value.trim();
+        }
         const feeling = state.uiFeeling[idx] || '';
         const commentInput = document.getElementById(`reg-comment-${idx}`);
         const comment = commentInput ? commentInput.value.trim() : '';
