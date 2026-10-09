@@ -2223,7 +2223,7 @@ function render(){
           <div style="width:38px; height:38px; border-radius:50%; background:var(--rose); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; flex-shrink:0;">${escapeHtml(initials)}</div>
         </div>
       </div>
-      <button class="link-btn" id="switch-btn" style="margin:-6px 0 14px; font-size:12px;">Cambiar de usuaria</button>
+      <button class="link-btn" id="switch-btn" style="margin:-6px 0 14px; font-size:14px; padding:10px 0;">Cambiar de usuaria</button>
 
       ${heroDay ? `
         <div class="hero-today-card">
@@ -3704,6 +3704,15 @@ async function restoreSession(){
   render();
 }
 
+// Entrar con ?salir al final del link (…/RussTrainer-rutina/?salir) borra la sesion
+// recordada y abre directo la pantalla de ingreso (para entrar como otra usuaria o como panelruss).
+try{
+  if(/[?&#](salir|login)\b/i.test(location.search + location.hash)){
+    localStorage.removeItem('rt_session');
+    Object.keys(localStorage).forEach(k=>{ if(k.indexOf('rt_view_') === 0) localStorage.removeItem(k); });
+    history.replaceState(null, '', location.pathname);
+  }
+}catch(e){}
 render();
 restoreSession();
 </script>
