@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <title>Progreso · russ.trainer</title>
 <style>
   :root{
@@ -19,6 +19,9 @@
   *{box-sizing:border-box;}
   html{
     overflow-x:hidden;
+    overscroll-behavior-x:none;
+    -webkit-text-size-adjust:100%;
+    touch-action:pan-y;
   }
   body{
     margin:0;
@@ -65,12 +68,15 @@
     background:var(--bg-elevated);
     border:1px solid var(--border);
     color:var(--text);
-    font-size:15px;
+    font-size:16px;
     padding:12px 14px;
     border-radius:6px;
     margin-bottom:12px;
     font-family:inherit;
   }
+  /* 16px minimo: con menos, el iPhone hace zoom al tocar el campo y corre la pantalla */
+  input, select, textarea{ font-size:16px !important; }
+  button{ touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
   input:focus, select:focus{
     outline:none;
     border-color:var(--rose);
@@ -2068,13 +2074,56 @@ function restoreUiProgress(){
     }
   }catch(e){}
 }
-async function saveClienta(name, data){
-  try{
-    await dbSet(storageKey(name), data);
-  }catch(e){
-    console.error('No se pudo guardar', e);
+// Guardado en segundo plano: la pantalla responde al instante y los guardados
+// se hacen de a uno, con reintentos. Siempre se manda la version mas reciente.
+let _saveBusy = false;
+let _savePending = {};   // clave -> ultimos datos pendientes de guardar
+let _saveFailed = false;
+function showSaveBanner(show){
+  let b = document.getElementById('save-banner');
+  if(!b){
+    b = document.createElement('div');
+    b.id = 'save-banner';
+    b.style.cssText = 'position:fixed;left:12px;right:12px;bottom:76px;z-index:60;background:#b85c5c;color:#fff;padding:10px 14px;border-radius:10px;font-size:14px;text-align:center;display:none;';
+    b.textContent = 'Sin conexión: seguimos intentando guardar. No cierres la app.';
+    document.body.appendChild(b);
   }
+  b.style.display = show ? 'block' : 'none';
 }
+async function _flushSave(){
+  if(_saveBusy) return;
+  _saveBusy = true;
+  let keys;
+  while((keys = Object.keys(_savePending)).length){
+    const key = keys[0];
+    const data = _savePending[key];
+    delete _savePending[key];
+    let ok = false;
+    for(let attempt=0; attempt<4 && !ok; attempt++){
+      try{
+        await dbSet(key, data);
+        ok = true;
+      }catch(e){
+        console.error('No se pudo guardar (intento ' + (attempt+1) + ')', e);
+        if(attempt < 3) await new Promise(r=>setTimeout(r, 1000 * (attempt+1)));
+      }
+    }
+    if(!ok){
+      if(!(key in _savePending)) _savePending[key] = data;
+      _saveFailed = true; showSaveBanner(true);
+      break;
+    }
+    if(_saveFailed && !Object.keys(_savePending).length){ _saveFailed = false; showSaveBanner(false); }
+  }
+  _saveBusy = false;
+  if(_saveFailed) setTimeout(_flushSave, 5000);
+}
+function saveClienta(name, data){
+  _savePending[storageKey(name)] = data;
+  return _flushSave();
+}
+window.addEventListener('online', ()=>{ if(Object.keys(_savePending).length) _flushSave(); });
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'visible' && Object.keys(_savePending).length) _flushSave(); });
 
 // Fecha local (YYYY-MM-DD) en la zona horaria del dispositivo, no en UTC.
 function localISO(d){
@@ -3231,8 +3280,8 @@ function render(){
         const dayLabel = state.routineDay;
         if(!state.data.completados[dayLabel]) state.data.completados[dayLabel] = {};
         state.data.completados[dayLabel]['circuit-' + btn.dataset.idx] = { done:true, date: todayISO() };
-        await saveClienta(state.clienta, state.data);
         render();
+        saveClienta(state.clienta, state.data);
       };
     });
     wrap.querySelectorAll('.circuit-round-minus').forEach(btn=>{
@@ -3274,6 +3323,8 @@ function render(){
     });
     wrap.querySelectorAll('.circuit-register-btn').forEach(btn=>{
       btn.onclick = async ()=>{
+        if(btn.dataset.busy) return;
+        btn.dataset.busy = '1';
         const cidx = btn.dataset.cidx;
         const exidx = btn.dataset.exidx;
         const key = 'circ-c' + cidx + '-' + exidx;
@@ -3294,7 +3345,7 @@ function render(){
         if(comment) entry.comment = comment;
         state.data.exercises[exercise].push(entry);
         delete state.uiFeeling[key];
-        await saveClienta(state.clienta, state.data);
+        saveClienta(state.clienta, state.data);
         const item = items[Number(cidx)];
         const isLastExercise = Number(exidx) === item.ejercicios.length - 1;
         if(isLastExercise && round < item.rondas && item.descansoRondas){
@@ -3351,6 +3402,12 @@ function render(){
       };
     });
   }
+  try{
+    if(state.clienta){
+      if(state.view === 'routine-day' && state.routineDay) localStorage.setItem('rt_view_' + state.clienta, JSON.stringify({ date: todayISO(), day: state.routineDay }));
+      else if(state.view === 'dashboard') localStorage.removeItem('rt_view_' + state.clienta);
+    }
+  }catch(e){}
   const bottomTab = document.getElementById('bottom-tab');
   const showTab = state.clienta && !['login','welcome'].includes(state.view);
   bottomTab.classList.toggle('hidden', !showTab);
@@ -3497,6 +3554,14 @@ async function onEnter(){
   }
   restoreUiProgress();
   state.view = state.data.weightPromptSeen ? 'dashboard' : 'welcome';
+  try{
+    const v = JSON.parse(localStorage.getItem('rt_view_' + state.clienta) || 'null');
+    const rt = ROUTINES[routineKey(state.clienta)];
+    if(v && v.date === todayISO() && v.day && state.view === 'dashboard' && rt && rt[v.day]){
+      state.view = 'routine-day';
+      state.routineDay = v.day;
+    }
+  }catch(e){}
   render();
 }
 
@@ -3533,7 +3598,11 @@ async function onSaveEntry(){
   render();
 }
 
+const _quickSaving = {};
 async function onQuickSave(idx, exerciseName, weight, reps, sets, feeling, comment){
+  if(_quickSaving[idx]) return;
+  _quickSaving[idx] = true;
+  setTimeout(()=>{ delete _quickSaving[idx]; }, 1500);
   if(restTimerHandles[idx]){ clearInterval(restTimerHandles[idx]); delete restTimerHandles[idx]; delete restTimerEndTimes[idx]; delete state.uiResting[idx]; }
   delete state.uiRestAlert[idx];
   if(!state.data.exercises[exerciseName]){
@@ -3550,13 +3619,13 @@ async function onQuickSave(idx, exerciseName, weight, reps, sets, feeling, comme
   if(comment) entry.comment = comment;
   state.data.exercises[exerciseName].push(entry);
   state.data.exercises[exerciseName].sort((a,b)=> a.date.localeCompare(b.date));
-  await saveClienta(state.clienta, state.data);
   delete state.uiExpanded[idx];
   delete state.uiFeeling[idx];
   delete state.uiSets[idx];
   delete state.uiWeightPrefill[idx];
   persistUiProgress();
   render();
+  saveClienta(state.clienta, state.data);
 }
 
 async function onToggleChecklist(idx){
@@ -3565,8 +3634,8 @@ async function onToggleChecklist(idx){
   const current = state.data.completados[day][idx];
   const isDone = current && current.done;
   state.data.completados[day][idx] = isDone ? { done:false } : { done:true, date: todayISO(), ts: new Date().toISOString() };
-  await saveClienta(state.clienta, state.data);
   render();
+  saveClienta(state.clienta, state.data);
 }
 
 function drawChart(entries){
@@ -3624,6 +3693,14 @@ async function restoreSession(){
   }
   restoreUiProgress();
   state.view = state.data.weightPromptSeen ? 'dashboard' : 'welcome';
+  try{
+    const v = JSON.parse(localStorage.getItem('rt_view_' + state.clienta) || 'null');
+    const rt = ROUTINES[routineKey(state.clienta)];
+    if(v && v.date === todayISO() && v.day && state.view === 'dashboard' && rt && rt[v.day]){
+      state.view = 'routine-day';
+      state.routineDay = v.day;
+    }
+  }catch(e){}
   render();
 }
 
