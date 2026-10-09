@@ -1611,6 +1611,32 @@ function getMaxSemana(routine){
   });
   return max;
 }
+// Semana actual de una alumna: NO es la ultima planificada, asi se puede dejar planificado
+// el mes completo sin que cambie lo que ve hoy. Es la semana mas avanzada en la que ya
+// hizo algun dia; pasa a la siguiente cuando completo todos los dias de esa semana o
+// cuando lleva 7 dias o mas sin completar nada en ella (y existe una semana posterior).
+function getCurrentSemana(data, routine){
+  const { groups } = groupDaysBySemana(routine);
+  const keys = Object.keys(groups).map(Number).sort((a,b)=>a-b);
+  if(!keys.length) return null;
+  if(!data) return keys[0];
+  let cur = null;
+  keys.forEach(k=>{
+    if(groups[k].some(d=> isDayEverComplete(data, d, routine[d]))) cur = k;
+  });
+  if(cur === null) return keys[0];
+  const next = keys.filter(k=> k > cur)[0];
+  if(next === undefined) return cur;
+  const days = groups[cur];
+  const allDone = days.every(d=> isDayEverComplete(data, d, routine[d]));
+  let lastDone = null;
+  days.forEach(d=>{
+    const ds = lastCompletionDate(data, d, routine[d]);
+    if(ds && (!lastDone || ds > lastDone)) lastDone = ds;
+  });
+  const stale = lastDone === null || daysSince(lastDone) >= 7;
+  return (allDone || stale) ? next : cur;
+}
 function groupDaysBySemana(routine){
   const groups = {};
   const groupLabels = {};
@@ -1907,7 +1933,7 @@ function renderWeekTimeline(box, routine){
 
   const { groups, groupLabels, noSemana } = groupDaysBySemana(routine);
   const semanaKeys = Object.keys(groups).map(Number).sort((a,b)=>a-b);
-  const maxSemana = getMaxSemana(routine);
+  const maxSemana = getCurrentSemana(state.data, routine);
   const currentDays = semanaKeys.length ? (groups[maxSemana] || []) : [];
   const candidates = currentDays.concat(noSemana);
   const heroDay = getNextRotationDay(state.data, routine, candidates);
@@ -1978,24 +2004,27 @@ function renderWeekTimeline(box, routine){
   });
   box.appendChild(list);
 
-  const prevKeys = semanaKeys.filter(k=> k !== maxSemana).sort((a,b)=> b - a);
-  if(prevKeys.length){
+  const prevKeys = semanaKeys.filter(k=> k < maxSemana).sort((a,b)=> b - a);
+  const nextKeys = semanaKeys.filter(k=> k > maxSemana).sort((a,b)=> a - b);
+  const renderGroup = (title, keys, planned)=>{
+    if(!keys.length) return;
     const label = document.createElement('div');
     label.className = 'wk-prev-label';
-    label.textContent = 'SEMANAS ANTERIORES';
+    label.textContent = title;
     box.appendChild(label);
-    prevKeys.forEach(sNum=>{
+    keys.forEach(sNum=>{
       const days = groups[sNum];
-      const doneFlags = days.map(d=> isDayEverComplete(state.data, d, routine[d]));
+      const doneFlags = days.map(d=> planned ? false : isDayEverComplete(state.data, d, routine[d]));
       const nDone = doneFlags.filter(Boolean).length;
       const toggleKey = 'client-semana-' + sNum;
       const open = !!state.uiExpanded[toggleKey];
+      const subText = planned ? ('Planificada · ' + days.length + (days.length === 1 ? ' día' : ' días')) : ((nDone === days.length ? 'Completada' : 'Hechos') + ' · ' + nDone + ' de ' + days.length);
       const btn = document.createElement('button');
       btn.className = 'wk-prev-btn';
       btn.innerHTML = `
         <div class="wk-card-text">
           <div class="wk-name">${escapeHtml(groupLabels[sNum])}</div>
-          <div class="wk-sub ${nDone === days.length ? 'done' : ''}">${nDone === days.length ? 'Completada' : 'Hechos'} · ${nDone} de ${days.length}</div>
+          <div class="wk-sub ${!planned && nDone === days.length ? 'done' : ''}">${subText}</div>
         </div>
         ${svgChevron(open)}`;
       btn.onclick = ()=>{
@@ -2014,7 +2043,9 @@ function renderWeekTimeline(box, routine){
         });
       }
     });
-  }
+  };
+  renderGroup('PRÓXIMAS SEMANAS', nextKeys, true);
+  renderGroup('SEMANAS ANTERIORES', prevKeys, false);
 }
 
 let state = { clienta: null, data: null, view: 'login', exercise: null, routineDay: null, uiExpanded: {}, uiFeeling: {}, uiSets: {}, uiResting: {}, uiRestAlert: {}, uiWeightPrefill: {}, uiCircuit: {}, uiVideoOpen: {}, adminData: null, adminSelected: null, trainerEvents: null, calendarYear: null, calendarMonth: null, calendarSelectedDate: null };
@@ -2235,7 +2266,7 @@ function render(){
     if(myRoutine){
       const { groups, groupLabels, noSemana } = groupDaysBySemana(myRoutine);
       const semanaKeys = Object.keys(groups).map(Number).sort((a,b)=>a-b);
-      const maxSemana = getMaxSemana(myRoutine);
+      const maxSemana = getCurrentSemana(state.data, myRoutine);
       const candidateDays = semanaKeys.length ? (groups[maxSemana] || []).concat(noSemana) : noSemana;
       heroDay = getNextRotationDay(state.data, myRoutine, candidateDays);
       if(heroDay){
@@ -2318,7 +2349,7 @@ function render(){
       const dayChips = document.getElementById('routine-day-chips');
       const { groups, groupLabels, noSemana } = groupDaysBySemana(myRoutine);
       const semanaKeys = Object.keys(groups).map(Number).sort((a,b)=>a-b);
-      const maxSemana = getMaxSemana(myRoutine);
+      const maxSemana = getCurrentSemana(state.data, myRoutine);
       const rotationCandidates = semanaKeys.length ? (groups[maxSemana] || []).concat(noSemana) : noSemana;
       const rotationHeroDay = getNextRotationDay(state.data, myRoutine, rotationCandidates);
       const rotationHeroIdx = rotationHeroDay ? rotationCandidates.indexOf(rotationHeroDay) : -1;
@@ -2869,7 +2900,7 @@ function render(){
     const today = todayISO();
     const { groups: adminGroups, groupLabels: adminGroupLabels, noSemana: adminNoSemana } = groupDaysBySemana(routine);
     const adminSemanaKeys = Object.keys(adminGroups).map(Number).sort((a,b)=>a-b);
-    const adminMaxSemana = getMaxSemana(routine);
+    const adminMaxSemana = getCurrentSemana(c.data, routine);
     const orderedDayLabels = [];
     adminSemanaKeys.forEach(sNum=>{
       orderedDayLabels.push({ header: sNum, headerLabel: adminGroupLabels[sNum], isCurrent: sNum === adminMaxSemana });
