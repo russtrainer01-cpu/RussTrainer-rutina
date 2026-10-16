@@ -166,6 +166,19 @@
     color:var(--rose);
     border-style:dashed;
   }
+  .cq-types{ display:flex; flex-wrap:wrap; gap:8px; margin:0 0 14px; }
+  .cq-type{ background:var(--bg-elevated); border:1px solid var(--border); color:var(--text); padding:9px 14px; border-radius:20px; font-size:14px; font-weight:600; }
+  .cq-type.on{ background:var(--rose); border-color:var(--rose); color:#1a0d0f; }
+  .cq-check{ display:flex; align-items:center; gap:12px; min-height:44px; margin:0 0 12px; font-size:15px; color:var(--text); cursor:pointer; }
+  .cq-check input{ width:22px; height:22px; margin:0; flex:none; accent-color:var(--rose-dark); }
+  .cq-note{ background:var(--bg-card); border:1px solid var(--border); border-left:3px solid var(--rose); border-radius:4px; padding:14px 16px; margin-bottom:10px; }
+  .cq-note.applied{ opacity:.72; }
+  .cq-note-text{ font-size:15px; line-height:1.45; margin:0 0 8px; overflow-wrap:anywhere; }
+  .cq-meta{ display:flex; flex-wrap:wrap; gap:6px 10px; align-items:center; font-size:12px; color:var(--text-muted); }
+  .cq-badge{ background:var(--bg-elevated); border:1px solid var(--border); border-radius:12px; padding:2px 9px; font-weight:700; color:var(--rose-dark); }
+  .cq-actions{ display:flex; gap:8px; margin-top:10px; }
+  .cq-actions button{ padding:9px 12px; font-size:13px; }
+  .cq-off{ background:#b85c5c; color:#fff; border-radius:6px; padding:10px 12px; font-size:13px; margin-bottom:12px; }
   .empty{
     color:var(--text-muted);
     font-size:14px;
@@ -2230,6 +2243,136 @@ function formatDate(iso){
   return d.toLocaleDateString('es-AR', {day:'2-digit', month:'short'});
 }
 
+const CQ_TIPOS = ['Programación','Ejercicio','Experiencia de clienta','Contenido','Idea para mis planes'];
+let cq = { loaded:false, notas:[], tipo:'Programación', filtro:'Todas', draft:{ texto:'', para:'', aplicada:false, fecha:'' }, error:false };
+let cqQueue = Promise.resolve();
+async function cqFetch(){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/clientes?nombre=eq.${encodeURIComponent('_trainer_cuaderno')}&select=data`, {
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+  });
+  if(!res.ok) throw new Error('http ' + res.status);
+  const rows = await res.json();
+  return (rows.length && rows[0].data && Array.isArray(rows[0].data.notas)) ? rows[0].data.notas : [];
+}
+async function cqPush(notas){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/clientes`, {
+    method: 'POST',
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type':'application/json', Prefer:'resolution=merge-duplicates' },
+    body: JSON.stringify({ nombre: '_trainer_cuaderno', data: { notas } })
+  });
+  if(!res.ok) throw new Error('http ' + res.status);
+}
+function cqBackup(){ try{ localStorage.setItem('rt_cuaderno_backup', JSON.stringify(cq.notas)); }catch(e){} }
+async function cqLoad(){
+  try{
+    cq.notas = await cqFetch();
+    cq.error = false;
+  }catch(e){
+    try{ cq.notas = JSON.parse(localStorage.getItem('rt_cuaderno_backup') || '[]'); }catch(_){ cq.notas = []; }
+    cq.error = true;
+  }
+  cq.loaded = true;
+  cqBackup();
+  if(state.view === 'admin-cuaderno') render();
+}
+// Aplica el cambio al instante en pantalla y lo guarda en segundo plano (releyendo antes lo guardado, para no pisar notas de otro dispositivo)
+function cqMutate(fn){
+  cq.notas = fn(cq.notas.slice());
+  cqBackup();
+  render();
+  cqQueue = cqQueue.then(async ()=>{
+    for(let i=0;i<4;i++){
+      try{
+        const fresh = await cqFetch();
+        const merged = fn(fresh);
+        await cqPush(merged);
+        cq.notas = merged; cqBackup();
+        if(cq.error){ cq.error = false; if(state.view === 'admin-cuaderno') render(); }
+        return;
+      }catch(e){ await new Promise(r=>setTimeout(r, 800*(i+1))); }
+    }
+    cq.error = true;
+    if(state.view === 'admin-cuaderno') render();
+  });
+}
+function cqRender(){
+  const app = document.getElementById('app');
+  const hoy = todayISO();
+  if(!cq.draft.fecha) cq.draft.fecha = hoy;
+  const nombres = Object.keys(ROUTINES).map(k=> k.charAt(0).toUpperCase() + k.slice(1)).concat(['NutriReto','Mis planes','Contenido IG']);
+  const counts = {}; cq.notas.forEach(n=>{ counts[n.tipo] = (counts[n.tipo]||0) + 1; });
+  const visibles = cq.notas.filter(n=> cq.filtro === 'Todas' || (cq.filtro === 'Por aplicar' ? !n.aplicada : n.tipo === cq.filtro))
+    .sort((a,b)=> (b.ts||'').localeCompare(a.ts||''));
+  const filtros = ['Todas'].concat(CQ_TIPOS, ['Por aplicar']);
+  app.innerHTML = `
+    <div class="topbar">
+      <div>
+        <div class="brand">russ.trainer</div>
+        <div class="name">Cuaderno de aprendizaje</div>
+      </div>
+      <button class="link-btn" id="cq-back">‹ Volver al panel</button>
+    </div>
+    ${cq.error ? '<div class="cq-off">No se pudo guardar en la nube. Tus notas están en este celular y se reintenta al guardar otra.</div>' : ''}
+    <div class="card">
+      <label for="cq-texto">¿Qué aprendiste o te llamó la atención?</label>
+      <input type="text" id="cq-texto" maxlength="300" enterkeyhint="done" autocomplete="off" placeholder="Una línea, lo que sea" value="${escapeHtml(cq.draft.texto)}" />
+      <label>Tipo</label>
+      <div class="cq-types">${CQ_TIPOS.map(t=>`<button type="button" class="cq-type${cq.tipo===t?' on':''}" data-tipo="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join('')}</div>
+      <div class="row">
+        <div><label for="cq-fecha">Fecha</label><input type="date" id="cq-fecha" value="${cq.draft.fecha}" /></div>
+        <div><label for="cq-para">Para quién (opcional)</label><input type="text" id="cq-para" list="cq-para-list" autocomplete="off" placeholder="Alumna o proyecto" value="${escapeHtml(cq.draft.para)}" /></div>
+      </div>
+      <datalist id="cq-para-list">${nombres.map(n=>`<option value="${escapeHtml(n)}"></option>`).join('')}</datalist>
+      <label class="cq-check"><input type="checkbox" id="cq-aplicada" ${cq.draft.aplicada?'checked':''} /> Ya lo apliqué</label>
+      <button class="btn-primary" id="cq-save">Guardar nota</button>
+    </div>
+    <h2 style="margin-top:22px;">Mis notas${cq.notas.length ? ' · ' + cq.notas.length : ''}</h2>
+    <div class="chip-list" id="cq-filtros">${filtros.map(f=>`<button type="button" class="cq-type${cq.filtro===f?' on':''}" data-filtro="${escapeHtml(f)}">${escapeHtml(f)}${counts[f] ? ' · ' + counts[f] : ''}</button>`).join('')}</div>
+    <div id="cq-lista">${!cq.loaded ? '<div class="empty">Cargando...</div>' : (visibles.length ? visibles.map(n=>`
+      <div class="cq-note${n.aplicada?' applied':''}">
+        <p class="cq-note-text">${escapeHtml(n.texto)}</p>
+        <div class="cq-meta">
+          <span class="cq-badge">${escapeHtml(n.tipo)}</span>
+          <span>${formatDate(n.date)}</span>
+          ${n.para ? `<span>👤 ${escapeHtml(n.para)}</span>` : ''}
+          ${n.aplicada ? '<span>✓ Aplicado</span>' : ''}
+        </div>
+        <div class="cq-actions">
+          <button type="button" class="btn-ghost" data-toggle="${escapeHtml(n.id)}">${n.aplicada ? 'Marcar como no aplicado' : 'Ya lo apliqué'}</button>
+          <button type="button" class="btn-ghost" data-del="${escapeHtml(n.id)}" aria-label="Borrar nota">Borrar</button>
+        </div>
+      </div>`).join('') : `<div class="empty">${cq.notas.length ? 'No hay notas con este filtro.' : 'Todavía no tienes notas. Escribe la primera arriba: una línea basta.'}</div>`)}</div>
+  `;
+  const $ = id=>document.getElementById(id);
+  $('cq-back').onclick = ()=>{ state.view='admin-list'; render(); };
+  $('cq-texto').oninput = e=>{ cq.draft.texto = e.target.value; };
+  $('cq-para').oninput = e=>{ cq.draft.para = e.target.value; };
+  $('cq-fecha').onchange = e=>{ cq.draft.fecha = e.target.value || hoy; };
+  $('cq-aplicada').onchange = e=>{ cq.draft.aplicada = e.target.checked; };
+  app.querySelectorAll('[data-tipo]').forEach(b=> b.onclick = ()=>{ cq.tipo = b.dataset.tipo; render(); });
+  app.querySelectorAll('[data-filtro]').forEach(b=> b.onclick = ()=>{ cq.filtro = b.dataset.filtro; render(); });
+  const save = ()=>{
+    const texto = cq.draft.texto.trim();
+    if(!texto){ $('cq-texto').focus(); return; }
+    const nota = { id: 'n' + Date.now().toString(36) + Math.random().toString(36).slice(2,6), ts: new Date().toISOString(), date: cq.draft.fecha || hoy, texto, tipo: cq.tipo, para: cq.draft.para.trim(), aplicada: !!cq.draft.aplicada };
+    cq.draft = { texto:'', para:'', aplicada:false, fecha:'' };
+    if(navigator.vibrate) navigator.vibrate(30);
+    cqMutate(list=> list.some(n=>n.id===nota.id) ? list : list.concat([nota]));
+    setTimeout(()=>{ const i = document.getElementById('cq-texto'); if(i) i.focus(); }, 50);
+  };
+  $('cq-save').onclick = save;
+  $('cq-texto').onkeydown = e=>{ if(e.key === 'Enter'){ e.preventDefault(); save(); } };
+  app.querySelectorAll('[data-toggle]').forEach(b=> b.onclick = ()=>{
+    const id = b.dataset.toggle; const cur = cq.notas.find(n=>n.id===id); const val = !(cur && cur.aplicada);
+    cqMutate(list=> list.map(n=> n.id===id ? Object.assign({}, n, { aplicada: val }) : n));
+  });
+  app.querySelectorAll('[data-del]').forEach(b=> b.onclick = ()=>{
+    if(!confirm('¿Borrar esta nota?')) return;
+    const id = b.dataset.del;
+    cqMutate(list=> list.filter(n=>n.id!==id));
+  });
+}
+
 function render(){
   const app = document.getElementById('app');
   document.body.classList.toggle('theme-masculine', !!(state.clienta && isMasculino(state.clienta)));
@@ -2624,6 +2767,7 @@ function render(){
       <div class="cal-grid" id="cal-grid"></div>
       <button class="btn-ghost" id="cal-list-btn" style="width:100%; margin-top:18px;">👥 Ver todas las alumnas</button>
       <button class="btn-ghost" id="cal-plantilla-btn" style="width:100%; margin-top:8px;">🖼️ Plantilla de ejercicio</button>
+      <button class="btn-ghost" id="cal-cuaderno-btn" style="width:100%; margin-top:8px;">📓 Cuaderno de aprendizaje</button>
       <button class="btn-ghost" id="cal-add-event-btn" style="width:100%; margin-top:8px;">+ Agregar evento propio</button>
       <div id="cal-add-form" class="hidden card" style="margin-top:10px;">
         <label>Fecha</label>
@@ -2638,6 +2782,7 @@ function render(){
 
     document.getElementById('cal-exit-btn').onclick = ()=>{ localStorage.removeItem('rt_session'); state.view='login'; state.adminData=null; render(); };
     document.getElementById('cal-plantilla-btn').onclick = ()=>{ state.view='admin-plantilla'; render(); };
+    document.getElementById('cal-cuaderno-btn').onclick = ()=>{ state.view='admin-cuaderno'; render(); };
     document.getElementById('cal-prev-btn').onclick = ()=>{
       state.calendarMonth--;
       if(state.calendarMonth < 0){ state.calendarMonth = 11; state.calendarYear--; }
@@ -2735,6 +2880,10 @@ function render(){
     };
     fr.srcdoc = decodePlantilla();
   }
+  else if(state.view === 'admin-cuaderno'){
+    cqRender();
+    if(!cq.loaded && !cq.loading){ cq.loading = true; cqLoad().finally(()=>{ cq.loading = false; }); }
+  }
   else if(state.view === 'admin-list'){
     const commentCount = buildActivityFeed(state.adminData || {}).filter(i=>i.comment && !i.respondido).length;
     app.innerHTML = `
@@ -2753,6 +2902,7 @@ function render(){
       <button class="btn-ghost" id="summary-btn" style="width:100%; margin-top:10px;">📋 Resumen semanal</button>
       <button class="btn-ghost" id="feed-btn" style="width:100%; margin-top:10px;">🕐 Ver actividad reciente</button>
       <button class="btn-ghost" id="plantilla-btn" style="width:100%; margin-top:10px;">🖼️ Plantilla de ejercicio</button>
+      <button class="btn-ghost" id="cuaderno-btn" style="width:100%; margin-top:10px;">📓 Cuaderno de aprendizaje</button>
       <h2 style="margin-top:18px;">Tus alumnas</h2>
       <div id="admin-list-content">${state.adminData ? '' : '<div class="empty">Cargando...</div>'}</div>
     `;
@@ -2761,6 +2911,7 @@ function render(){
     document.getElementById('summary-btn').onclick = ()=>{ state.view='admin-summary'; render(); };
     document.getElementById('feed-btn').onclick = ()=>{ state.view='admin-feed'; render(); };
     document.getElementById('plantilla-btn').onclick = ()=>{ state.view='admin-plantilla'; render(); };
+    document.getElementById('cuaderno-btn').onclick = ()=>{ state.view='admin-cuaderno'; render(); };
     document.getElementById('comments-bell-btn').onclick = ()=>{ state.view='admin-comments'; render(); };
     if(state.adminData){
       const keys = Object.keys(state.adminData);
