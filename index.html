@@ -992,6 +992,8 @@
   .home-bg .h4{ left:0; bottom:0; width:100%; height:35%; background:linear-gradient(to bottom,rgba(252,252,247,0),#FCFCF7); filter:none; border-radius:0; }
   body.home-v2{ position:relative; }
   body.home-v2 #app{ position:relative; z-index:1; font-family:'Nunito',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; padding-bottom:40px; }
+  body:not(.routine-v2) .rt-logo{ display:none; }
+  .rt-logo{ margin:16px 0 8px; }
   .hv-logo{ display:flex; align-items:center; gap:10px; white-space:nowrap; }
   .hv-mono{ width:34px; height:34px; border:2px solid #a85c68; border-radius:9px; display:grid; place-items:center; font-family:'Playfair Display',Georgia,serif; font-size:18px; font-weight:700; color:#a85c68; background:rgba(255,255,255,.35); }
   .hv-word{ font-family:'Playfair Display',Georgia,serif; font-size:22px; font-weight:700; color:#3b2a24; }
@@ -1014,6 +1016,31 @@
   body.home-v2 .wk-card.today{ background:rgba(244,201,205,.7); box-shadow:0 8px 24px rgba(212,132,143,.22); }
   body.home-v2 .wk-name{ font-size:16px; font-weight:900; }
   body.home-v2 .link-btn{ font-family:inherit; }
+
+  /* ===== Rutina del dia nueva ===== */
+  body.routine-v2 #app{ position:relative; z-index:1; font-family:'Nunito',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+  body.routine-v2 .home-bg{ height:420px; }
+  body.routine-v2 .workout-progress-wrap{ background:rgba(252,252,247,.92); box-shadow:none; }
+  body.routine-v2 .workout-progress-label{ font-size:13px; font-weight:900; color:#6e655d; }
+  body.routine-v2 .workout-progress-track{ height:8px; border-radius:4px; background:linear-gradient(90deg,#e9c9bd,#d4848f,#8a5548); }
+  body.routine-v2 .workout-progress-mask{ background:#efe6e2; }
+  body.routine-v2 .workout-progress-pct{ font-weight:900; font-size:13px; }
+  body.routine-v2 .back{ background:rgba(255,255,255,.75); border:0; box-shadow:0 6px 18px rgba(43,37,33,.08); border-radius:21px; height:42px; padding:0 18px; color:#a85c68; font-weight:900; }
+  body.routine-v2 h1{ font-size:32px; font-weight:700; letter-spacing:-.01em; color:#3b2a24; margin-bottom:18px; }
+  body.routine-v2 h2{ font-weight:900; color:#3b2a24; }
+  body.routine-v2 .card{ background:rgba(255,255,255,.7); border:0; border-radius:30px; box-shadow:0 14px 36px rgba(43,37,33,.08); padding:20px 20px 22px; margin-bottom:16px; }
+  body.routine-v2 input, body.routine-v2 select, body.routine-v2 textarea{ border-radius:25px; background:#fff; border:0; box-shadow:inset 0 0 0 1.5px #eadcdc; }
+  body.routine-v2 button{ border-radius:24px; }
+  body.routine-v2 .btn-primary{ background:#4a2f27; color:#FCFCF7; font-weight:900; border-radius:27px; padding:16px 20px; }
+  body.routine-v2 .btn-ghost{ background:#f4e6e6; border:0; color:#3b2a24; font-weight:800; border-radius:22px; }
+  body.routine-v2 .set-counter button{ width:44px; height:44px; border:0; }
+  body.routine-v2 .set-counter button.same-btn{ width:auto; height:40px; border-radius:20px; padding:0 14px !important; font-size:13px !important; white-space:nowrap; }
+  body.routine-v2 .set-minus{ background:#f4e6e6; color:#a85c68; }
+  body.routine-v2 .set-plus{ background:#d4848f; color:#1a0d0f; }
+  body.routine-v2 .set-counter .count{ font-weight:900; font-size:20px; }
+  body.routine-v2 .feeling-btn{ background:#f4e6e6; border:0; border-radius:20px; padding:10px 4px; }
+  body.routine-v2 .feeling-btn.selected{ background:#d4848f; }
+  body.routine-v2 .rest-start-btn{ background:#f4e6e6; color:#3b2a24; border:0; border-radius:20px; }
   .hidden{display:none;}
 </style>
 </head>
@@ -2432,6 +2459,7 @@ function cqRender(){
 function render(){
   const app = document.getElementById('app');
   document.body.classList.toggle('theme-masculine', !!(state.clienta && isMasculino(state.clienta)));
+  document.body.classList.toggle('routine-v2', state.view === 'routine-day' && !(state.clienta && isMasculino(state.clienta)));
   document.body.classList.toggle('home-v2', state.view === 'dashboard' && !(state.clienta && isMasculino(state.clienta)));
   if(state.view === 'session-error'){
     app.innerHTML = `
@@ -2450,7 +2478,7 @@ function render(){
       <div class="login-wrap login-v2">
         <div class="lg-bg" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><span class="fade"></span></div>
         <div class="lg-hero"><div class="lg-name"><div class="lg-kicker">RUSS TRAINER</div><div class="lg-title">Mi <i>Rutina</i></div></div></div>
-        <div class="lg-hi">Qué bueno verte 💕</div>
+        <div class="lg-hi">Qué bueno verte</div>
         <label for="name-input">¿Cómo te llamas?</label>
         <input id="name-input" placeholder="Escribe tu nombre" autocomplete="off" />
         <div id="login-error" class="error hidden">Escribe tu nombre para continuar.</div>
@@ -2506,7 +2534,7 @@ function render(){
       <div class="topbar" style="align-items:flex-start;position:relative;z-index:1;">
         <div>
           <div class="hv-logo"><span class="hv-mono">R</span><span class="hv-word">Russ<i>Trainer</i></span></div>
-          <div class="hv-hola">Hola, ${escapeHtml(state.clienta)} 💕</div>
+          <div class="hv-hola">Hola, ${escapeHtml(state.clienta)}</div>
         </div>
         <div style="display:flex; align-items:center; gap:10px;">
           ${monthNum ? `<span class="month-badge" style="background:${monthColor(monthNum)};">Mes ${monthNum}</span>` : ''}
@@ -3334,6 +3362,7 @@ function render(){
     const overlayItem = overlayIdx !== null ? items[Number(overlayIdx)] : null;
     let currentSeccion = null;
     app.innerHTML = `
+      <div class="home-bg" aria-hidden="true"><i class="h1"></i><i class="h2"></i><i class="h3"></i><i class="h4"></i></div>
       <div class="workout-progress-wrap">
         <div class="workout-progress-label">🏋️ Rutina de hoy</div>
         <div class="workout-progress-row">
@@ -3343,7 +3372,7 @@ function render(){
       </div>
       <div style="height:54px;"></div>
       <button class="back" id="back-btn">&larr; Volver</button>
-      <div class="brand">russ.trainer</div>
+      <div class="hv-logo rt-logo"><span class="hv-mono">R</span><span class="hv-word">Russ<i>Trainer</i></span></div>
       <h1>${escapeHtml(state.routineDay)}</h1>
       <div id="routine-items"></div>
       ${overlayIdx !== null ? `
