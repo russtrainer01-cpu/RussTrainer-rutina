@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <title>Progreso · russ.trainer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;900&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#FCFCF7;
@@ -979,6 +979,38 @@
   .cal-agenda-item.static{
     cursor:default;
   }
+
+  /* ===== Inicio nuevo (empolvado, rosa y marron) ===== */
+  .home-bg{ position:absolute; left:0; top:0; width:100%; height:520px; overflow:hidden; pointer-events:none; z-index:-1; }
+  .home-bg i{ position:absolute; display:block; border-radius:50%; filter:blur(80px); }
+  .home-bg .h1{ left:-25%; top:-20%; width:75%; height:60%; background:#d4848f; opacity:.42; }
+  .home-bg .h2{ left:48%; top:-12%; width:65%; height:55%; background:#b98468; opacity:.34; }
+  .home-bg .h3{ left:40%; top:50%; width:70%; height:42%; background:#e9c9bd; opacity:.55; }
+  .home-bg .h4{ left:0; bottom:0; width:100%; height:35%; background:linear-gradient(to bottom,rgba(252,252,247,0),#FCFCF7); filter:none; border-radius:0; }
+  body.home-v2{ position:relative; }
+  body.home-v2 #app{ position:relative; z-index:1; font-family:'Nunito',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; padding-bottom:40px; }
+  .hv-logo{ display:flex; align-items:center; gap:10px; white-space:nowrap; }
+  .hv-mono{ width:34px; height:34px; border:2px solid #a85c68; border-radius:9px; display:grid; place-items:center; font-family:'Playfair Display',Georgia,serif; font-size:18px; font-weight:700; color:#a85c68; background:rgba(255,255,255,.35); }
+  .hv-word{ font-family:'Playfair Display',Georgia,serif; font-size:22px; font-weight:700; color:#3b2a24; }
+  .hv-word i{ font-style:italic; color:#a85c68; margin-left:4px; }
+  .hv-hola{ font-size:34px; line-height:1.05; font-weight:600; letter-spacing:-.01em; margin:14px 0 0; color:#3b2a24; }
+  body.home-v2 .hero-today-card{ background:linear-gradient(135deg,#5a3a2e 0%,#8a5548 45%,#c47a82 100%); border-radius:30px; padding:22px 24px; margin:14px 0 14px; box-shadow:0 18px 40px rgba(90,58,46,.3); }
+  body.home-v2 .hero-today-card.hero-done{ background:linear-gradient(135deg,#5a3a2e,#8a5548); }
+  body.home-v2 .hero-kicker{ font-size:12px; letter-spacing:.14em; color:#f1d9d4; opacity:1; font-weight:900; }
+  body.home-v2 .hero-title{ font-size:26px; font-weight:900; line-height:1.1; margin:6px 0 4px; color:#FCFCF7; }
+  body.home-v2 .hero-sub{ font-size:15px; font-weight:700; color:#f1d9d4; opacity:1; margin-bottom:16px; }
+  body.home-v2 .hero-btn{ background:#FCFCF7; color:#4a2f27; border-radius:24px; height:48px; padding:0 24px; font-size:16px; font-weight:900; font-family:inherit; }
+  body.home-v2 .stat-grid{ gap:12px; }
+  body.home-v2 .stat-card{ border-radius:24px; background:rgba(255,255,255,.62); box-shadow:0 8px 24px rgba(43,37,33,.06); padding:16px 8px; }
+  body.home-v2 .stat-num{ font-size:28px; font-weight:900; }
+  body.home-v2 .stat-label{ font-size:11px; font-weight:800; letter-spacing:.06em; color:#6e655d; }
+  body.home-v2 .wk-title{ font-size:24px; font-weight:900; }
+  body.home-v2 .wk-chip{ background:#dfe9da; color:#2f5a2f; font-weight:900; }
+  body.home-v2 .wk-seg.today{ background:#d4848f; }
+  body.home-v2 .wk-card{ border-radius:22px; background:rgba(255,255,255,.62); box-shadow:0 8px 24px rgba(43,37,33,.06); min-height:64px; }
+  body.home-v2 .wk-card.today{ background:rgba(244,201,205,.7); box-shadow:0 8px 24px rgba(212,132,143,.22); }
+  body.home-v2 .wk-name{ font-size:16px; font-weight:900; }
+  body.home-v2 .link-btn{ font-family:inherit; }
   .hidden{display:none;}
 </style>
 </head>
@@ -2397,6 +2429,7 @@ function cqRender(){
 function render(){
   const app = document.getElementById('app');
   document.body.classList.toggle('theme-masculine', !!(state.clienta && isMasculino(state.clienta)));
+  document.body.classList.toggle('home-v2', state.view === 'dashboard' && !(state.clienta && isMasculino(state.clienta)));
   if(state.view === 'session-error'){
     app.innerHTML = `
       <div class="login-wrap">
@@ -2466,10 +2499,11 @@ function render(){
     }
 
     app.innerHTML = `
-      <div class="topbar" style="align-items:flex-start;">
+      <div class="home-bg" aria-hidden="true"><i class="h1"></i><i class="h2"></i><i class="h3"></i><i class="h4"></i></div>
+      <div class="topbar" style="align-items:flex-start;position:relative;z-index:1;">
         <div>
-          <div class="brand">russ.trainer</div>
-          <div style="font-size:26px; font-weight:800; margin-top:4px;">Hola, ${escapeHtml(state.clienta)} 👋</div>
+          <div class="hv-logo"><span class="hv-mono">R</span><span class="hv-word">Russ<i>Trainer</i></span></div>
+          <div class="hv-hola">Hola, ${escapeHtml(state.clienta)} 💕</div>
         </div>
         <div style="display:flex; align-items:center; gap:10px;">
           ${monthNum ? `<span class="month-badge" style="background:${monthColor(monthNum)};">Mes ${monthNum}</span>` : ''}
@@ -3720,7 +3754,7 @@ function render(){
     }
   }catch(e){}
   const bottomTab = document.getElementById('bottom-tab');
-  const showTab = state.clienta && !['login','welcome'].includes(state.view);
+  const showTab = false; // Mi peso eliminado
   bottomTab.classList.toggle('hidden', !showTab);
   document.getElementById('weight-tab-btn').onclick = ()=>{ state.view = 'weight'; render(); };
 }
