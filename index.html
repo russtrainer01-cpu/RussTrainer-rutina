@@ -470,19 +470,22 @@
   .login-wrap.login-v2{ font-family:'Nunito',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; justify-content:flex-start; position:relative; min-height:calc(100vh - 122px); }
   .lg-bg{ position:fixed; left:0; top:0; width:100%; height:min(460px,56vh); overflow:hidden; pointer-events:none; z-index:0; }
   .lg-bg i{ position:absolute; display:block; border-radius:50%; filter:blur(70px); }
-  .lg-bg .b1{ left:-20%; top:-18%; width:75%; height:75%; background:#d4848f; opacity:.85; }
-  .lg-bg .b2{ left:42%; top:-10%; width:70%; height:65%; background:#f1b9b0; opacity:.9; }
-  .lg-bg .b3{ left:15%; top:34%; width:75%; height:55%; background:#e9c4d6; opacity:.8; }
+  .lg-bg .b1{ left:-20%; top:-18%; width:75%; height:75%; background:#d4848f; opacity:.65; }
+  .lg-bg .b2{ left:42%; top:-10%; width:70%; height:65%; background:#b98468; opacity:.45; }
+  .lg-bg .b3{ left:15%; top:34%; width:75%; height:55%; background:#e9c9bd; opacity:.7; }
   .lg-bg .fade{ position:absolute; left:0; bottom:0; width:100%; height:38%; background:linear-gradient(to bottom,rgba(252,252,247,0),#FCFCF7); }
   .login-v2 > *:not(.lg-bg){ position:relative; z-index:1; }
   .lg-hero{ flex:1 1 auto; min-height:170px; max-height:330px; display:flex; align-items:center; justify-content:center; padding-top:24px; }
-  .lg-name{ font-size:42px; font-weight:900; letter-spacing:-0.02em; color:#2b2521; white-space:nowrap; }
-  .lg-hi{ display:flex; align-items:center; justify-content:center; gap:8px; font-size:24px; font-weight:900; color:#2b2521; }
+  .lg-name{ text-align:center; white-space:nowrap; }
+  .lg-kicker{ font-size:13px; font-weight:700; letter-spacing:.42em; margin-right:-.42em; color:#4a2f27; }
+  .lg-title{ margin-top:8px; font-family:'Playfair Display',Georgia,serif; font-size:56px; line-height:1; font-weight:700; color:#3b2a24; }
+  .lg-title i{ font-style:italic; color:#a85c68; }
+  .lg-hi{ display:flex; align-items:center; justify-content:center; gap:8px; font-size:17px; font-weight:600; color:#6e655d; }
   .login-v2 label{ margin:28px 0 10px; font-size:16px; font-weight:900; color:#2b2521; }
-  .login-v2 input{ height:58px; border-radius:29px; border:2px solid #2b2521; background:#fff; padding:0 24px; font-size:17px; font-weight:600; margin:0; }
+  .login-v2 input{ height:58px; border-radius:29px; border:2px solid #4a2f27; background:#fff; padding:0 24px; font-size:17px; font-weight:600; margin:0; }
   .login-v2 input:focus{ border-color:#a85c68; }
   .login-v2 .error{ margin:10px 4px 0; }
-  .lg-btn{ margin-top:16px; height:58px; border-radius:29px; font-size:18px; font-weight:900; padding:0; }
+  .lg-btn{ background:#4a2f27; color:#FCFCF7; margin-top:16px; height:58px; border-radius:29px; font-size:18px; font-weight:900; padding:0; }
   .lg-help{ margin-top:22px; text-align:center; font-size:14px; font-weight:600; color:#6e655d; }
   .lg-help a{ color:#a85c68; font-weight:800; }
   .login-wrap{
@@ -2446,8 +2449,8 @@ function render(){
     app.innerHTML = `
       <div class="login-wrap login-v2">
         <div class="lg-bg" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><span class="fade"></span></div>
-        <div class="lg-hero"><div class="lg-name">Russ Trainer</div></div>
-        <div class="lg-hi">Hola, qué bueno verte <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="#d4848f"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 2.7 5 6 5c2 0 3.4 1.1 4.2 2.4C11 6.1 12.4 5 14.4 5c3.3 0 5.1 3.4 3.6 6.8C16.5 16.4 12 21 12 21z"/></svg></div>
+        <div class="lg-hero"><div class="lg-name"><div class="lg-kicker">RUSS TRAINER</div><div class="lg-title">Mi <i>Rutina</i></div></div></div>
+        <div class="lg-hi">Qué bueno verte 💕</div>
         <label for="name-input">¿Cómo te llamas?</label>
         <input id="name-input" placeholder="Escribe tu nombre" autocomplete="off" />
         <div id="login-error" class="error hidden">Escribe tu nombre para continuar.</div>
