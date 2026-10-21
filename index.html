@@ -2185,9 +2185,34 @@ function guidePosition(){
   top = Math.max(8, Math.min(window.innerHeight - th - 8, top));
   tip.style.left = left + 'px'; tip.style.top = top + 'px';
 }
+
+// Sonido suave al avanzar en la guia (campanita de dos notas; sube un poco en cada paso)
+function guideChime(step, kind){
+  try{
+    if(!audioCtx){ const AC = window.AudioContext || window.webkitAudioContext; if(!AC) return; audioCtx = new AC(); }
+    if(audioCtx.state === 'suspended'){ try{ audioCtx.resume(); }catch(e){} }
+    const scale = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50]; // do re mi sol la do (pentatonica)
+    const base = scale[(step || 0) % scale.length];
+    const notes = kind === 'final' ? [base, base*1.25, base*1.5, base*2] : kind === 'back' ? [base*0.75] : [base, base*1.5];
+    const t0 = audioCtx.currentTime + 0.02;
+    notes.forEach((f, i)=>{
+      const t = t0 + i * (kind === 'final' ? 0.11 : 0.09);
+      const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(kind === 'back' ? 0.08 : 0.16, t + 0.015);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + (kind === 'final' ? 0.7 : 0.45));
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(t); o.stop(t + 0.75);
+    });
+  }catch(e){}
+}
 function guideGo(n){
   const prev = guideScreen();
+  const from = state.guideStep || 0;
   state.guideStep = Math.max(0, Math.min(GUIDE_STEPS.length - 1, n));
+  const nowStep = state.guideStep;
+  if(nowStep !== from){ guideChime(nowStep, nowStep < from ? 'back' : (GUIDE_STEPS[nowStep].screen === 'final' ? 'final' : 'next')); }
   if(guideScreen() !== prev) render(); else guideShowStep();
 }
 function guideExit(){
