@@ -1041,14 +1041,32 @@
   body.routine-v2 .feeling-btn{ background:#f4e6e6; border:0; border-radius:20px; padding:10px 4px; }
   body.routine-v2 .feeling-btn.selected{ background:#d4848f; }
   body.routine-v2 .rest-start-btn{ background:#f4e6e6; color:#3b2a24; border:0; border-radius:20px; }
+
+  /* ===== Guia: como usar la app ===== */
+  .hv-links{ display:flex; align-items:center; gap:18px; margin:-6px 0 14px; flex-wrap:wrap; }
+  .hv-links .link-btn{ margin:0 !important; }
+  .guide-open{ display:inline-flex; align-items:center; gap:6px; height:38px; padding:0 16px !important; border-radius:19px !important; background:rgba(255,255,255,.8) !important; box-shadow:0 6px 18px rgba(43,37,33,.08); color:#a85c68 !important; font-weight:900 !important; font-size:14px !important; font-family:inherit; border:0; cursor:pointer; }
+  .guide-chip{ display:inline-block; background:#f4e6e6; color:#a85c68; font-size:12px; font-weight:900; letter-spacing:.06em; padding:5px 12px; border-radius:14px; margin:6px 0 0; }
+  .guide-demo-nota{ font-size:13px; font-weight:700; color:#6e655d; margin:6px 0 14px; }
+  #g-block{ position:fixed; inset:0; z-index:999; background:transparent; }
+  #g-hole{ position:fixed; z-index:1000; border-radius:22px; box-shadow:0 0 0 9999px rgba(43,37,33,.58); outline:3px solid #d4848f; pointer-events:none; transition:all .25s ease; }
+  #g-tip{ position:fixed; z-index:1001; background:#fff; color:#3b2a24; border-radius:24px; padding:18px 18px 16px; box-shadow:0 20px 50px rgba(43,37,33,.3); font-family:'Nunito',-apple-system,sans-serif; }
+  #g-tip .g-count{ font-size:12px; font-weight:900; letter-spacing:.1em; color:#a85c68; }
+  #g-tip .g-title{ font-size:19px; font-weight:900; margin:4px 0 4px; line-height:1.2; }
+  #g-tip .g-text{ font-size:15px; font-weight:600; line-height:1.45; color:#4a3f38; }
+  #g-tip .g-row{ display:flex; align-items:center; gap:10px; margin-top:14px; }
+  #g-tip .g-skip{ background:none; border:0; color:#8a8078; font-weight:800; font-size:13px; padding:8px 4px; cursor:pointer; font-family:inherit; margin-right:auto; }
+  #g-tip .g-back{ background:#f4e6e6; color:#3b2a24; border:0; border-radius:22px; height:44px; padding:0 18px; font-weight:800; font-size:14px; cursor:pointer; font-family:inherit; }
+  #g-tip .g-next{ background:#4a2f27; color:#FCFCF7; border:0; border-radius:22px; height:44px; padding:0 22px; font-weight:900; font-size:15px; cursor:pointer; font-family:inherit; }
+  #g-tip.g-final{ left:16px; right:16px; top:50%; transform:translateY(-50%); max-width:380px; margin:0 auto; text-align:center; padding:26px 22px 22px; }
+  #g-tip.g-final .g-title{ font-size:24px; }
+  #g-tip.g-final .g-row{ justify-content:center; }
+  .guide-demo .video-btn, .guide-demo button{ pointer-events:none; }
   .hidden{display:none;}
 </style>
 </head>
 <body>
 <div id="app"></div>
-<div id="bottom-tab" class="bottom-tab hidden">
-  <button id="weight-tab-btn">⚖️ Mi peso</button>
-</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
@@ -2049,6 +2067,174 @@ function isDayEverComplete(data, day, items){
   return dates.some(ds=> isDayCompleteOn(data, day, items, ds));
 }
 
+
+// ===== Guia: como usar la app (rutina de prueba con globos) =====
+const GUIDE_STEPS = [
+  { screen:'home',    sel:'#g-hero',   title:'Aquí ves tu rutina del día', text:'La tarjeta "Hoy toca" te dice qué entrenas hoy. Toca Empezar y te lleva directo a tus ejercicios.' },
+  { screen:'home',    sel:'#g-week',   title:'Tus días de la semana', text:'Aquí están todos los días de tu semana. El rosado es el que toca hoy y los verdes ya los terminaste.' },
+  { screen:'routine', sel:'#g-ex',     title:'Aquí está el ejercicio', text:'Ves el nombre, cuántas series y repeticiones te tocan, y el peso sugerido.' },
+  { screen:'routine', sel:'#g-video',  title:'Aquí ves el video', text:'Toca Ver técnica y mira cómo se hace el ejercicio antes de empezar.' },
+  { screen:'routine', sel:'#g-rest',   title:'Aquí está el tiempo de descanso', text:'Toca Iniciar descanso al terminar una serie. Cuenta el tiempo y suena cuando puedes seguir.' },
+  { screen:'routine', sel:'#g-sets',   title:'Anota cada serie', text:'Con el + sumas una serie hecha y con el − la restas. Ves cuántas llevas de las que te tocan.' },
+  { screen:'routine', sel:'#g-done',   title:'Lo cumplí', text:'Si hiciste todas las series del objetivo, toca Lo cumplí y se completan solas, sin tocar el + varias veces.' },
+  { screen:'routine', sel:'#g-feel',   title:'Cuéntame cómo te sentiste', text:'Elige fácil, justo, difícil o al límite. Así sé cómo ajustar tu plan.' },
+  { screen:'routine', sel:'#g-weight', title:'Peso y comentario', text:'Escribe el peso que usaste y, si quieres, un comentario para mí. Por ejemplo si cambiaste de peso o algo te molestó.' },
+  { screen:'routine', sel:'#g-reg',    title:'Registrar', text:'Cuando termines el ejercicio toca Registrar y queda guardado en tu progreso.' },
+  { screen:'routine', sel:'#g-progress', title:'Tu avance del día', text:'Esta barra de arriba muestra cuánto llevas de tu rutina de hoy. Cuando llegue al 100% terminaste.' },
+  { screen:'final' }
+];
+function guideCleanup(){
+  ['g-block','g-hole','g-tip'].forEach(id=>{ const el = document.getElementById(id); if(el) el.remove(); });
+  window.removeEventListener('resize', guidePosition);
+  window.removeEventListener('scroll', guidePosition, true);
+}
+function guideScreen(){
+  const st = GUIDE_STEPS[state.guideStep || 0];
+  return st ? (st.screen === 'final' ? 'routine' : st.screen) : 'home';
+}
+function guideHomeHtml(){
+  const who = escapeHtml(state.clienta || '');
+  return `
+    <div class="home-bg" aria-hidden="true"><i class="h1"></i><i class="h2"></i><i class="h3"></i><i class="h4"></i></div>
+    <div class="guide-demo">
+      <div class="topbar" style="align-items:flex-start;position:relative;z-index:1;">
+        <div>
+          <div class="hv-logo"><span class="hv-mono">R</span><span class="hv-word">Russ<i>Trainer</i></span></div>
+          <div class="hv-hola">Hola, ${who}</div>
+        </div>
+      </div>
+      <span class="guide-chip">RUTINA DE PRUEBA</span>
+      <div class="hero-today-card" id="g-hero" style="margin-top:14px;">
+        <div class="hero-kicker">HOY TOCA</div>
+        <div class="hero-title">Día 2 - Glúteos</div>
+        <div class="hero-sub">3 ejercicios</div>
+        <button class="hero-btn">Empezar →</button>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-num">1/4</div><div class="stat-label">DÍAS ESTA SEMANA</div></div>
+        <div class="stat-card"><div class="stat-num" style="color:#3f6b3f;">🔥 3</div><div class="stat-label">DÍAS SEGUIDOS</div></div>
+      </div>
+      <div id="g-week">
+        <div class="wk-head"><h2 class="wk-title">Semana 4</h2><span class="wk-chip">Actual</span><span class="wk-count">1 de 4</span></div>
+        <div class="wk-bar" style="grid-template-columns:repeat(4,minmax(0,1fr));"><div class="wk-seg done"></div><div class="wk-seg today"></div><div class="wk-seg"></div><div class="wk-seg"></div></div>
+        <div class="wk-row"><div class="wk-rail"><div class="wk-dot done"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><div class="wk-line done"></div></div><button class="wk-card"><div class="wk-card-text"><div class="wk-name">Día 1 - Espalda + Hombros</div><div class="wk-sub done">Completado</div></div></button></div>
+        <div class="wk-row"><div class="wk-rail"><div class="wk-dot today">2</div><div class="wk-line"></div></div><button class="wk-card today"><div class="wk-card-text"><div class="wk-name">Día 2 - Glúteos</div><div class="wk-sub today">Hoy toca</div></div></button></div>
+        <div class="wk-row"><div class="wk-rail"><div class="wk-dot pending">3</div><div class="wk-line"></div></div><button class="wk-card"><div class="wk-card-text"><div class="wk-name">Día 3 - Tríceps + Abs</div><div class="wk-sub">Pendiente</div></div></button></div>
+        <div class="wk-row"><div class="wk-rail"><div class="wk-dot pending">4</div><div class="wk-line none"></div></div><button class="wk-card"><div class="wk-card-text"><div class="wk-name">Día 4 - Piernas</div><div class="wk-sub">Pendiente</div></div></button></div>
+      </div>
+    </div>`;
+}
+function guideRoutineHtml(){
+  return `
+    <div class="home-bg" aria-hidden="true"><i class="h1"></i><i class="h2"></i><i class="h3"></i><i class="h4"></i></div>
+    <div class="guide-demo">
+      <div class="workout-progress-wrap" id="g-progress">
+        <div class="workout-progress-label">🏋️ Rutina de hoy</div>
+        <div class="workout-progress-row"><div class="workout-progress-track"><div class="workout-progress-mask" style="width:67%;"></div></div><span class="workout-progress-pct">33%</span></div>
+      </div>
+      <div style="height:54px;"></div>
+      <button class="back">&larr; Volver</button>
+      <div class="hv-logo rt-logo"><span class="hv-mono">R</span><span class="hv-word">Russ<i>Trainer</i></span></div>
+      <h1>Día 2 - Glúteos</h1>
+      <span class="guide-chip">RUTINA DE PRUEBA</span>
+      <div class="guide-demo-nota">Es un ejemplo, no se guarda nada.</div>
+      <h2 style="margin-top:10px;">🍑 Glúteos</h2>
+      <div class="card">
+        <div id="g-ex">
+          <div style="font-weight:700; margin-bottom:4px;">Hip Thrust</div>
+          <div class="sub" style="margin:0 0 10px;">Objetivo: 3 series &times; 12 &middot; 20kg</div>
+        </div>
+        <div id="g-video" style="display:inline-block;"><button class="video-btn">🎥 Ver técnica</button></div>
+        <div class="rest-row" id="g-rest" style="display:inline-block;"><button class="rest-start-btn">⏱️ Iniciar descanso (1 min)</button></div>
+        <div class="sub" style="margin:8px 0 6px;">Series hechas</div>
+        <div class="set-counter">
+          <div id="g-sets" style="display:flex;align-items:center;gap:16px;"><button class="set-minus">−</button><span class="count">1 / 3</span><button class="set-plus">+</button></div>
+          <button class="btn-ghost same-btn" id="g-done" style="margin-left:auto; padding:7px 12px; font-size:12px;">✓ Lo cumplí</button>
+        </div>
+        <div class="feeling-row" id="g-feel">
+          <button class="feeling-btn">😌</button><button class="feeling-btn selected">👍</button><button class="feeling-btn">😮‍💨</button><button class="feeling-btn">🥵</button>
+        </div>
+        <div id="g-weight">
+          <input type="text" placeholder="Peso que usaste (kg)" value="20" readonly />
+          <input type="text" placeholder="💬 Comentario para tu entrenadora (opcional)" readonly style="margin-top:8px;" />
+        </div>
+        <button class="btn-primary" id="g-reg" style="margin-top:12px;">Registrar</button>
+      </div>
+      <div class="card">
+        <div style="font-weight:700; margin-bottom:4px;">Clamshell con mancuerna</div>
+        <div class="sub" style="margin:0 0 10px;">Objetivo: 3 series &times; 15 &middot; 5kg</div>
+        <button class="video-btn">🎥 Ver técnica</button>
+      </div>
+      <div style="height:30px;"></div>
+    </div>`;
+}
+function guidePosition(){
+  const st = GUIDE_STEPS[state.guideStep || 0];
+  const hole = document.getElementById('g-hole'); const tip = document.getElementById('g-tip');
+  if(!st || st.screen === 'final' || !hole || !tip) return;
+  const t = document.querySelector(st.sel); if(!t) return;
+  const r = t.getBoundingClientRect(); const pad = 8;
+  hole.style.left = (r.left - pad) + 'px'; hole.style.top = (r.top - pad) + 'px';
+  hole.style.width = (r.width + pad*2) + 'px'; hole.style.height = (r.height + pad*2) + 'px';
+  const tw = Math.min(340, window.innerWidth - 32);
+  tip.style.width = tw + 'px';
+  const th = tip.offsetHeight;
+  let left = r.left + r.width/2 - tw/2; left = Math.max(16, Math.min(window.innerWidth - tw - 16, left));
+  const below = r.bottom + pad + 14 + th <= window.innerHeight - 8;
+  let top = below ? r.bottom + pad + 14 : r.top - pad - 14 - th;
+  top = Math.max(8, Math.min(window.innerHeight - th - 8, top));
+  tip.style.left = left + 'px'; tip.style.top = top + 'px';
+}
+function guideGo(n){
+  const prev = guideScreen();
+  state.guideStep = Math.max(0, Math.min(GUIDE_STEPS.length - 1, n));
+  if(guideScreen() !== prev) render(); else guideShowStep();
+}
+function guideExit(){
+  guideCleanup(); state.guideStep = 0; state.view = 'dashboard'; window.scrollTo(0,0); render();
+}
+function guideShowStep(){
+  const i = state.guideStep || 0; const st = GUIDE_STEPS[i];
+  let tip = document.getElementById('g-tip'); let hole = document.getElementById('g-hole');
+  if(!document.getElementById('g-block')){ const b = document.createElement('div'); b.id = 'g-block'; document.body.appendChild(b); }
+  if(!hole){ hole = document.createElement('div'); hole.id = 'g-hole'; document.body.appendChild(hole); }
+  if(!tip){ tip = document.createElement('div'); tip.id = 'g-tip'; document.body.appendChild(tip); }
+  const total = GUIDE_STEPS.length - 1;
+  if(st.screen === 'final'){
+    hole.style.display = 'none';
+    hole.style.boxShadow = 'none';
+    document.getElementById('g-block').style.background = 'rgba(43,37,33,.58)';
+    tip.className = 'g-final';
+    tip.style.cssText = '';
+    tip.innerHTML = `<div class="g-title">¡Listo, ya sabes usar la app!</div><div class="g-text">Cada día entras, miras qué te toca, haces tu ejercicio y lo registras. Si tienes dudas, escríbeme y te ayudo.</div><div class="g-row"><button class="g-back" id="g-prev">Atrás</button><button class="g-next" id="g-end">Volver al inicio</button></div>`;
+    document.getElementById('g-prev').onclick = ()=> guideGo(i - 1);
+    document.getElementById('g-end').onclick = guideExit;
+    return;
+  }
+  hole.style.display = ''; hole.style.boxShadow = '';
+  document.getElementById('g-block').style.background = 'transparent';
+  tip.className = '';
+  tip.innerHTML = `<div class="g-count">PASO ${i+1} DE ${total}</div><div class="g-title">${st.title}</div><div class="g-text">${st.text}</div><div class="g-row"><button class="g-skip" id="g-skip">Salir</button>${i > 0 ? '<button class="g-back" id="g-prev">Atrás</button>' : ''}<button class="g-next" id="g-nxt">${i === total - 1 ? 'Terminar' : 'Siguiente'}</button></div>`;
+  document.getElementById('g-skip').onclick = guideExit;
+  if(i > 0) document.getElementById('g-prev').onclick = ()=> guideGo(i - 1);
+  document.getElementById('g-nxt').onclick = ()=> guideGo(i + 1);
+  const t = document.querySelector(st.sel);
+  if(t){
+    const r = t.getBoundingClientRect();
+    if(r.top < 90 || r.bottom > window.innerHeight - 200){ window.scrollTo(0, Math.max(0, window.scrollY + r.top - window.innerHeight/3)); }
+  }
+  guidePosition();
+  setTimeout(guidePosition, 60);
+}
+function renderGuide(app){
+  state.guideStep = state.guideStep || 0;
+  app.innerHTML = guideScreen() === 'home' ? guideHomeHtml() : guideRoutineHtml();
+  window.removeEventListener('resize', guidePosition); window.removeEventListener('scroll', guidePosition, true);
+  window.addEventListener('resize', guidePosition); window.addEventListener('scroll', guidePosition, true);
+  if(!document.getElementById('g-tip')) window.scrollTo(0,0);
+  guideShowStep();
+}
+
 function renderWeekTimeline(box, routine){
   const svgCheck = (color, size)=> `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
   const svgChevron = (down)=> `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6e655d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="${down ? 'M6 9l6 6 6-6' : 'M9 6l6 6-6 6'}"/></svg>`;
@@ -2459,8 +2645,11 @@ function cqRender(){
 function render(){
   const app = document.getElementById('app');
   document.body.classList.toggle('theme-masculine', !!(state.clienta && isMasculino(state.clienta)));
-  document.body.classList.toggle('routine-v2', state.view === 'routine-day' && !(state.clienta && isMasculino(state.clienta)));
-  document.body.classList.toggle('home-v2', state.view === 'dashboard' && !(state.clienta && isMasculino(state.clienta)));
+  const _gMasc = !!(state.clienta && isMasculino(state.clienta));
+  const _gScr = state.view === 'guide' ? guideScreen() : null;
+  document.body.classList.toggle('routine-v2', (state.view === 'routine-day' || _gScr === 'routine') && !_gMasc);
+  document.body.classList.toggle('home-v2', (state.view === 'dashboard' || _gScr === 'home') && !_gMasc);
+  if(state.view !== 'guide') guideCleanup();
   if(state.view === 'session-error'){
     app.innerHTML = `
       <div class="login-wrap">
@@ -2506,6 +2695,9 @@ function render(){
     document.getElementById('welcome-save-btn').onclick = onSaveInitialWeight;
     document.getElementById('welcome-skip-btn').onclick = onSkipInitialWeight;
   }
+  else if(state.view === 'guide'){
+    renderGuide(app);
+  }
   else if(state.view === 'dashboard'){
     const exercises = Object.keys(state.data.exercises);
     const myRoutine = ROUTINES[routineKey(state.clienta)];
@@ -2541,7 +2733,7 @@ function render(){
           <div style="width:38px; height:38px; border-radius:50%; background:var(--rose); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; flex-shrink:0;">${escapeHtml(initials)}</div>
         </div>
       </div>
-      <button class="link-btn" id="switch-btn" style="margin:-6px 0 14px; font-size:14px; padding:10px 0;">Cambiar de usuaria</button>
+      <div class="hv-links"><button class="link-btn" id="switch-btn" style="font-size:14px; padding:10px 0;">Cambiar de usuaria</button><button class="guide-open" id="guide-btn">✨ Cómo usar la app</button></div>
 
       ${heroDay ? `
         <div class="hero-today-card">
@@ -2663,6 +2855,7 @@ function render(){
       });
     }
     document.getElementById('switch-btn').onclick = ()=>{ localStorage.removeItem('rt_session'); state.view='login'; state.clienta=null; state.data=null; render(); };
+    document.getElementById('guide-btn').onclick = ()=>{ state.guideStep = 0; state.view = 'guide'; window.scrollTo(0,0); render(); };
   }
   else if(state.view === 'weight'){
     const latestWeight = state.data.bodyWeight.length ? state.data.bodyWeight[state.data.bodyWeight.length-1] : null;
@@ -3785,10 +3978,6 @@ function render(){
       else if(state.view === 'dashboard') localStorage.removeItem('rt_view_' + state.clienta);
     }
   }catch(e){}
-  const bottomTab = document.getElementById('bottom-tab');
-  const showTab = false; // Mi peso eliminado
-  bottomTab.classList.toggle('hidden', !showTab);
-  document.getElementById('weight-tab-btn').onclick = ()=>{ state.view = 'weight'; render(); };
 }
 
 function escapeHtml(s){
