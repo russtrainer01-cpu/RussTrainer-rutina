@@ -1794,6 +1794,8 @@ function groupDaysBySemana(routine){
 }
 
 function isDayCompleteOn(data, dayLabel, items, dateStr){
+  const finR = data.completados[dayLabel] && data.completados[dayLabel]['fin'];
+  if(finR && finR.done && finR.date === dateStr) return true;
   return items.every((item, idx)=>{
     if(item.tipo === 'mensaje') return true;
     if(item.tipo === 'checklist'){
@@ -2310,7 +2312,7 @@ function renderWeekTimeline(box, routine){
       <button class="wk-card ${s === 'today' ? 'today' : ''}">
         <div class="wk-card-text">
           <div class="wk-name">${escapeHtml(dayName)}</div>
-          <div class="wk-sub ${s === 'pending' ? '' : s}">${s === 'done' ? 'Completado' : (s === 'today' ? 'Hoy toca' : 'Pendiente')}</div>
+          <div class="wk-sub ${s === 'pending' ? '' : s}">${s === 'done' ? 'Completado' + (()=>{ const f = state.data.completados[day] && state.data.completados[day]['fin']; return (f && f.done && f.pct < 100) ? ' · ' + f.pct + '%' : ''; })() : (s === 'today' ? 'Hoy toca' : 'Pendiente')}</div>
         </div>
         ${svgChevron(false)}
       </button>`;
@@ -3569,6 +3571,10 @@ function render(){
           return entries.length >= item.rondas;
         });
         if(allDone) doneCount++;
+        else {
+          const hechos = item.ejercicios.reduce((n,ex)=> n + Math.min(item.rondas, (state.data.exercises[ex.ejercicio] || []).filter(e=> e.date === todayStr).length), 0);
+          doneCount += hechos / (item.rondas * item.ejercicios.length);
+        }
       } else {
         const entries = state.data.exercises[item.ejercicio] || [];
         if(entries.some(e=> e.date === todayStr)) doneCount++;
@@ -3592,6 +3598,13 @@ function render(){
       <button class="back" id="back-btn">&larr; Volver</button>
       <div class="hv-logo rt-logo"><span class="hv-mono">R</span><span class="hv-word">Russ<i>Trainer</i></span></div>
       <h1>${escapeHtml(state.routineDay)}</h1>
+      ${(()=>{ const fr = doneToday['fin']; return (fr && fr.done && fr.date === todayStr) ? `
+        <div class="card" style="text-align:center;">
+          <div style="font-size:26px;">🎉</div>
+          <div style="font-weight:700; font-size:17px; color:var(--rose-dark); margin:4px 0;">¡Rutina finalizada!</div>
+          <div style="font-size:13px; font-weight:700;">Completaste el ${fr.pct}% de hoy</div>
+          <div class="sub" style="margin:6px 0 0;">Lo importante es que viniste 🤍</div>
+        </div>` : ''; })()}
       <div id="routine-items"></div>
       ${overlayIdx !== null ? `
         <div class="rest-overlay${state.uiResting[overlayIdx] <= 10 ? ' blinking' : ''}" id="rest-overlay">
@@ -3864,6 +3877,38 @@ function render(){
         render();
       };
     });
+    const finHoy = doneToday['fin'];
+    if(!(finHoy && finHoy.done && finHoy.date === todayStr) && progressPct > 0 && progressPct < 100){
+      const finCard = document.createElement('div');
+      finCard.className = 'card';
+      finCard.style.cssText = 'text-align:center; margin-top:22px;';
+      finCard.innerHTML = `
+        <p class="sub" style="margin:0 0 10px;">¿Hoy no pudiste hacerlo todo?<br>Cada paso cuenta 🤍</p>
+        <button class="btn-ghost" id="finalizar-rutina-btn" style="width:100%; border:1.5px solid var(--rose-dark); color:var(--rose-dark); font-weight:700;">Finalizar rutina · ${progressPct}%</button>`;
+      wrap.appendChild(finCard);
+      finCard.querySelector('#finalizar-rutina-btn').onclick = ()=>{
+        const ov = document.createElement('div');
+        ov.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px;';
+        ov.innerHTML = `
+          <div style="background:var(--bg); border-radius:18px; padding:22px; max-width:320px; width:100%; text-align:center; box-shadow:0 8px 30px rgba(0,0,0,.25);">
+            <div style="font-size:30px;">💪</div>
+            <div style="font-weight:700; font-size:16px; margin:6px 0;">¿Finalizar la rutina al ${progressPct}%?</div>
+            <p class="sub" style="margin:0 0 14px;">Se guarda el día como hecho, con lo que entrenaste hoy.</p>
+            <button class="btn-primary" id="fin-si">Sí, finalizar</button>
+            <button class="btn-ghost" id="fin-no" style="margin-top:8px; width:100%;">Seguir entrenando</button>
+          </div>`;
+        document.body.appendChild(ov);
+        ov.querySelector('#fin-no').onclick = ()=> ov.remove();
+        ov.querySelector('#fin-si').onclick = ()=>{
+          ov.remove();
+          const dayLabel = state.routineDay;
+          if(!state.data.completados[dayLabel]) state.data.completados[dayLabel] = {};
+          state.data.completados[dayLabel]['fin'] = { done:true, date: todayISO(), ts:new Date().toISOString(), pct: progressPct };
+          render();
+          saveClienta(state.clienta, state.data);
+        };
+      };
+    }
     wrap.querySelectorAll('.circuit-finish-btn').forEach(btn=>{
       btn.onclick = async ()=>{
         if(!confirm('¿Finalizar este circuito acá? Se va a marcar como hecho por hoy, aunque no hayas completado todas las rondas.')) return;
