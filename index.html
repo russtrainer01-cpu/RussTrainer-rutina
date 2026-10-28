@@ -2453,6 +2453,7 @@ async function loadClienta(name){
       if(!parsed.completados) parsed.completados = {};
       if(!parsed.bodyWeight) parsed.bodyWeight = [];
       if(!parsed.weightPromptSeen) parsed.weightPromptSeen = false;
+      if(name.trim().toLowerCase() === 'minervis') parsed.weightPromptSeen = true;
       if(!parsed.ficha) parsed.ficha = { objetivo:'', nivel:'', restricciones:'', fechaInicio:'', cumpleanos:'', semanaInicio:'', telefono:'' };
       if(parsed.ficha.semanaInicio === undefined) parsed.ficha.semanaInicio = '';
       if(parsed.ficha.telefono === undefined) parsed.ficha.telefono = '';
