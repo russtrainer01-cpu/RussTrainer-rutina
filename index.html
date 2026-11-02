@@ -2210,6 +2210,7 @@ const GUIDE_STEPS = [
   { screen:'routine', sel:'#g-weight', title:'Peso y comentario', text:'Escribe el peso que usaste y, si quieres, un comentario para mí. Por ejemplo si cambiaste de peso o algo te molestó.' },
   { screen:'routine', sel:'#g-reg',    title:'Registrar', text:'Cuando termines el ejercicio toca Registrar y queda guardado en tu progreso.' },
   { screen:'routine', sel:'#g-progress', title:'Tu avance del día', text:'Esta barra de arriba muestra cuánto llevas de tu rutina de hoy. Cuando llegue al 100% terminaste.' },
+  { screen:'routine', sel:'#g-dl', title:'Descarga tu rutina', text:'Toca este icono de la señal sin wifi y tu rutina se descarga en PDF. Queda en Descargas para que la veas aunque te quedes sin datos. Además la app guarda tu rutina sola por 24 horas.' },
   { screen:'final' }
 ];
 function guideCleanup(){
@@ -2264,7 +2265,7 @@ function guideRoutineHtml(){
       <div style="height:54px;"></div>
       <button class="back">&larr; Volver</button>
       <div class="hv-logo rt-logo"><span class="hv-mono">R</span><span class="hv-word">Russ<i>Trainer</i></span></div>
-      <h1>Día 2 - Glúteos</h1>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;"><h1 style="flex:1;min-width:0;">Día 2 - Glúteos</h1><button class="dl-icon" id="g-dl" aria-label="Descargar rutina">${NOWIFI_SVG}</button></div>
       <span class="guide-chip">RUTINA DE PRUEBA</span>
       <div class="guide-demo-nota">Es un ejemplo, no se guarda nada.</div>
       <h2 style="margin-top:10px;">🍑 Glúteos</h2>
