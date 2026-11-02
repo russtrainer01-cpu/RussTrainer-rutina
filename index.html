@@ -2553,10 +2553,10 @@ async function authCall(grant, body){
 }
 async function authLogin(nombre, clave){ return authCall('password', { email: authEmail(nombre), password: clave }); }
 let _authRefreshing = null;
-async function authEnsure(){
+async function authEnsure(force){
   const a = authGet();
   if(!a) return;
-  if(a.expires_at - 90 > Date.now()/1000) return;
+  if(!force && a.expires_at - 90 > Date.now()/1000) return;
   if(!_authRefreshing){
     _authRefreshing = authCall('refresh_token', { refresh_token: a.refresh_token }).catch(e=>{
       if(e && (e.status === 400 || e.status === 401 || e.status === 403)){ localStorage.removeItem('rt_auth'); }
@@ -4607,7 +4607,7 @@ async function restoreSession(){
   const saved = localStorage.getItem('rt_session');
   if(!saved) return;
   if(!authGet()){ rtClearSession(); state.view = 'login'; render(); return; }
-  await authEnsure();
+  await authEnsure(true);
   if(!authGet() && navigator.onLine !== false){ rtClearSession(); state.view = 'login'; render(); return; }
   if(saved === 'panelruss'){
     const now = new Date();
