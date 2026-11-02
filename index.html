@@ -1076,6 +1076,12 @@
   #g-tip.g-final .g-row{ justify-content:center; }
   .guide-demo .video-btn, .guide-demo button{ pointer-events:none; }
   .hidden{display:none;}
+
+  .dl-icon{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid var(--bg-elevated);background:transparent;color:var(--rose-dark);display:inline-flex;align-items:center;justify-content:center;padding:0;cursor:pointer;opacity:.85}
+  .dl-icon:active{opacity:1;background:var(--bg-card)}
+  .dl-icon svg{width:20px;height:20px}
+  #offline-pill{position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:70;background:#8a8078;color:#fff;font-size:12px;padding:5px 12px;border-radius:999px;display:none;align-items:center;gap:6px;white-space:nowrap}
+  #rt-toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:80;background:#2b2521;color:#fff;font-size:13px;padding:9px 14px;border-radius:10px;max-width:86vw;text-align:center}
 </style>
 </head>
 <body>
@@ -2568,13 +2574,137 @@ async function loadClienta(name){
       if(!parsed.vencimiento) parsed.vencimiento = '';
       if(!parsed.trainerNotes) parsed.trainerNotes = [];
       if(!parsed.nextWeekNotes) parsed.nextWeekNotes = {};
+      offSave(name, parsed);
+      state.offline = false;
       return parsed;
     }catch(e){
       lastError = e;
+      if(typeof navigator !== 'undefined' && navigator.onLine === false) break;
       if(attempt < 2) await new Promise(r=>setTimeout(r, 700));
     }
   }
+  const cached = offLoad(name);
+  if(cached){ state.offline = true; return cached; }
   throw lastError;
+}
+
+// ---- Modo sin conexión: copia de la rutina en el celular, se borra sola a las 24 h ----
+const OFF_TTL = 24 * 60 * 60 * 1000;
+function offKey(name){ return 'rt_off_' + String(name).trim().toLowerCase(); }
+function offSave(name, data){ try{ localStorage.setItem(offKey(name), JSON.stringify({ ts: Date.now(), data })); }catch(e){} }
+function offLoad(name){
+  try{
+    const raw = localStorage.getItem(offKey(name));
+    if(!raw) return null;
+    const o = JSON.parse(raw);
+    if(!o || !o.ts || Date.now() - o.ts > OFF_TTL){ localStorage.removeItem(offKey(name)); return null; }
+    return o.data;
+  }catch(e){ return null; }
+}
+function offPurge(){
+  try{
+    Object.keys(localStorage).forEach(k=>{
+      if(k.indexOf('rt_off_') !== 0) return;
+      let o = null; try{ o = JSON.parse(localStorage.getItem(k)); }catch(_){}
+      if(!o || !o.ts || Date.now() - o.ts > OFF_TTL) localStorage.removeItem(k);
+    });
+  }catch(e){}
+}
+offPurge();
+setInterval(offPurge, 60 * 60 * 1000);
+function updateOfflinePill(){
+  let p = document.getElementById('offline-pill');
+  if(!p){ p = document.createElement('div'); p.id = 'offline-pill'; p.innerHTML = NOWIFI_SVG.replace('width="20"','width="14"').replace('height="20"','height="14"') + '<span>Sin conexión · usando tu rutina guardada</span>'; document.body.appendChild(p); }
+  p.style.display = (navigator.onLine === false || state.offline) ? 'inline-flex' : 'none';
+}
+window.addEventListener('offline', updateOfflinePill);
+window.addEventListener('online', updateOfflinePill);
+function rtToast(msg){
+  const old = document.getElementById('rt-toast'); if(old) old.remove();
+  const t = document.createElement('div'); t.id = 'rt-toast'; t.textContent = msg; document.body.appendChild(t);
+  setTimeout(()=>{ if(t.parentNode) t.remove(); }, 3200);
+}
+const NOWIFI_SVG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8.8a15 15 0 0 1 4.2-2.6"/><path d="M22 8.8a15 15 0 0 0-8.5-3.7"/><path d="M5 12.5a10 10 0 0 1 3.1-2"/><path d="M19 12.5a10 10 0 0 0-3.6-2.3"/><path d="M8.5 16a5 5 0 0 1 2-1.1"/><path d="M15.5 16a5 5 0 0 0-1.4-1"/><circle cx="12" cy="19.2" r=".9" fill="currentColor"/><path d="M3 3l18 18"/></svg>';
+
+// ---- Descargar la rutina del día como PDF (queda en Descargas) ----
+function descargarRutinaPDF(items){
+  try{
+    const W = 1080, PAD = 56;
+    const rose = '#d4848f', roseDark = '#a85c68', ink = '#2b2521', muted = '#8a8078', card = '#F5F2E9';
+    const nombre = (state.clienta || '').trim(); const nombreBonito = nombre.charAt(0).toUpperCase() + nombre.slice(1);
+    const fecha = new Date().toLocaleDateString('es-AR', { day:'2-digit', month:'long' });
+    const fnt = (w, px)=> w + ' ' + px + 'px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif';
+    function lineOf(it){
+      const parts = [];
+      if(it.series && it.series !== '-') parts.push(it.series);
+      if(it.reps) parts.push(/^\d+$/.test(String(it.reps)) ? it.reps + ' reps' : it.reps);
+      if(it.peso && it.peso !== 'Sin peso') parts.push(it.peso);
+      if(it.descanso) parts.push('desc. ' + it.descanso);
+      return parts.join('  ·  ');
+    }
+    function draw(ctx, H){
+      let y = 0;
+      if(H){ ctx.fillStyle = '#FCFCF7'; ctx.fillRect(0, 0, W, H); }
+      if(H){ ctx.fillStyle = rose; ctx.fillRect(0, 0, W, 190); }
+      if(H){
+        ctx.fillStyle = '#fff'; ctx.font = fnt('700', 46); ctx.fillText('Rutina de ' + nombreBonito, PAD, 82);
+        ctx.font = fnt('400', 30); ctx.fillText(String(state.routineDay), PAD, 140);
+      }
+      y = 190 + 40;
+      let sec = null;
+      const row = (title, sub, extra)=>{
+        const h = 34 + (sub ? 44 : 0) + (extra || 0) + 30;
+        if(H){ ctx.fillStyle = card; ctx.beginPath(); ctx.roundRect(PAD, y, W - PAD*2, h, 20); ctx.fill();
+          ctx.fillStyle = ink; ctx.font = fnt('700', 34); ctx.fillText(title, PAD + 28, y + 52);
+          if(sub){ ctx.fillStyle = muted; ctx.font = fnt('400', 29); ctx.fillText(sub, PAD + 28, y + 98); } }
+        y += h + 16;
+      };
+      items.forEach(it=>{
+        if(it.tipo === 'mensaje') return;
+        if(it.seccion && it.seccion !== sec){
+          sec = it.seccion; y += 10;
+          if(H){ ctx.fillStyle = roseDark; ctx.font = fnt('700', 30); ctx.fillText(sec, PAD, y + 30); }
+          y += 52;
+        }
+        if(it.tipo === 'circuito'){
+          row(it.titulo || 'Circuito', it.rondas + ' rondas' + (it.descansoRondas ? '  ·  descanso ' + it.descansoRondas : ''), 0);
+          (it.ejercicios || []).forEach(ex=> row(ex.ejercicio, [ex.reps, ex.peso && ex.peso !== 'Sin peso' ? ex.peso : ''].filter(Boolean).join('  ·  '), 0));
+        } else {
+          row(it.ejercicio, lineOf(it), 0);
+        }
+      });
+      y += 10;
+      if(H){ ctx.fillStyle = muted; ctx.font = fnt('400', 26); ctx.textAlign = 'center';
+        ctx.fillText('russ.trainer  ·  ' + fecha + '  ·  válida por 24 h', W/2, y + 30); ctx.textAlign = 'left'; }
+      return y + 70;
+    }
+    const probe = document.createElement('canvas'); probe.width = W; probe.height = 10;
+    const H = draw(probe.getContext('2d'), 0);
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    draw(cv.getContext('2d'), H);
+    const jpg = atob(cv.toDataURL('image/jpeg', 0.92).split(',')[1]);
+    const img = new Uint8Array(jpg.length); for(let i=0;i<jpg.length;i++) img[i] = jpg.charCodeAt(i);
+    const pw = W * 0.5, ph = H * 0.5;
+    const enc = new TextEncoder(); const chunks = []; const offs = []; let len = 0;
+    const push = (u)=>{ chunks.push(u); len += u.length; };
+    const txt = (t)=> push(enc.encode(t));
+    const obj = (n, body)=>{ offs[n] = len; txt(n + ' 0 obj\n'); body(); txt('\nendobj\n'); };
+    txt('%PDF-1.4\n');
+    obj(1, ()=> txt('<< /Type /Catalog /Pages 2 0 R >>'));
+    obj(2, ()=> txt('<< /Type /Pages /Kids [3 0 R] /Count 1 >>'));
+    obj(3, ()=> txt('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + pw + ' ' + ph + '] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>'));
+    obj(4, ()=>{ txt('<< /Type /XObject /Subtype /Image /Width ' + W + ' /Height ' + H + ' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ' + img.length + ' >>\nstream\n'); push(img); txt('\nendstream'); });
+    const cs = 'q ' + pw + ' 0 0 ' + ph + ' 0 0 cm /Im0 Do Q';
+    obj(5, ()=> txt('<< /Length ' + cs.length + ' >>\nstream\n' + cs + '\nendstream'));
+    const xr = len; txt('xref\n0 6\n0000000000 65535 f \n');
+    for(let n=1;n<=5;n++) txt(String(offs[n]).padStart(10,'0') + ' 00000 n \n');
+    txt('trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n' + xr + '\n%%EOF');
+    const blob = new Blob(chunks, { type:'application/pdf' });
+    const slug = String(state.routineDay).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-|-$/g,'');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Rutina-' + nombreBonito + '-' + slug + '.pdf';
+    document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+    rtToast('Rutina descargada · la encuentras en Descargas');
+  }catch(e){ console.error(e); rtToast('No se pudo descargar la rutina'); }
 }
 function persistUiProgress(){
   if(!state.clienta) return;
@@ -3719,7 +3849,7 @@ function render(){
       <div style="height:54px;"></div>
       <button class="back" id="back-btn">&larr; Volver</button>
       <div class="hv-logo rt-logo"><span class="hv-mono">R</span><span class="hv-word">Russ<i>Trainer</i></span></div>
-      <h1>${escapeHtml(state.routineDay)}</h1>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;"><h1 style="flex:1;min-width:0;">${escapeHtml(state.routineDay)}</h1><button class="dl-icon" id="dl-btn" aria-label="Descargar rutina para usar sin datos" title="Descargar rutina (sin datos)">${NOWIFI_SVG}</button></div>
       ${(()=>{ const fr = doneToday['fin']; return (fr && fr.done && fr.date === todayStr) ? `
         <div class="card" style="text-align:center;">
           <div style="font-size:26px;">🎉</div>
@@ -3740,6 +3870,7 @@ function render(){
     if(overlayIdx !== null){
       document.querySelector('.rest-overlay-cancel').onclick = ()=> cancelRestTimer(overlayIdx);
     }
+    { const dl = document.getElementById('dl-btn'); if(dl) dl.onclick = ()=> descargarRutinaPDF(items); }
     const wrap = document.getElementById('routine-items');
     items.forEach((item, idx)=>{
       if(item.tipo === 'circuito'){
@@ -4480,8 +4611,9 @@ try{
     history.replaceState(null, '', location.pathname);
   }
 }catch(e){}
+try{ if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 render();
-restoreSession();
+restoreSession().then(updateOfflinePill);
 </script>
 </body>
 </html>
