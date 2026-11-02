@@ -4442,7 +4442,7 @@ async function onEnter(){
     return;
   }
   restoreUiProgress();
-  state.view = state.data.weightPromptSeen ? 'dashboard' : 'welcome';
+  state.view = 'dashboard';
   try{
     const v = JSON.parse(localStorage.getItem('rt_view_' + state.clienta) || 'null');
     const rt = ROUTINES[routineKey(state.clienta)];
@@ -4581,7 +4581,7 @@ async function restoreSession(){
     return;
   }
   restoreUiProgress();
-  state.view = state.data.weightPromptSeen ? 'dashboard' : 'welcome';
+  state.view = 'dashboard';
   try{
     const v = JSON.parse(localStorage.getItem('rt_view_' + state.clienta) || 'null');
     const rt = ROUTINES[routineKey(state.clienta)];
