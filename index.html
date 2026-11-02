@@ -1082,6 +1082,57 @@
   .dl-icon svg{width:20px;height:20px}
   #offline-pill{position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:70;background:#8a8078;color:#fff;font-size:12px;padding:5px 12px;border-radius:999px;display:none;align-items:center;gap:6px;white-space:nowrap}
   #rt-toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:80;background:#2b2521;color:#fff;font-size:13px;padding:9px 14px;border-radius:10px;max-width:86vw;text-align:center}
+
+  /* ===== Panel de Russ (escritorio) ===== */
+  body.panel-wide{display:block}
+  body.panel-wide #app{max-width:none;padding:0;overflow:visible}
+  .pn-shell{display:flex;min-height:100vh;background:#f3f4f7;color:#1c2230;font-family:Inter,"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif}
+  .pn-side{width:250px;flex:none;background:#1c2230;color:#c9cfdd;padding:26px 16px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;box-sizing:border-box}
+  .pn-logo{display:flex;align-items:center;gap:10px;font-size:21px;font-weight:700;color:#fff;margin:0 8px 28px}
+  .pn-logo i{color:#d4848f;font-style:italic;font-weight:700}
+  .pn-m{width:34px;height:34px;border:2px solid #d4848f;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;font-size:17px;color:#fff}
+  .pn-nav{display:flex;flex-direction:column;gap:3px;flex:1;overflow:auto}
+  .pn-nv{background:none;border:0;color:#c9cfdd;text-align:left;padding:11px 14px;border-radius:10px;font-size:15px;font-weight:500;font-family:inherit;display:flex;align-items:center;gap:12px;cursor:pointer}
+  .pn-nv:hover{background:#252d40}
+  .pn-nv.on{background:#2b3448;color:#fff;font-weight:700}
+  .pn-nv .bd{margin-left:auto;background:#d4848f;color:#fff;border-radius:99px;font-size:12px;padding:1px 8px;font-weight:700}
+  .pn-sep{height:1px;background:#2b3448;margin:10px 8px}
+  .pn-main{flex:1;min-width:0;padding:34px 40px 60px;box-sizing:border-box}
+  .pn-h1{font-size:30px;font-weight:800;margin:0 0 4px;letter-spacing:-.01em}
+  .pn-sub{color:#6b7385;margin:0 0 22px;font-size:15px}
+  .pn-kps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:22px}
+  .pn-kp{background:#fff;border:1px solid #e3e6ee;border-radius:10px;padding:16px 18px}
+  .pn-kp small{color:#6b7385;font-size:13px}
+  .pn-kp b{display:block;font-size:28px;margin-top:6px}
+  .pn-cols{display:grid;grid-template-columns:1.7fr 1fr;gap:18px;align-items:start}
+  .pn-card{background:#fff;border:1px solid #e3e6ee;border-radius:10px;padding:20px;min-width:0}
+  .pn-card h2{font-size:18px;margin:0 0 6px}
+  .pn-row{display:grid;grid-template-columns:44px minmax(110px,1.1fr) minmax(120px,1.2fr) minmax(150px,1.5fr) 108px;gap:14px;align-items:center;padding:13px 0;border-top:1px solid #e3e6ee;width:100%;text-align:left;background:none;border-left:0;border-right:0;border-bottom:0;font:inherit;color:inherit}
+  .pn-row.click{cursor:pointer}.pn-row.click:hover{background:#f8f9fc}
+  .pn-av{width:40px;height:40px;border-radius:50%;background:#3d5afe;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
+  .pn-nm b{display:block}.pn-nm small,.pn-card small{color:#6b7385;font-size:12.5px}
+  .pn-bar{height:8px;background:#e6e9f1;border-radius:99px;overflow:hidden;margin-bottom:5px}.pn-bar i{display:block;height:100%;border-radius:99px}
+  .pn-st{font-size:13px;font-weight:600}
+  .pn-btn{border:1px solid #e3e6ee;background:#fff;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;font-family:inherit;line-height:1.3;color:#3d5afe;cursor:pointer;text-decoration:none;display:inline-block;text-align:center}
+  .pn-btn:hover{background:#f3f4f7}
+  .pn-btn.pri{background:#3d5afe;color:#fff;border-color:#3d5afe}
+  .pn-btn.pri:disabled{opacity:.5;cursor:default}
+  .pn-cm{padding:13px 0;border-top:1px solid #e3e6ee}
+  .pn-cm .t{font-size:14px;color:#6b7385;margin:4px 0 8px}
+  .pn-empty{color:#6b7385;padding:18px 0;font-size:14px}
+  .pn-form{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin:14px 0 6px}
+  .pn-form label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:#6b7385}
+  .pn-form input{border:1px solid #cfd4e1;border-radius:8px;padding:9px 11px;font-size:15px;font-family:inherit;min-width:190px;background:#fff;color:#1c2230}
+  .pn-msg{font-size:14px;margin-top:8px}.pn-msg.ok{color:#1f9d6b}.pn-msg.err{color:#d64545}
+  .pn-tag{display:inline-block;font-size:12px;padding:2px 9px;border-radius:99px;background:#eef0f6;color:#4a5266;margin-left:6px}
+  @media(max-width:900px){
+    .pn-shell{flex-direction:column}
+    .pn-side{width:auto;height:auto;position:static;flex-direction:row;align-items:center;padding:10px 12px;overflow-x:auto}
+    .pn-logo{margin:0 14px 0 0;white-space:nowrap}
+    .pn-nav{flex-direction:row;overflow:visible}.pn-nv{white-space:nowrap;padding:9px 12px}.pn-sep{display:none}
+    .pn-main{padding:20px 16px 60px}.pn-kps{grid-template-columns:repeat(2,1fr)}.pn-cols{grid-template-columns:1fr}
+    .pn-row{grid-template-columns:40px 1fr auto}.pn-row .pn-prog,.pn-row .pn-st{grid-column:2 / -1}
+  }
 </style>
 </head>
 <body>
@@ -2104,6 +2155,168 @@ async function loadAdminData(){
   render();
 }
 
+
+// ===== Panel de Russ (escritorio): Hoy, Alumnas, Comentarios, Claves =====
+const pnFn = ()=> SUPABASE_URL + '/functions/v1/admin-users';
+function pnHidden(){ try{ return JSON.parse(localStorage.getItem('rt_panel_hide') || '[]'); }catch(e){ return []; } }
+function pnSetHidden(a){ try{ localStorage.setItem('rt_panel_hide', JSON.stringify(a)); }catch(e){} }
+function pnWa(tel, nombre, texto){
+  const d = String(tel || '').replace(/\D/g,'');
+  if(!d) return '';
+  return 'https://wa.me/' + d + (texto ? '?text=' + encodeURIComponent(texto) : '');
+}
+function pnStatus(c){
+  const gap = daysSince(lastActivityDate(c.data));
+  const today = gap === 0;
+  if(today) return { col:'#1f9d6b', txt:'Entrenó hoy', lvl:0, gap };
+  if(gap === null) return { col:'#d64545', txt:'Sin actividad', lvl:2, gap };
+  if(gap === 1) return { col:'#1f9d6b', txt:'Entrenó ayer', lvl:0, gap };
+  if(gap < 3) return { col:'#1f9d6b', txt:'Entrenó hace ' + gap + ' días', lvl:0, gap };
+  if(gap < 6) return { col:'#e08a00', txt:'Sin entrenar hace ' + gap + ' días', lvl:1, gap };
+  return { col:'#d64545', txt:'Sin entrenar hace ' + gap + ' días', lvl:2, gap };
+}
+function pnRows(){
+  const hid = pnHidden();
+  const all = Object.keys(state.adminData || {}).map(k=>{
+    const c = state.adminData[k];
+    return { key:k, c, st:pnStatus(c), week:computeWeekCount(c.data), target:weeklyTarget(c.displayName), hidden:hid.indexOf(k) > -1 };
+  });
+  return all;
+}
+function pnWaBtn(r, texto){
+  const link = pnWa(r.c.data.ficha && r.c.data.ficha.telefono, r.c.displayName, texto);
+  return link ? `<a class="pn-btn" href="${link}" target="_blank" rel="noopener">WhatsApp</a>` : `<button class="pn-btn" data-det="${r.key}" title="Falta el teléfono: agrégalo en su ficha">+ Teléfono</button>`;
+}
+function renderPanel(app){
+  const sec = state.panelSec || 'hoy';
+  const feed = buildActivityFeed(state.adminData || {});
+  const pending = feed.filter(i=>i.comment && !i.respondido);
+  const nav = [
+    ['hoy','🏠','Hoy'],['alumnas','👥','Alumnas'],['comentarios','💬','Comentarios'],['claves','🔑','Claves'],'sep',
+    ['v:admin-summary','📋','Resumen semanal'],['v:admin-feed','🕐','Actividad'],['v:admin-calendar','📅','Calendario'],['v:admin-plantilla','🖼️','Plantilla'],['v:admin-cuaderno','📓','Cuaderno']
+  ];
+  const navHtml = nav.map(n=> n === 'sep' ? '<div class="pn-sep"></div>' :
+    `<button class="pn-nv${n[0] === sec ? ' on' : ''}" data-nav="${n[0]}"><span>${n[1]}</span>${n[2]}${n[0]==='comentarios' && pending.length ? `<span class="bd">${pending.length}</span>` : ''}</button>`).join('');
+  app.innerHTML = `
+    <div class="pn-shell">
+      <aside class="pn-side">
+        <div class="pn-logo"><span class="pn-m">R</span><span>Russ<i>Trainer</i></span></div>
+        <nav class="pn-nav">${navHtml}</nav>
+        <button class="pn-nv" id="pn-exit"><span>↩︎</span>Salir</button>
+      </aside>
+      <main class="pn-main" id="pn-main"></main>
+    </div>`;
+  app.querySelectorAll('[data-nav]').forEach(b=> b.onclick = ()=>{
+    const v = b.getAttribute('data-nav');
+    if(v.indexOf('v:') === 0){ state.view = v.slice(2); render(); }
+    else { state.panelSec = v; render(); }
+  });
+  document.getElementById('pn-exit').onclick = ()=>{ rtClearSession(); state.view='login'; state.adminData=null; render(); };
+  const main = document.getElementById('pn-main');
+  if(!state.adminData){ main.innerHTML = '<h1 class="pn-h1">Hola, Russ</h1><p class="pn-sub">Cargando a tus alumnas…</p>'; return; }
+  const rows = pnRows().filter(r=>!r.hidden);
+  const fechaTxt = new Date().toLocaleDateString('es-AR', { weekday:'long', day:'numeric', month:'long' });
+  const detailBtns = ()=> main.querySelectorAll('[data-det]').forEach(b=> b.onclick = (e)=>{ e.stopPropagation(); state.adminSelected = b.getAttribute('data-det'); state.view = 'admin-detail'; render(); });
+  const respBtns = ()=> main.querySelectorAll('[data-resp]').forEach(b=> b.onclick = ()=>{ const it = pending[Number(b.getAttribute('data-resp'))]; if(it) markCommentResponded(it.key, it.exercise, it.ts); });
+  const commentHtml = (it, i)=>{
+    const r = pnRows().find(x=>x.key === it.key);
+    return `<div class="pn-cm"><div><b>${escapeHtml(it.clienta)}</b> · ${escapeHtml(it.exercise)} ${it.feeling ? '<span class="pn-tag">' + escapeHtml(it.feeling) + '</span>' : ''}<small style="float:right">${formatDate(it.date)}</small></div>
+      <div class="t">“${escapeHtml(it.comment)}”</div>
+      <button class="pn-btn" data-resp="${i}">✓ Ya respondí</button> ${r ? pnWaBtn(r, '') : ''}</div>`;
+  };
+  if(sec === 'hoy'){
+    const todayN = rows.filter(r=>r.st.gap === 0).length;
+    const wk = rows.reduce((a,r)=>a + r.week, 0), tg = rows.reduce((a,r)=>a + r.target, 0);
+    const inact = rows.filter(r=>r.st.lvl > 0).length;
+    const list = rows.slice().sort((a,b)=> b.st.lvl - a.st.lvl || (b.st.gap === null ? 999 : b.st.gap) - (a.st.gap === null ? 999 : a.st.gap));
+    main.innerHTML = `
+      <h1 class="pn-h1">Hola, Russ</h1>
+      <p class="pn-sub">${fechaTxt.charAt(0).toUpperCase() + fechaTxt.slice(1)} · así van tus alumnas hoy</p>
+      <div class="pn-kps">
+        <div class="pn-kp"><small>Entrenaron hoy</small><b>${todayN} de ${rows.length}</b></div>
+        <div class="pn-kp"><small>Esta semana</small><b>${wk} de ${tg} días</b></div>
+        <div class="pn-kp"><small>Sin entrenar (3+ días)</small><b>${inact} ${inact === 1 ? 'alumna' : 'alumnas'}</b></div>
+        <div class="pn-kp"><small>Comentarios sin responder</small><b>${pending.length}</b></div>
+      </div>
+      <div class="pn-cols">
+        <div class="pn-card"><h2>Alumnas esta semana</h2>
+          ${list.length ? list.map(r=>`<div class="pn-row click" data-det="${r.key}"><div class="pn-av">${escapeHtml(r.c.displayName.charAt(0))}</div>
+            <div class="pn-nm"><b>${escapeHtml(r.c.displayName)}</b><small>${computeMonthNumber(r.c.data.ficha.fechaInicio) ? 'Mes ' + computeMonthNumber(r.c.data.ficha.fechaInicio) : ''}</small></div>
+            <div class="pn-prog"><div class="pn-bar"><i style="width:${Math.min(100, Math.round(r.week / (r.target || 1) * 100))}%;background:${r.st.col}"></i></div><small>${r.week}/${r.target} esta semana</small></div>
+            <div class="pn-st" style="color:${r.st.col}">● ${r.st.txt}</div>
+            <div>${r.st.lvl > 0 ? pnWaBtn(r, 'Hola ' + r.c.displayName + ' cómo vas con tus entrenos esta semana') : ''}</div></div>`).join('') : '<div class="pn-empty">No hay alumnas visibles. Puedes mostrar las ocultas en Alumnas.</div>'}
+        </div>
+        <div class="pn-card"><h2>Comentarios sin responder</h2>
+          ${pending.length ? pending.slice(0,5).map(commentHtml).join('') + (pending.length > 5 ? '<div style="padding-top:10px"><button class="pn-btn" id="pn-allc">Ver los ' + pending.length + '</button></div>' : '') : '<div class="pn-empty">Todo respondido 🎉</div>'}
+        </div></div>`;
+    main.querySelectorAll('.pn-row.click').forEach(r=> r.onclick = ()=>{ state.adminSelected = r.getAttribute('data-det'); state.view='admin-detail'; render(); });
+    detailBtns(); respBtns();
+    const ac = document.getElementById('pn-allc'); if(ac) ac.onclick = ()=>{ state.panelSec='comentarios'; render(); };
+  }
+  else if(sec === 'alumnas'){
+    const all = pnRows().sort((a,b)=> (a.hidden - b.hidden) || a.c.displayName.localeCompare(b.c.displayName));
+    main.innerHTML = `<h1 class="pn-h1">Alumnas</h1><p class="pn-sub">Toca una para ver su detalle. Puedes ocultar a las que ya no entrenan; no se borra nada.</p>
+      <div class="pn-card">${all.map(r=>{
+        const venc = daysUntil(r.c.data.vencimiento); const wi = weekEndInfo(r.c.data.ficha.semanaInicio);
+        const avisos = [];
+        if(venc !== null && venc <= 7) avisos.push(venc < 0 ? '💳 Plan vencido' : venc === 0 ? '💳 Vence hoy' : '💳 Vence en ' + venc + ' días');
+        if(wi && wi.daysLeft <= 3) avisos.push(wi.daysLeft < 0 ? '📅 Semana vencida' : '📅 Semana termina en ' + wi.daysLeft + 'd');
+        return `<div class="pn-row click" data-det="${r.key}" style="${r.hidden ? 'opacity:.55' : ''}"><div class="pn-av">${escapeHtml(r.c.displayName.charAt(0))}</div>
+          <div class="pn-nm"><b>${escapeHtml(r.c.displayName)}</b><small>${r.hidden ? 'Oculta' : (computeStreak(r.c.data) > 0 ? '🔥 ' + computeStreak(r.c.data) + ' días seguidos' : '')}</small></div>
+          <div class="pn-prog"><div class="pn-bar"><i style="width:${Math.min(100, Math.round(r.week / (r.target || 1) * 100))}%;background:${r.st.col}"></i></div><small>${r.week}/${r.target} esta semana</small></div>
+          <div class="pn-st" style="color:${r.st.col}">● ${r.st.txt}${avisos.length ? '<div style="color:#6b7385;font-weight:500;font-size:12.5px;margin-top:3px">' + avisos.join(' · ') + '</div>' : ''}</div>
+          <div style="display:flex;gap:6px">${pnWaBtn(r, '')}<button class="pn-btn" style="color:#6b7385" data-hide="${r.key}">${r.hidden ? 'Mostrar' : 'Ocultar'}</button></div></div>`;
+      }).join('')}</div>`;
+    main.querySelectorAll('.pn-row.click').forEach(r=> r.onclick = ()=>{ state.adminSelected = r.getAttribute('data-det'); state.view='admin-detail'; render(); });
+    detailBtns();
+    main.querySelectorAll('[data-hide]').forEach(b=> b.onclick = (e)=>{ e.stopPropagation(); const k = b.getAttribute('data-hide'); let h = pnHidden(); h = h.indexOf(k) > -1 ? h.filter(x=>x !== k) : h.concat(k); pnSetHidden(h); render(); });
+  }
+  else if(sec === 'comentarios'){
+    main.innerHTML = `<h1 class="pn-h1">Comentarios</h1><p class="pn-sub">Lo que te escriben tus alumnas al registrar cada ejercicio.</p>
+      <div class="pn-card" style="max-width:820px">${pending.length ? pending.map(commentHtml).join('') : '<div class="pn-empty">No tienes comentarios pendientes 🎉</div>'}</div>`;
+    detailBtns(); respBtns();
+  }
+  else if(sec === 'claves'){
+    main.innerHTML = `<h1 class="pn-h1">Claves</h1><p class="pn-sub">Crea el acceso de una alumna nueva o cambia la clave de una que ya tiene. Pásale el nombre y la clave por WhatsApp.</p>
+      <div class="pn-card" style="max-width:820px">
+        <h2>Nueva alumna o cambio de clave</h2>
+        <div class="pn-form">
+          <label>Nombre (como lo escribe al entrar)<input id="pn-n" autocomplete="off" placeholder="lorena"></label>
+          <label>Clave (mínimo 6 caracteres)<input id="pn-c" autocomplete="off" placeholder="Lorena01"></label>
+          <button class="pn-btn pri" id="pn-crear">Crear alumna</button>
+          <button class="pn-btn" id="pn-cambiar">Cambiar clave</button>
+        </div>
+        <div class="pn-msg" id="pn-msg"></div>
+      </div>
+      <div class="pn-card" style="max-width:820px;margin-top:18px"><h2>Alumnas con acceso</h2><div id="pn-users" class="pn-empty">Cargando…</div></div>`;
+    const msg = document.getElementById('pn-msg');
+    async function call(accion){
+      const nombre = document.getElementById('pn-n').value.trim(), clave = document.getElementById('pn-c').value;
+      msg.className = 'pn-msg'; msg.textContent = 'Un momento…';
+      try{
+        const res = await fetch(pnFn(), { method:'POST', headers: await sbH({ 'Content-Type':'application/json' }), body: JSON.stringify({ accion, nombre, clave }) });
+        const j = await res.json().catch(()=>({}));
+        if(!res.ok) throw new Error(j.error || ('Error ' + res.status));
+        msg.className = 'pn-msg ok'; msg.textContent = j.mensaje || 'Listo';
+        document.getElementById('pn-c').value = '';
+        load();
+      }catch(e){ msg.className = 'pn-msg err'; msg.textContent = e.message; }
+    }
+    document.getElementById('pn-crear').onclick = ()=> call('crear');
+    document.getElementById('pn-cambiar').onclick = ()=> call('cambiar');
+    async function load(){
+      const box = document.getElementById('pn-users'); if(!box) return;
+      try{
+        const res = await fetch(pnFn(), { method:'POST', headers: await sbH({ 'Content-Type':'application/json' }), body: JSON.stringify({ accion:'listar' }) });
+        const j = await res.json(); if(!res.ok) throw new Error(j.error || 'No se pudo cargar');
+        box.className = ''; box.innerHTML = j.usuarios.length ? j.usuarios.map(u=>`<div class="pn-row" style="grid-template-columns:44px 1fr auto"><div class="pn-av">${escapeHtml(u.nombre.charAt(0).toUpperCase())}</div><div class="pn-nm"><b>${escapeHtml(u.nombre)}</b>${u.admin ? '<span class="pn-tag">administradora</span>' : ''}<small style="display:block">Creada ${formatDate((u.creado || '').slice(0,10))}</small></div><button class="pn-btn" data-fill="${escapeHtml(u.nombre)}">Cambiar clave</button></div>`).join('') : 'Todavía no hay usuarios.';
+        box.querySelectorAll('[data-fill]').forEach(b=> b.onclick = ()=>{ document.getElementById('pn-n').value = b.getAttribute('data-fill'); document.getElementById('pn-c').focus(); });
+      }catch(e){ box.className = 'pn-empty'; box.textContent = 'No se pudo cargar la lista (' + e.message + ').'; }
+    }
+    load();
+  }
+}
+
 const CLIENT_CONFIG = {
   'anderson': { diasPorSemana: 4, genero: 'masculino' },
   'roiner': { diasPorSemana: 5, genero: 'masculino' },
@@ -2959,6 +3172,7 @@ function render(){
   document.body.classList.toggle('theme-masculine', !!(state.clienta && isMasculino(state.clienta)));
   const _gMasc = !!(state.clienta && isMasculino(state.clienta));
   const _gScr = state.view === 'guide' ? guideScreen() : null;
+  document.body.classList.toggle('panel-wide', state.view === 'admin-list');
   document.body.classList.toggle('routine-v2', (state.view === 'routine-day' || _gScr === 'routine') && !_gMasc);
   document.body.classList.toggle('home-v2', (state.view === 'dashboard' || _gScr === 'home') && !_gMasc);
   if(state.view !== 'guide') guideCleanup();
@@ -3476,86 +3690,7 @@ function render(){
     if(!cq.loaded && !cq.loading){ cq.loading = true; cqLoad().finally(()=>{ cq.loading = false; }); }
   }
   else if(state.view === 'admin-list'){
-    const commentCount = buildActivityFeed(state.adminData || {}).filter(i=>i.comment && !i.respondido).length;
-    app.innerHTML = `
-      <div class="topbar">
-        <div>
-          <div class="brand">russ.trainer</div>
-          <div class="name">Panel de entrenadora</div>
-        </div>
-        <div style="display:flex; align-items:center; gap:10px;">
-          <button class="bell-btn" id="comments-bell-btn">🔔${commentCount > 0 ? `<span class="bell-badge">${commentCount}</span>` : ''}</button>
-          <button class="link-btn" id="admin-exit-btn">Salir</button>
-        </div>
-      </div>
-      <div id="admin-today"></div>
-      <button class="btn-ghost" id="cal-back-btn" style="width:100%; margin-top:10px;">📅 Ver calendario</button>
-      <button class="btn-ghost" id="summary-btn" style="width:100%; margin-top:10px;">📋 Resumen semanal</button>
-      <button class="btn-ghost" id="feed-btn" style="width:100%; margin-top:10px;">🕐 Ver actividad reciente</button>
-      <button class="btn-ghost" id="plantilla-btn" style="width:100%; margin-top:10px;">🖼️ Plantilla de ejercicio</button>
-      <button class="btn-ghost" id="cuaderno-btn" style="width:100%; margin-top:10px;">📓 Cuaderno de aprendizaje</button>
-      <h2 style="margin-top:18px;">Tus alumnas</h2>
-      <div id="admin-list-content">${state.adminData ? '' : '<div class="empty">Cargando...</div>'}</div>
-    `;
-    document.getElementById('admin-exit-btn').onclick = ()=>{ rtClearSession(); state.view='login'; state.adminData=null; render(); };
-    document.getElementById('cal-back-btn').onclick = ()=>{ state.view='admin-calendar'; render(); };
-    document.getElementById('summary-btn').onclick = ()=>{ state.view='admin-summary'; render(); };
-    document.getElementById('feed-btn').onclick = ()=>{ state.view='admin-feed'; render(); };
-    document.getElementById('plantilla-btn').onclick = ()=>{ state.view='admin-plantilla'; render(); };
-    document.getElementById('cuaderno-btn').onclick = ()=>{ state.view='admin-cuaderno'; render(); };
-    document.getElementById('comments-bell-btn').onclick = ()=>{ state.view='admin-comments'; render(); };
-    if(state.adminData){
-      const keys = Object.keys(state.adminData);
-      const todayStr = todayISO();
-      const trainedToday = keys.filter(k=> lastActivityDate(state.adminData[k].data) === todayStr);
-      const notTrainedToday = keys.filter(k=> lastActivityDate(state.adminData[k].data) !== todayStr);
-      const todayWrap = document.getElementById('admin-today');
-      todayWrap.innerHTML = `
-        <div class="card">
-          <div style="font-weight:700; margin-bottom:6px;">Hoy</div>
-          <div class="sub" style="margin:0;">✅ Entrenaron: ${trainedToday.length ? trainedToday.map(k=>state.adminData[k].displayName).join(', ') : 'nadie todavía'}</div>
-          <div class="sub" style="margin:4px 0 0;">⏳ Todavía no: ${notTrainedToday.length ? notTrainedToday.map(k=>state.adminData[k].displayName).join(', ') : 'todas entrenaron'}</div>
-        </div>
-      `;
-      const content = document.getElementById('admin-list-content');
-      keys.sort((a,b)=>{
-        const da = daysSince(lastActivityDate(state.adminData[a].data));
-        const db = daysSince(lastActivityDate(state.adminData[b].data));
-        const alertA = da === null || da >= 3 ? 1 : 0;
-        const alertB = db === null || db >= 3 ? 1 : 0;
-        if(alertA !== alertB) return alertB - alertA;
-        return (db === null ? 999 : db) - (da === null ? 999 : da);
-      });
-      keys.forEach(key=>{
-        const c = state.adminData[key];
-        const streak = computeStreak(c.data);
-        const weekCount = computeWeekCount(c.data);
-        const target = weeklyTarget(c.displayName);
-        const lastActive = lastActivityDate(c.data);
-        const gap = daysSince(lastActive);
-        const isAlert = gap === null || gap >= 3;
-        const birthday = isBirthdayToday(c.data.ficha.cumpleanos);
-        const vencDays = daysUntil(c.data.vencimiento);
-        const vencAlert = vencDays !== null && vencDays <= 7;
-        const weekInfo = weekEndInfo(c.data.ficha.semanaInicio);
-        const weekAlert = weekInfo && weekInfo.daysLeft <= 3;
-        const monthNum = computeMonthNumber(c.data.ficha.fechaInicio);
-        const card = document.createElement('button');
-        card.className = 'card';
-        card.style.cssText = `text-align:left; width:100%; border:1px solid var(--border); border-left:3px solid ${isAlert ? '#c65f5f' : 'var(--rose)'}; cursor:pointer; background:var(--bg-card); font-family:inherit;`;
-        card.innerHTML = `
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="font-weight:700; display:flex; align-items:center; gap:8px;">${escapeHtml(c.displayName)} ${birthday ? '🎂' : ''}${monthNum ? `<span class="month-badge" style="background:${monthColor(monthNum)};">Mes ${monthNum}</span>` : ''}</div>
-            ${isAlert ? `<span style="color:#c65f5f; font-size:12px; font-weight:700;">⚠️ ${gap === null ? 'Sin actividad' : gap + ' días sin entrenar'}</span>` : ''}
-          </div>
-          <div class="sub" style="margin:2px 0 0;">${streak > 0 ? '🔥 ' + streak + ' · ' : ''}${weekCount}/${target} esta semana</div>
-          ${vencAlert ? `<div class="sub" style="margin:4px 0 0; color:#c65f5f; font-weight:600;">💳 ${vencDays < 0 ? 'Plan vencido' : vencDays === 0 ? 'Vence hoy' : 'Vence en ' + vencDays + ' días'}</div>` : ''}
-          ${weekAlert ? `<div class="sub" style="margin:4px 0 0; color:var(--rose-dark); font-weight:600;">📅 ${weekInfo.daysLeft < 0 ? 'Semana vencida, hay que planificar' : weekInfo.daysLeft === 0 ? 'Su semana termina hoy' : 'Le queda' + (weekInfo.daysLeft===1?' 1 día':'n ' + weekInfo.daysLeft + ' días') + ' de su semana'}</div>` : ''}
-        `;
-        card.onclick = ()=>{ state.adminSelected = key; state.view = 'admin-detail'; render(); };
-        content.appendChild(card);
-      });
-    }
+    renderPanel(app);
   }
   else if(state.view === 'admin-detail'){
     const key = state.adminSelected;
@@ -4471,7 +4606,7 @@ async function onEnter(){
     state.calendarYear = now.getFullYear();
     state.calendarMonth = now.getMonth();
     state.calendarSelectedDate = todayISO();
-    state.view = 'admin-calendar';
+    state.view = 'admin-list';
     render();
     loadAdminData();
     loadTrainerEvents().then(events=>{ state.trainerEvents = events; if(state.view==='admin-calendar') render(); });
@@ -4614,7 +4749,7 @@ async function restoreSession(){
     state.calendarYear = now.getFullYear();
     state.calendarMonth = now.getMonth();
     state.calendarSelectedDate = todayISO();
-    state.view = 'admin-calendar';
+    state.view = 'admin-list';
     render();
     loadAdminData();
     loadTrainerEvents().then(events=>{ state.trainerEvents = events; if(state.view==='admin-calendar') render(); });
