@@ -1097,6 +1097,7 @@
   .pn-nv.on{background:#2b3448;color:#fff;font-weight:700}
   .pn-nv .bd{margin-left:auto;background:#d4848f;color:#fff;border-radius:99px;font-size:12px;padding:1px 8px;font-weight:700}
   .pn-sep{height:1px;background:#2b3448;margin:10px 8px}
+  .pn-chev{display:none}
   .pn-main{flex:1;min-width:0;padding:34px 40px 60px;box-sizing:border-box}
   .pn-h1{font-size:30px;font-weight:800;margin:0 0 4px;letter-spacing:-.01em}
   .pn-sub{color:#6b7385;margin:0 0 22px;font-size:15px}
@@ -1127,9 +1128,14 @@
   .pn-tag{display:inline-block;font-size:12px;padding:2px 9px;border-radius:99px;background:#eef0f6;color:#4a5266;margin-left:6px}
   @media(max-width:900px){
     .pn-shell{flex-direction:column}
-    .pn-side{width:auto;height:auto;position:static;flex-direction:row;align-items:center;padding:10px 12px;overflow-x:auto}
-    .pn-logo{margin:0 14px 0 0;white-space:nowrap}
-    .pn-nav{flex-direction:row;overflow:visible}.pn-nv{white-space:nowrap;padding:9px 12px}.pn-sep{display:none}
+    .pn-side{width:auto;height:auto;position:sticky;top:0;z-index:50;flex-direction:column;align-items:stretch;padding:10px 14px}
+    .pn-logo{margin:0;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent}
+    .pn-chev{display:inline;margin-left:auto;font-size:18px;color:#9aa3b8;transition:transform .15s}
+    .pn-shell.menu-open .pn-chev{transform:rotate(180deg)}
+    .pn-nav,#pn-exit{display:none}
+    .pn-shell.menu-open .pn-nav{display:flex;margin-top:12px;max-height:70vh}
+    .pn-shell.menu-open #pn-exit{display:flex}
+    .pn-nv{padding:13px 12px}
     .pn-main{padding:20px 16px 60px}.pn-kps{grid-template-columns:repeat(2,1fr)}.pn-cols{grid-template-columns:1fr}
     .pn-row{grid-template-columns:40px 1fr auto}.pn-row .pn-prog,.pn-row .pn-st{grid-column:2 / -1}
   }
@@ -2199,8 +2205,8 @@ async function loadAdminData(){
 
 // ===== Panel de Russ (escritorio): Hoy, Alumnas, Comentarios, Claves =====
 const pnFn = ()=> SUPABASE_URL + '/functions/v1/admin-users';
-function pnHidden(){ try{ return JSON.parse(localStorage.getItem('rt_panel_hide') || '[]'); }catch(e){ return []; } }
-function pnSetHidden(a){ try{ localStorage.setItem('rt_panel_hide', JSON.stringify(a)); }catch(e){} }
+function pnHidden(){ const ag = agGet(); if(Array.isArray(ag.ocultas)) return ag.ocultas; return Object.keys(ROUTINES).filter(k=> k !== 'lorena'); }
+function pnSetHidden(a){ agMutate(ag=>{ ag.ocultas = a.slice(); }); }
 function pnWa(tel, nombre, texto){
   const d = String(tel || '').replace(/\D/g,'');
   if(!d) return '';
@@ -2229,11 +2235,11 @@ function pnWaBtn(r, texto){
   return link ? `<a class="pn-btn" href="${link}" target="_blank" rel="noopener">WhatsApp</a>` : `<button class="pn-btn" data-det="${r.key}" title="Falta el teléfono: agrégalo en su ficha">+ Teléfono</button>`;
 }
 function renderPanel(app){
-  const sec = state.panelSec || 'hoy';
+  const sec = state.panelSec || 'agenda';
   const feed = buildActivityFeed(state.adminData || {});
   const pending = feed.filter(i=>i.comment && !i.respondido);
   const nav = [
-    ['hoy','🏠','Hoy'],['agenda','🗓️','Mi agenda'],['bandeja','💡','Bandeja'],['alumnas','👥','Alumnas'],['comentarios','💬','Comentarios'],['claves','🔑','Claves'],'sep',
+    ['agenda','🗓️','Mi agenda'],['bandeja','💡','Bandeja'],['hoy','🏠','Alumnas hoy'],['alumnas','👥','Alumnas'],['comentarios','💬','Comentarios'],['claves','🔑','Claves'],'sep',
     ['v:admin-summary','📋','Resumen semanal'],['v:admin-feed','🕐','Actividad'],['v:admin-calendar','📅','Calendario'],['v:admin-plantilla','🖼️','Plantilla'],['v:admin-cuaderno','📓','Cuaderno']
   ];
   const navHtml = nav.map(n=> n === 'sep' ? '<div class="pn-sep"></div>' :
@@ -2241,7 +2247,7 @@ function renderPanel(app){
   app.innerHTML = `
     <div class="pn-shell">
       <aside class="pn-side">
-        <div class="pn-logo"><span class="pn-m">R</span><span>Russ<i>Trainer</i></span></div>
+        <div class="pn-logo" id="pn-logo"><span class="pn-m">R</span><span>Russ<i>Trainer</i></span><span class="pn-chev">▾</span></div>
         <nav class="pn-nav">${navHtml}</nav>
         <button class="pn-nv" id="pn-exit"><span>↩︎</span>Salir</button>
       </aside>
@@ -2249,9 +2255,12 @@ function renderPanel(app){
     </div>`;
   app.querySelectorAll('[data-nav]').forEach(b=> b.onclick = ()=>{
     const v = b.getAttribute('data-nav');
+    state.pnMenu = false;
     if(v.indexOf('v:') === 0){ state.view = v.slice(2); render(); }
     else { state.panelSec = v; render(); }
   });
+  const shell = app.querySelector('.pn-shell'); if(state.pnMenu) shell.classList.add('menu-open');
+  document.getElementById('pn-logo').onclick = ()=>{ state.pnMenu = !state.pnMenu; shell.classList.toggle('menu-open', !!state.pnMenu); };
   document.getElementById('pn-exit').onclick = ()=>{ rtClearSession(); state.view='login'; state.adminData=null; render(); };
   const main = document.getElementById('pn-main');
   agFab(); agLoad();
@@ -2288,7 +2297,7 @@ function renderPanel(app){
             <div class="pn-nm"><b>${escapeHtml(r.c.displayName)}</b><small>${computeMonthNumber(r.c.data.ficha.fechaInicio) ? 'Mes ' + computeMonthNumber(r.c.data.ficha.fechaInicio) : ''}</small></div>
             <div class="pn-prog"><div class="pn-bar"><i style="width:${Math.min(100, Math.round(r.week / (r.target || 1) * 100))}%;background:${r.st.col}"></i></div><small>${r.week}/${r.target} esta semana</small></div>
             <div class="pn-st" style="color:${r.st.col}">● ${r.st.txt}</div>
-            <div>${r.st.lvl > 0 ? pnWaBtn(r, 'Hola ' + r.c.displayName + ' cómo vas con tus entrenos esta semana') : ''}</div></div>`).join('') : '<div class="pn-empty">No hay alumnas visibles. Puedes mostrar las ocultas en Alumnas.</div>'}
+            <div>${r.st.lvl > 0 ? pnWaBtn(r, 'Hola ' + r.c.displayName + ' cómo vas con tus entrenos esta semana') : ''}</div></div>`).join('') : '<div class="pn-empty">No hay alumnas visibles. Las inactivas están en Alumnas y puedes reactivarlas.</div>'}
         </div>
         <div class="pn-card"><h2>Comentarios sin responder</h2>
           ${pending.length ? pending.slice(0,5).map(commentHtml).join('') + (pending.length > 5 ? '<div style="padding-top:10px"><button class="pn-btn" id="pn-allc">Ver los ' + pending.length + '</button></div>' : '') : '<div class="pn-empty">Todo respondido 🎉</div>'}
@@ -2299,17 +2308,17 @@ function renderPanel(app){
   }
   else if(sec === 'alumnas'){
     const all = pnRows().sort((a,b)=> (a.hidden - b.hidden) || a.c.displayName.localeCompare(b.c.displayName));
-    main.innerHTML = `<h1 class="pn-h1">Alumnas</h1><p class="pn-sub">Toca una para ver su detalle. Puedes ocultar a las que ya no entrenan; no se borra nada.</p>
+    main.innerHTML = `<h1 class="pn-h1">Alumnas</h1><p class="pn-sub">Toca una para ver su detalle. Las que ya no entrenan las pasas a inactivas: dejan de aparecer en tus pendientes y no se borra nada. Puedes reactivarlas cuando quieras.</p>
       <div class="pn-card">${all.map(r=>{
         const venc = daysUntil(r.c.data.vencimiento); const wi = weekEndInfo(r.c.data.ficha.semanaInicio);
         const avisos = [];
         if(venc !== null && venc <= 7) avisos.push(venc < 0 ? '💳 Plan vencido' : venc === 0 ? '💳 Vence hoy' : '💳 Vence en ' + venc + ' días');
         if(wi && wi.daysLeft <= 3) avisos.push(wi.daysLeft < 0 ? '📅 Semana vencida' : '📅 Semana termina en ' + wi.daysLeft + 'd');
         return `<div class="pn-row click" data-det="${r.key}" style="${r.hidden ? 'opacity:.55' : ''}"><div class="pn-av">${escapeHtml(r.c.displayName.charAt(0))}</div>
-          <div class="pn-nm"><b>${escapeHtml(r.c.displayName)}</b><small>${r.hidden ? 'Oculta' : (computeStreak(r.c.data) > 0 ? '🔥 ' + computeStreak(r.c.data) + ' días seguidos' : '')}</small></div>
+          <div class="pn-nm"><b>${escapeHtml(r.c.displayName)}</b><small>${r.hidden ? 'Inactiva' : (computeStreak(r.c.data) > 0 ? '🔥 ' + computeStreak(r.c.data) + ' días seguidos' : '')}</small></div>
           <div class="pn-prog"><div class="pn-bar"><i style="width:${Math.min(100, Math.round(r.week / (r.target || 1) * 100))}%;background:${r.st.col}"></i></div><small>${r.week}/${r.target} esta semana</small></div>
           <div class="pn-st" style="color:${r.st.col}">● ${r.st.txt}${avisos.length ? '<div style="color:#6b7385;font-weight:500;font-size:12.5px;margin-top:3px">' + avisos.join(' · ') + '</div>' : ''}</div>
-          <div style="display:flex;gap:6px">${pnWaBtn(r, '')}<button class="pn-btn" style="color:#6b7385" data-hide="${r.key}">${r.hidden ? 'Mostrar' : 'Ocultar'}</button></div></div>`;
+          <div style="display:flex;gap:6px">${pnWaBtn(r, '')}<button class="pn-btn" style="color:#6b7385" data-hide="${r.key}">${r.hidden ? 'Reactivar' : 'Pasar a inactiva'}</button></div></div>`;
       }).join('')}</div>`;
     main.querySelectorAll('.pn-row.click').forEach(r=> r.onclick = ()=>{ state.adminSelected = r.getAttribute('data-det'); state.view='admin-detail'; render(); });
     detailBtns();
@@ -2368,8 +2377,8 @@ const AG_FMT = ['Carrusel','Reel','Historia','Post','Otro'];
 const AG_DIAS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 const AG_ORDEN = [1,2,3,4,5,6,0];
 let agPending = [], agBusy = false, agAgain = false, agLoaded = false;
-function agEmpty(){ return { tareas:[], semana:{}, repetir:[], hechas:{}, norte:null }; }
-function agNorm(d){ const b = agEmpty(); d = d || {}; Object.keys(b).forEach(k=>{ if(d[k] !== undefined && d[k] !== null) b[k] = d[k]; }); b.norte = d.norte || null; return b; }
+function agEmpty(){ return { tareas:[], semana:{}, repetir:[], hechas:{}, norte:null, ocultas:null }; }
+function agNorm(d){ const b = agEmpty(); d = d || {}; Object.keys(b).forEach(k=>{ if(d[k] !== undefined && d[k] !== null) b[k] = d[k]; }); b.norte = d.norte || null; b.ocultas = Array.isArray(d.ocultas) ? d.ocultas : null; return b; }
 function agStore(){ try{ localStorage.setItem('rt_agenda', JSON.stringify(state.agenda)); }catch(e){} }
 function agGet(){
   if(!state.agenda){ let l = null; try{ l = JSON.parse(localStorage.getItem('rt_agenda') || 'null'); }catch(e){} state.agenda = agNorm(l); }
@@ -2378,7 +2387,7 @@ function agGet(){
 function agId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 function agRefresh(){
   if(state.view !== 'admin-list') return;
-  const sec = state.panelSec || 'hoy';
+  const sec = state.panelSec || 'agenda';
   if(sec !== 'agenda' && sec !== 'bandeja' && sec !== 'hoy') return;
   const a = document.activeElement;
   if(a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.tagName === 'SELECT')) return;
