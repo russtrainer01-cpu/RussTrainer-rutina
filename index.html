@@ -1195,6 +1195,8 @@
   .ed-it.special{display:flex;gap:8px;background:#f3f4f7;border-radius:8px;padding:8px 10px;margin:4px 0}
   .ed-sp{flex:1;font-size:14px}.ed-sp small{color:#6b7385}
   .ed-sw{font-size:12.5px;color:#6b7385;display:flex;gap:4px;align-items:center;white-space:nowrap}
+  .ed-note{margin:0 0 10px}.ed-note label{display:block;font-size:13px;font-weight:600;color:#4a5266;margin-bottom:5px}.ed-note small{font-weight:400;color:#6b7385}
+  .ed-note textarea{width:100%;box-sizing:border-box;border:1px solid #cfd4e1;border-radius:8px;padding:9px 11px;font-size:14.5px;font-family:inherit;color:#1c2230;background:#fffaf0;resize:vertical}
   .ed-ct{display:flex}
   .ed-ct .ag-ic:disabled{opacity:.3;cursor:default}
   @media(max-width:900px){
@@ -2683,8 +2685,8 @@ function edSections(){
   Object.keys(ROUTINES).forEach(k=> Object.keys(ROUTINES[k]).forEach(d=> ROUTINES[k][d].forEach(e=>{ if(e.seccion) s.add(e.seccion); })));
   return Array.from(s);
 }
-function edItemRow(it, di, ii, n){
-  const ctrl = `<div class="ed-ct"><button class="ag-ic" data-up="${di}:${ii}" title="Subir"${ii === 0 ? ' disabled' : ''}>↑</button><button class="ag-ic" data-dn="${di}:${ii}" title="Bajar"${ii === n - 1 ? ' disabled' : ''}>↓</button><button class="ag-ic" data-rm="${di}:${ii}" title="Quitar">✕</button></div>`;
+function edItemRow(it, di, ii, n, lo){
+  const ctrl = `<div class="ed-ct"><button class="ag-ic" data-up="${di}:${ii}" title="Subir"${ii <= lo ? ' disabled' : ''}>↑</button><button class="ag-ic" data-dn="${di}:${ii}" title="Bajar"${ii === n - 1 ? ' disabled' : ''}>↓</button><button class="ag-ic" data-rm="${di}:${ii}" title="Quitar">✕</button></div>`;
   if(it.tipo !== 'carga' && it.tipo !== 'checklist'){
     return `<div class="ed-it special"><div class="ed-sp">🧩 ${escapeHtml(it.titulo || it.ejercicio || 'Bloque especial')} <small>(bloque especial: pídele a Claude que lo cambie)</small></div>${ctrl}</div>`;
   }
@@ -2718,7 +2720,8 @@ function edRender(main){
       <div style="display:flex;gap:10px;align-items:center"><span class="pn-msg ${ed.err ? 'err' : 'ok'}" id="ed-msg">${escapeHtml(ed.msg || '')}</span><button class="pn-btn pri" id="ed-save"${ed.dirty ? '' : ' disabled'}>${ed.dirty ? 'Guardar cambios' : 'Sin cambios'}</button></div></div>
     ${groups.map(g=>`<div class="pn-card ed-wk"><button class="ed-wh" data-tg="${g.k}"><b>${escapeHtml(g.label)}</b><small>${g.idx.length} ${g.idx.length === 1 ? 'día' : 'días'}</small><span>${ed.open[g.k] ? '▾' : '▸'}</span></button>
       ${ed.open[g.k] ? g.idx.map(di=>{ const d = ed.days[di]; return `<div class="ed-day"><div class="ed-dh"><span class="ed-pre">${escapeHtml(d.pre)}</span><input class="ed-dn" data-dn-name="${di}" value="${escapeHtml(d.nom)}" placeholder="Nombre del día"><button class="ag-ic" data-rmday="${di}" title="Quitar día">🗑</button></div>
-        ${d.items.map((it, ii)=> edItemRow(it, di, ii, d.items.length)).join('')}
+        <div class="ed-note"><label>💛 Nota o mensaje para empezar el día <small>(ella lo ve arriba de la rutina)</small></label><textarea data-note="${di}" rows="2" placeholder="Ej: hoy cuida la técnica y baja el peso si sientes molestia en el hombro">${escapeHtml((d.items.find(x=>x.tipo === 'mensaje') || {}).texto || '')}</textarea></div>
+        ${d.items.map((it, ii)=> it.tipo === 'mensaje' ? '' : edItemRow(it, di, ii, d.items.length, d.items[0] && d.items[0].tipo === 'mensaje' ? 0 : -1)).join('')}
         <button class="pn-btn" data-add="${di}">+ Agregar ejercicio</button></div>`; }).join('') + `<button class="pn-btn" data-addday="${g.k}" style="margin-top:6px">+ Agregar día a esta semana</button>` : ''}</div>`).join('')}
     <p class="pn-sub" style="font-size:13px;margin-top:14px">Ojo: si cambias el nombre o el orden de un día que la alumna ya hizo, sus tildes de ese día pueden quedar corridas. Para semanas nuevas no hay problema.</p>`;
   const dirty = ()=>{ ed.dirty = true; ed.msg = ''; const b = document.getElementById('ed-save'); if(b){ b.disabled = false; b.textContent = 'Guardar cambios'; } const m = document.getElementById('ed-msg'); if(m) m.textContent = ''; };
@@ -2732,9 +2735,17 @@ function edRender(main){
     if(f === 'ejercicio' && it.ejercicio && !it.video && vmap[it.ejercicio]){ it.video = vmap[it.ejercicio]; dirty(); edRender(main); return; }
     dirty();
   });
+  main.querySelectorAll('[data-note]').forEach(t=> t.onchange = ()=>{
+    const d = ed.days[Number(t.getAttribute('data-note'))], v = t.value.trim();
+    const at = d.items.findIndex(x=>x.tipo === 'mensaje');
+    if(!v){ if(at > -1) d.items.splice(at, 1); }
+    else if(at > -1) d.items[at].texto = v;
+    else d.items.unshift({ tipo:'mensaje', texto:v });
+    dirty(); edRender(main);
+  });
   main.querySelectorAll('[data-sp]').forEach(c=> c.onchange = ()=>{ const p = c.getAttribute('data-sp').split(':'); ed.days[Number(p[0])].items[Number(p[1])].sinPeso = c.checked; dirty(); });
   main.querySelectorAll('[data-dn-name]').forEach(inp=> inp.onchange = ()=>{ ed.days[Number(inp.getAttribute('data-dn-name'))].nom = inp.value.trim(); dirty(); });
-  const mv = (attr, delta)=> main.querySelectorAll('[' + attr + ']').forEach(b=> b.onclick = ()=>{ const p = b.getAttribute(attr).split(':').map(Number), a = ed.days[p[0]].items, j = p[1] + delta; if(j < 0 || j >= a.length) return; const t = a[p[1]]; a[p[1]] = a[j]; a[j] = t; dirty(); edRender(main); });
+  const mv = (attr, delta)=> main.querySelectorAll('[' + attr + ']').forEach(b=> b.onclick = ()=>{ const p = b.getAttribute(attr).split(':').map(Number), a = ed.days[p[0]].items, j = p[1] + delta; if(j < 0 || j >= a.length || a[j].tipo === 'mensaje') return; const t = a[p[1]]; a[p[1]] = a[j]; a[j] = t; dirty(); edRender(main); });
   mv('data-up', -1); mv('data-dn', 1);
   main.querySelectorAll('[data-rm]').forEach(b=> b.onclick = ()=>{ const p = b.getAttribute('data-rm').split(':').map(Number); ed.days[p[0]].items.splice(p[1], 1); dirty(); edRender(main); });
   main.querySelectorAll('[data-add]').forEach(b=> b.onclick = ()=>{ const d = ed.days[Number(b.getAttribute('data-add'))]; const last = d.items.filter(x=>x.tipo === 'carga').pop(); d.items.push({ seccion: last ? last.seccion : '', ejercicio:'', series:'3 series', reps:'12', peso:'', descanso:'40 seg', tipo:'carga', sinPeso:false, video:null }); dirty(); edRender(main); });
