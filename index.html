@@ -3098,6 +3098,21 @@ async function dbSet(nombre, data){
   if(!res.ok) throw new Error('No se pudo guardar en la base');
 }
 
+// Rutinas en la base: si existe 'rutina:<nombre>' reemplaza a la del código; sin conexión usa la copia del celular
+function rtApplyRoutine(key, r){
+  if(!r || !r.dias) return false;
+  const out = {}; (r.orden || Object.keys(r.dias)).forEach(k=>{ if(r.dias[k]) out[k] = r.dias[k]; });
+  if(!Object.keys(out).length) return false;
+  ROUTINES[key] = out; return true;
+}
+async function rtOverlay(key){
+  try{
+    const r = await dbGet('rutina:' + key);
+    if(r && rtApplyRoutine(key, r)) offSave('rut_' + key, r);
+  }catch(e){
+    const c = offLoad('rut_' + key); if(c) rtApplyRoutine(key, c);
+  }
+}
 async function loadClienta(name){
   let lastError = null;
   for(let attempt=0; attempt<3; attempt++){
@@ -3114,6 +3129,7 @@ async function loadClienta(name){
       if(!parsed.trainerNotes) parsed.trainerNotes = [];
       if(!parsed.nextWeekNotes) parsed.nextWeekNotes = {};
       offSave(name, parsed);
+      await rtOverlay(routineKey(name));
       state.offline = false;
       return parsed;
     }catch(e){
@@ -3123,7 +3139,7 @@ async function loadClienta(name){
     }
   }
   const cached = offLoad(name);
-  if(cached){ state.offline = true; return cached; }
+  if(cached){ const cr = offLoad('rut_' + routineKey(name)); if(cr) rtApplyRoutine(routineKey(name), cr); state.offline = true; return cached; }
   throw lastError;
 }
 
