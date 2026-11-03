@@ -1180,6 +1180,31 @@
   @media(min-width:700px){#ag-modal{align-items:center}.ag-sheet{border-radius:16px}}
     .ag-hr:empty{display:none}
   @media(max-width:900px){#ag-fab{bottom:20px}.ag-t{flex-wrap:wrap;row-gap:6px}.ag-tx{flex:1 1 60%;min-width:150px}.ag-wk b{width:78px}.ag-quick{flex-wrap:wrap}}
+  /* ===== Editor de rutinas ===== */
+  .ed-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 14px;position:sticky;top:0;background:#f3f4f7;padding:10px 0;z-index:5}
+  .ed-wk{margin-bottom:14px;padding:6px 18px 18px}
+  .ed-wh{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;padding:12px 0;font-family:inherit;font-size:17px;color:#1c2230;cursor:pointer;text-align:left}
+  .ed-wh small{color:#6b7385;font-size:13px}.ed-wh span{margin-left:auto;color:#6b7385}
+  .ed-day{border-top:1px solid #e3e6ee;padding:14px 0}
+  .ed-dh{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  .ed-pre{font-weight:700;font-size:14px;color:#4a5266;white-space:nowrap}
+  .ed-day input:not([type=checkbox]){border:1px solid #cfd4e1;border-radius:8px;padding:8px 9px;font-size:14px;font-family:inherit;background:#fff;color:#1c2230;min-width:0}
+  .ed-dn{flex:1;font-weight:700}
+  .ed-it{display:grid;grid-template-columns:135px minmax(150px,1.6fr) 80px 64px 105px 80px minmax(120px,1.3fr) auto auto;gap:6px;align-items:center;padding:6px 0}
+  .ed-it.k{grid-template-columns:135px minmax(150px,1.6fr) minmax(150px,1fr) minmax(120px,1.3fr) auto}
+  .ed-it.special{display:flex;gap:8px;background:#f3f4f7;border-radius:8px;padding:8px 10px;margin:4px 0}
+  .ed-sp{flex:1;font-size:14px}.ed-sp small{color:#6b7385}
+  .ed-sw{font-size:12.5px;color:#6b7385;display:flex;gap:4px;align-items:center;white-space:nowrap}
+  .ed-ct{display:flex}
+  .ed-ct .ag-ic:disabled{opacity:.3;cursor:default}
+  @media(max-width:900px){
+    .ed-wk{padding:4px 12px 14px}
+    .ed-bar{top:60px}
+    .ed-it,.ed-it.k{grid-template-columns:1fr 1fr 1fr;border-top:1px dashed #e3e6ee;padding:10px 0}
+    .ed-it .ed-sec,.ed-it .ed-ej,.ed-it .ed-v,.ed-it .ed-w{grid-column:1 / -1}
+    .ed-it .ed-ct{grid-column:1 / -1;justify-content:flex-end}
+    .ed-pre{font-size:12px}
+  }
 </style>
 </head>
 <body>
@@ -2239,7 +2264,7 @@ function renderPanel(app){
   const feed = buildActivityFeed(state.adminData || {});
   const pending = feed.filter(i=>i.comment && !i.respondido);
   const nav = [
-    ['agenda','🗓️','Mi agenda'],['bandeja','💡','Bandeja'],['hoy','🏠','Alumnas hoy'],['alumnas','👥','Alumnas'],['comentarios','💬','Comentarios'],['claves','🔑','Claves'],'sep',
+    ['agenda','🗓️','Mi agenda'],['bandeja','💡','Bandeja'],['rutinas','📝','Rutinas'],['hoy','🏠','Alumnas hoy'],['alumnas','👥','Alumnas'],['comentarios','💬','Comentarios'],['claves','🔑','Claves'],'sep',
     ['v:admin-summary','📋','Resumen semanal'],['v:admin-feed','🕐','Actividad'],['v:admin-calendar','📅','Calendario'],['v:admin-plantilla','🖼️','Plantilla'],['v:admin-cuaderno','📓','Cuaderno']
   ];
   const navHtml = nav.map(n=> n === 'sep' ? '<div class="pn-sep"></div>' :
@@ -2265,6 +2290,7 @@ function renderPanel(app){
   const main = document.getElementById('pn-main');
   agFab(); agLoad();
   if(sec === 'bandeja'){ agRenderBandeja(main); return; }
+  if(sec === 'rutinas'){ edRender(main); return; }
   if(!state.adminData){ main.innerHTML = '<h1 class="pn-h1">Hola, Russ</h1><p class="pn-sub">Cargando a tus alumnas…</p>'; return; }
   const rows = pnRows().filter(r=>!r.hidden);
   const fechaTxt = new Date().toLocaleDateString('es-AR', { weekday:'long', day:'numeric', month:'long' });
@@ -2608,6 +2634,141 @@ function agOpenModal(){
   $('#agm-s').onclick = save;
   $('#agm-t').onkeydown = e=>{ if(e.key === 'Enter') save(); if(e.key === 'Escape') close(); };
   upd(); $('#agm-t').focus();
+}
+
+// ===== Editor de rutinas (panel de Russ) =====
+function edSplit(label){
+  const m = label.match(/^(.*?Día \d+)(?: - (.+))?$/);
+  return m ? { pre:m[1], nom:m[2] || '' } : { pre:'', nom:label };
+}
+function edLabel(d){ return d.pre ? (d.nom ? d.pre + ' - ' + d.nom : d.pre) : d.nom; }
+function edBuild(key){
+  const rt = ROUTINES[key] || {};
+  const days = Object.keys(rt).map(k=>{ const sp = edSplit(k); return { pre:sp.pre, nom:sp.nom, items: JSON.parse(JSON.stringify(rt[k])) }; });
+  return { key, days, dirty:false, open:{}, msg:'' };
+}
+function edGroups(ed){
+  const g = [];
+  ed.days.forEach((d, i)=>{
+    const info = parseDayLabel(edLabel(d));
+    const gk = info.groupKey === null ? 'x' : info.groupKey, gl = info.groupLabel || 'Rutina';
+    let grp = g.find(x=>x.k === gk);
+    if(!grp){ grp = { k:gk, label:gl, idx:[] }; g.push(grp); }
+    grp.idx.push(i);
+  });
+  return g;
+}
+function edVideoMap(){
+  const m = {};
+  Object.keys(ROUTINES).forEach(k=> Object.keys(ROUTINES[k]).forEach(d=> ROUTINES[k][d].forEach(e=>{ if(e.ejercicio && e.video && !m[e.ejercicio]) m[e.ejercicio] = e.video; })));
+  return m;
+}
+function edNames(){
+  const s = new Set();
+  Object.keys(EXERCISE_LIBRARY).forEach(c=> EXERCISE_LIBRARY[c].forEach(n=> s.add(n)));
+  Object.keys(ROUTINES).forEach(k=> Object.keys(ROUTINES[k]).forEach(d=> ROUTINES[k][d].forEach(e=>{ if(e.ejercicio) s.add(e.ejercicio); })));
+  return Array.from(s).sort((a,b)=>a.localeCompare(b));
+}
+function edSections(){
+  const s = new Set();
+  Object.keys(ROUTINES).forEach(k=> Object.keys(ROUTINES[k]).forEach(d=> ROUTINES[k][d].forEach(e=>{ if(e.seccion) s.add(e.seccion); })));
+  return Array.from(s);
+}
+function edItemRow(it, di, ii, n){
+  const ctrl = `<div class="ed-ct"><button class="ag-ic" data-up="${di}:${ii}" title="Subir"${ii === 0 ? ' disabled' : ''}>↑</button><button class="ag-ic" data-dn="${di}:${ii}" title="Bajar"${ii === n - 1 ? ' disabled' : ''}>↓</button><button class="ag-ic" data-rm="${di}:${ii}" title="Quitar">✕</button></div>`;
+  if(it.tipo !== 'carga' && it.tipo !== 'checklist'){
+    return `<div class="ed-it special"><div class="ed-sp">🧩 ${escapeHtml(it.titulo || it.ejercicio || 'Bloque especial')} <small>(bloque especial: pídele a Claude que lo cambie)</small></div>${ctrl}</div>`;
+  }
+  const f = (name, ph, cls)=> `<input class="${cls || ''}" data-f="${di}:${ii}:${name}" value="${escapeHtml(it[name] === undefined || it[name] === null ? '' : String(it[name]))}" placeholder="${ph}">`;
+  const carga = it.tipo === 'carga';
+  return `<div class="ed-it ${carga ? 'c' : 'k'}">
+    <input class="ed-sec" list="ed-secs" data-f="${di}:${ii}:seccion" value="${escapeHtml(it.seccion || '')}" placeholder="Sección">
+    <input class="ed-ej" list="ed-names" data-f="${di}:${ii}:ejercicio" value="${escapeHtml(it.ejercicio || '')}" placeholder="Ejercicio">
+    ${carga ? f('series','Series','ed-s') : ''}${f('reps', carga ? 'Reps' : 'Detalle (ej: 15 min)', carga ? 'ed-s' : 'ed-w')}${carga ? f('peso','Peso','ed-s') + f('descanso','Descanso','ed-s') : ''}
+    ${f('video','Link del video','ed-v')}
+    ${carga ? `<label class="ed-sw"><input type="checkbox" data-sp="${di}:${ii}"${it.sinPeso ? ' checked' : ''}> sin peso</label>` : ''}
+    ${ctrl}</div>`;
+}
+function edRender(main){
+  const hid = pnHidden();
+  const keys = Object.keys(ROUTINES).filter(k=> hid.indexOf(k) < 0);
+  const cur = state.edKey && keys.indexOf(state.edKey) > -1 ? state.edKey : keys[0];
+  if(!state.ed || state.ed.key !== cur){
+    state.ed = edBuild(cur);
+    rtOverlay(cur).then(()=>{ if(state.ed && state.ed.key === cur && !state.ed.dirty){ state.ed = edBuild(cur); if((state.panelSec || '') === 'rutinas') edRender(document.getElementById('pn-main') || main); } });
+  }
+  const ed = state.ed, groups = edGroups(ed);
+  if(ed.open.__init !== true){ ed.open.__init = true; if(groups.length) ed.open[groups[groups.length - 1].k] = true; }
+  const nm = k=> k.charAt(0).toUpperCase() + k.slice(1);
+  main.innerHTML = `<h1 class="pn-h1">Rutinas</h1><p class="pn-sub">Edita lo que ve cada alumna. Al guardar, lo ve al instante en su app.</p>
+    <datalist id="ed-names">${edNames().map(n=>`<option value="${escapeHtml(n)}">`).join('')}</datalist>
+    <datalist id="ed-secs">${edSections().map(n=>`<option value="${escapeHtml(n)}">`).join('')}</datalist>
+    <div class="ag-chips">${keys.map(k=>`<button type="button" data-ak="${k}" class="${k === cur ? 'on' : ''}">${escapeHtml(nm(k))}</button>`).join('')}</div>
+    ${keys.length ? '' : '<div class="pn-empty">No hay alumnas activas. Reactiva una en Alumnas.</div>'}
+    <div class="ed-bar"><div><button class="pn-btn" id="ed-copy">+ Nueva semana (copia de la última)</button></div>
+      <div style="display:flex;gap:10px;align-items:center"><span class="pn-msg ${ed.err ? 'err' : 'ok'}" id="ed-msg">${escapeHtml(ed.msg || '')}</span><button class="pn-btn pri" id="ed-save"${ed.dirty ? '' : ' disabled'}>${ed.dirty ? 'Guardar cambios' : 'Sin cambios'}</button></div></div>
+    ${groups.map(g=>`<div class="pn-card ed-wk"><button class="ed-wh" data-tg="${g.k}"><b>${escapeHtml(g.label)}</b><small>${g.idx.length} ${g.idx.length === 1 ? 'día' : 'días'}</small><span>${ed.open[g.k] ? '▾' : '▸'}</span></button>
+      ${ed.open[g.k] ? g.idx.map(di=>{ const d = ed.days[di]; return `<div class="ed-day"><div class="ed-dh"><span class="ed-pre">${escapeHtml(d.pre)}</span><input class="ed-dn" data-dn-name="${di}" value="${escapeHtml(d.nom)}" placeholder="Nombre del día"><button class="ag-ic" data-rmday="${di}" title="Quitar día">🗑</button></div>
+        ${d.items.map((it, ii)=> edItemRow(it, di, ii, d.items.length)).join('')}
+        <button class="pn-btn" data-add="${di}">+ Agregar ejercicio</button></div>`; }).join('') + `<button class="pn-btn" data-addday="${g.k}" style="margin-top:6px">+ Agregar día a esta semana</button>` : ''}</div>`).join('')}
+    <p class="pn-sub" style="font-size:13px;margin-top:14px">Ojo: si cambias el nombre o el orden de un día que la alumna ya hizo, sus tildes de ese día pueden quedar corridas. Para semanas nuevas no hay problema.</p>`;
+  const dirty = ()=>{ ed.dirty = true; ed.msg = ''; const b = document.getElementById('ed-save'); if(b){ b.disabled = false; b.textContent = 'Guardar cambios'; } const m = document.getElementById('ed-msg'); if(m) m.textContent = ''; };
+  main.querySelectorAll('[data-ak]').forEach(b=> b.onclick = ()=>{ if(ed.dirty && !confirm('Tienes cambios sin guardar. ¿Cambiar de alumna igual?')) return; state.edKey = b.getAttribute('data-ak'); state.ed = null; render(); });
+  main.querySelectorAll('[data-tg]').forEach(b=> b.onclick = ()=>{ const k = b.getAttribute('data-tg'); const kk = isNaN(Number(k)) ? k : Number(k); ed.open[kk] = !ed.open[kk]; edRender(main); });
+  const vmap = edVideoMap();
+  main.querySelectorAll('[data-f]').forEach(inp=> inp.onchange = ()=>{
+    const p = inp.getAttribute('data-f').split(':'), it = ed.days[Number(p[0])].items[Number(p[1])], f = p[2];
+    it[f] = inp.value.trim();
+    if(f === 'video' && !it.video) it.video = null;
+    if(f === 'ejercicio' && it.ejercicio && !it.video && vmap[it.ejercicio]){ it.video = vmap[it.ejercicio]; dirty(); edRender(main); return; }
+    dirty();
+  });
+  main.querySelectorAll('[data-sp]').forEach(c=> c.onchange = ()=>{ const p = c.getAttribute('data-sp').split(':'); ed.days[Number(p[0])].items[Number(p[1])].sinPeso = c.checked; dirty(); });
+  main.querySelectorAll('[data-dn-name]').forEach(inp=> inp.onchange = ()=>{ ed.days[Number(inp.getAttribute('data-dn-name'))].nom = inp.value.trim(); dirty(); });
+  const mv = (attr, delta)=> main.querySelectorAll('[' + attr + ']').forEach(b=> b.onclick = ()=>{ const p = b.getAttribute(attr).split(':').map(Number), a = ed.days[p[0]].items, j = p[1] + delta; if(j < 0 || j >= a.length) return; const t = a[p[1]]; a[p[1]] = a[j]; a[j] = t; dirty(); edRender(main); });
+  mv('data-up', -1); mv('data-dn', 1);
+  main.querySelectorAll('[data-rm]').forEach(b=> b.onclick = ()=>{ const p = b.getAttribute('data-rm').split(':').map(Number); ed.days[p[0]].items.splice(p[1], 1); dirty(); edRender(main); });
+  main.querySelectorAll('[data-add]').forEach(b=> b.onclick = ()=>{ const d = ed.days[Number(b.getAttribute('data-add'))]; const last = d.items.filter(x=>x.tipo === 'carga').pop(); d.items.push({ seccion: last ? last.seccion : '', ejercicio:'', series:'3 series', reps:'12', peso:'', descanso:'40 seg', tipo:'carga', sinPeso:false, video:null }); dirty(); edRender(main); });
+  main.querySelectorAll('[data-rmday]').forEach(b=> b.onclick = ()=>{ const i = Number(b.getAttribute('data-rmday')); if(!confirm('¿Quitar este día completo?')) return; ed.days.splice(i, 1); dirty(); edRender(main); });
+  main.querySelectorAll('[data-addday]').forEach(b=> b.onclick = ()=>{
+    const gk = b.getAttribute('data-addday'), g = groups.find(x=> String(x.k) === gk); if(!g) return;
+    const last = ed.days[g.idx[g.idx.length - 1]], sp = edSplit(edLabel(last));
+    const n = Math.max.apply(null, g.idx.map(i=>{ const m = ed.days[i].pre.match(/Día (\d+)/); return m ? Number(m[1]) : 0; })) + 1;
+    const pre = sp.pre.replace(/Día \d+/, 'Día ' + n);
+    ed.days.splice(g.idx[g.idx.length - 1] + 1, 0, { pre, nom:'Nuevo día', items:[] }); dirty(); edRender(main);
+  });
+  document.getElementById('ed-copy').onclick = ()=>{
+    if(!groups.length) return;
+    const g = groups[groups.length - 1];
+    const info = parseDayLabel(edLabel(ed.days[g.idx[0]]));
+    if(info.semana === null){ ed.msg = 'Esta rutina no tiene semanas numeradas'; ed.err = true; edRender(main); return; }
+    const maxSem = Math.max.apply(null, groups.filter(x=>x.k !== 'x').map(x=> x.k % 1000 || x.k));
+    const copies = g.idx.map(i=>{ const d = ed.days[i]; return { pre: d.pre.replace(/Semana \d+/, 'Semana ' + (info.semana + 1)), nom:d.nom, items: JSON.parse(JSON.stringify(d.items)) }; });
+    const clash = ed.days.some(d=> copies.some(c=> edLabel(c) === edLabel(d)));
+    if(clash){ ed.msg = 'Esa semana ya existe'; ed.err = true; edRender(main); return; }
+    ed.days = ed.days.concat(copies); ed.open = {}; ed.open.__init = true; dirty();
+    const ng = edGroups(ed); ed.open[ng[ng.length - 1].k] = true; edRender(main);
+  };
+  document.getElementById('ed-save').onclick = async ()=>{
+    const labels = ed.days.map(edLabel);
+    if(new Set(labels).size !== labels.length){ ed.msg = 'Hay dos días con el mismo nombre'; ed.err = true; edRender(main); return; }
+    if(ed.days.some(d=> !d.nom && !d.pre)){ ed.msg = 'Falta el nombre de un día'; ed.err = true; edRender(main); return; }
+    const dias = {}; ed.days.forEach(d=>{
+      dias[edLabel(d)] = d.items.filter(it=> it.tipo !== 'carga' && it.tipo !== 'checklist' ? true : (it.ejercicio && it.ejercicio.trim())).map(it=>{
+        const o = Object.assign({}, it); if(o.tipo === 'checklist'){ o.series = '-'; o.peso = 'Sin peso'; delete o.sinPeso; delete o.descanso; }
+        else if(o.tipo === 'carga'){ if(o.sinPeso && !o.peso) o.peso = 'Peso corporal'; o.sinPeso = !!o.sinPeso; if(!o.descanso) delete o.descanso; }
+        if(o.video === '' || o.video === undefined) o.video = null; return o; });
+    });
+    const body = { orden: labels, dias };
+    const btn = document.getElementById('ed-save'); btn.disabled = true; btn.textContent = 'Guardando…';
+    try{
+      await dbSet('rutina:' + ed.key, body);
+      rtApplyRoutine(ed.key, body);
+      ed.dirty = false; ed.err = false; ed.msg = 'Guardado ✓ Ya lo ve ' + ed.key.charAt(0).toUpperCase() + ed.key.slice(1);
+      state.ed = edBuild(ed.key); state.ed.msg = ed.msg; state.ed.open = ed.open;
+      edRender(main);
+    }catch(e){ ed.err = true; ed.msg = 'No se pudo guardar. Revisa tu conexión y vuelve a intentar'; edRender(main); const b2 = document.getElementById('ed-save'); if(b2){ b2.disabled = false; b2.textContent = 'Guardar cambios'; } }
+  };
 }
 
 const CLIENT_CONFIG = {
