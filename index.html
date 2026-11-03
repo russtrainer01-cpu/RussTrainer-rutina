@@ -1981,7 +1981,7 @@ function getCalendarEventsForMonth(year, month){
   return map;
 }
 
-function routineKey(name){ return name.trim().toLowerCase(); }
+function routineKey(name){ return authSlug(name); }
 
 function parseDayLabel(label){
   const m = label.match(/^(?:Mes (\d+) - )?Semana (\d+) - (.+)$/);
@@ -2219,9 +2219,16 @@ async function saveTrainerEvents(events){
 
 async function loadAdminData(){
   state.adminData = {};
-  for(const key of Object.keys(ROUTINES)){
-    const displayName = key.charAt(0).toUpperCase() + key.slice(1);
-    const data = await loadClienta(displayName);
+  let extra = [];
+  try{
+    const res = await fetch(SUPABASE_URL + '/rest/v1/clientes?nombre=like.' + encodeURIComponent('rutina:*') + '&select=nombre', { headers: await sbH() });
+    if(res.ok) extra = (await res.json()).map(r=> String(r.nombre).slice(7));
+  }catch(e){}
+  const keys = Object.keys(ROUTINES).concat(extra.filter(k=> !(k in ROUTINES)));
+  for(const key of keys){
+    const data = await loadClienta(key);
+    const cfg = CLIENT_CONFIG[key];
+    const displayName = (cfg && cfg.nombre) || (key.charAt(0).toUpperCase() + key.slice(1));
     state.adminData[key] = { displayName, data };
   }
   render();
@@ -2230,7 +2237,8 @@ async function loadAdminData(){
 
 // ===== Panel de Russ (escritorio): Hoy, Alumnas, Comentarios, Claves =====
 const pnFn = ()=> SUPABASE_URL + '/functions/v1/admin-users';
-function pnHidden(){ const ag = agGet(); if(Array.isArray(ag.ocultas)) return ag.ocultas; return Object.keys(ROUTINES).filter(k=> k !== 'lorena'); }
+const PN_LEGACY = Object.keys(ROUTINES);
+function pnHidden(){ const ag = agGet(); if(Array.isArray(ag.ocultas)) return ag.ocultas; return PN_LEGACY.filter(k=> k !== 'lorena'); }
 function pnSetHidden(a){ agMutate(ag=>{ ag.ocultas = a.slice(); }); }
 function pnWa(tel, nombre, texto){
   const d = String(tel || '').replace(/\D/g,'');
@@ -2335,6 +2343,7 @@ function renderPanel(app){
   else if(sec === 'alumnas'){
     const all = pnRows().sort((a,b)=> (a.hidden - b.hidden) || a.c.displayName.localeCompare(b.c.displayName));
     main.innerHTML = `<h1 class="pn-h1">Alumnas</h1><p class="pn-sub">Toca una para ver su detalle. Las que ya no entrenan las pasas a inactivas: dejan de aparecer en tus pendientes y no se borra nada. Puedes reactivarlas cuando quieras.</p>
+      <div id="pn-new"></div>
       <div class="pn-card">${all.map(r=>{
         const venc = daysUntil(r.c.data.vencimiento); const wi = weekEndInfo(r.c.data.ficha.semanaInicio);
         const avisos = [];
@@ -2347,7 +2356,7 @@ function renderPanel(app){
           <div style="display:flex;gap:6px">${pnWaBtn(r, '')}<button class="pn-btn" style="color:#6b7385" data-hide="${r.key}">${r.hidden ? 'Reactivar' : 'Pasar a inactiva'}</button></div></div>`;
       }).join('')}</div>`;
     main.querySelectorAll('.pn-row.click').forEach(r=> r.onclick = ()=>{ state.adminSelected = r.getAttribute('data-det'); state.view='admin-detail'; render(); });
-    detailBtns();
+    detailBtns(); pnNewAlumna(document.getElementById('pn-new'));
     main.querySelectorAll('[data-hide]').forEach(b=> b.onclick = (e)=>{ e.stopPropagation(); const k = b.getAttribute('data-hide'); let h = pnHidden(); h = h.indexOf(k) > -1 ? h.filter(x=>x !== k) : h.concat(k); pnSetHidden(h); render(); });
   }
   else if(sec === 'comentarios'){
@@ -2760,6 +2769,7 @@ function edRender(main){
         if(o.video === '' || o.video === undefined) o.video = null; return o; });
     });
     const body = { orden: labels, dias };
+    if(CLIENT_CONFIG[ed.key]) body.config = Object.assign({}, CLIENT_CONFIG[ed.key]);
     const btn = document.getElementById('ed-save'); btn.disabled = true; btn.textContent = 'Guardando…';
     try{
       await dbSet('rutina:' + ed.key, body);
@@ -2768,6 +2778,84 @@ function edRender(main){
       state.ed = edBuild(ed.key); state.ed.msg = ed.msg; state.ed.open = ed.open;
       edRender(main);
     }catch(e){ ed.err = true; ed.msg = 'No se pudo guardar. Revisa tu conexión y vuelve a intentar'; edRender(main); const b2 = document.getElementById('ed-save'); if(b2){ b2.disabled = false; b2.textContent = 'Guardar cambios'; } }
+  };
+}
+
+// ===== Nueva alumna (panel) =====
+function pnRand4(){ return String(Math.floor(1000 + Math.random() * 9000)); }
+function pnCap(n){ n = String(n || '').trim(); return n ? n.charAt(0).toUpperCase() + n.slice(1) : n; }
+function pnAppUrl(){ return location.origin + location.pathname.replace(/index\.html$/, ''); }
+function pnWelcome(nombre, clave){
+  return 'Hola ' + pnCap(nombre.split(' ')[0]) + ' ya está lista tu app de entrenamiento 💪\n\nEntra desde este link\n' + pnAppUrl() + '\n\nTu nombre: ' + nombre.trim().toLowerCase() + '\nTu clave: ' + clave + '\n\nLa primera vez escribes tu nombre y tu clave y después te queda abierta en tu celular\n\nSi quieres agrégala a tu pantalla de inicio para abrirla como una app';
+}
+async function pnCrearAlumna(f){
+  const key = authSlug(f.nombre);
+  if(!key) throw new Error('Escribe el nombre de la alumna');
+  if(f.clave.length < 6) throw new Error('La clave debe tener al menos 6 caracteres');
+  if(ROUTINES[key] && PN_LEGACY.indexOf(key) > -1) throw new Error('Esa alumna ya existe');
+  const res = await fetch(pnFn(), { method:'POST', headers: await sbH({ 'Content-Type':'application/json' }), body: JSON.stringify({ accion:'crear', nombre:f.nombre, clave:f.clave }) });
+  const j = await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(j.error || ('Error ' + res.status));
+  await dbSet(storageKey(key), { exercises:{}, completados:{}, bodyWeight:[], weightPromptSeen:true,
+    ficha:{ objetivo:'', nivel:'', restricciones:'', fechaInicio:f.inicio, cumpleanos:'', semanaInicio:f.inicio, telefono:f.tel }, vencimiento:'', trainerNotes:[], nextWeekNotes:{} });
+  let dias, orden;
+  if(f.base && ROUTINES[f.base]){ dias = JSON.parse(JSON.stringify(ROUTINES[f.base])); orden = Object.keys(dias); }
+  else {
+    dias = {}; orden = [];
+    for(let d = 1; d <= f.dias; d++){
+      const lb = 'Semana 1 - Día ' + d + ' - Por definir'; orden.push(lb);
+      dias[lb] = [{ seccion:'🕐 Pronto', ejercicio:'Tu rutina se está preparando', series:'-', reps:'Russ te avisa cuando esté lista', peso:'Sin peso', tipo:'checklist', video:null }];
+    }
+  }
+  const body = { orden, dias, config:{ nombre:pnCap(f.nombre.trim()), diasPorSemana:f.dias, genero:f.genero } };
+  await dbSet('rutina:' + key, body);
+  rtApplyRoutine(key, body);
+  return key;
+}
+function pnNewAlumna(box){
+  if(!box) return;
+  const st = state.pnNew || null;
+  if(!st){ box.innerHTML = '<div style="margin-bottom:14px"><button class="pn-btn pri" id="pn-new-open">+ Nueva alumna</button></div>';
+    document.getElementById('pn-new-open').onclick = ()=>{ state.pnNew = { form:true, clave:'' }; render(); }; return; }
+  if(st.result){
+    const r = st.result, link = pnWa(r.tel, r.nombre, r.texto);
+    box.innerHTML = `<div class="pn-card" style="margin-bottom:16px;max-width:820px"><h2>✅ ${escapeHtml(pnCap(r.nombre))} ya tiene su app</h2>
+      <p class="pn-sub" style="margin:4px 0 10px">Mándale este mensaje. Ya aparece en Alumnas y en Rutinas, y le armas su primera semana en el editor.</p>
+      <textarea id="pn-wtxt" readonly style="width:100%;box-sizing:border-box;height:210px;border:1px solid #cfd4e1;border-radius:8px;padding:10px;font-family:inherit;font-size:14px;color:#1c2230;background:#fff">${escapeHtml(r.texto)}</textarea>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">${link ? `<a class="pn-btn pri" href="${link}" target="_blank" rel="noopener">Enviar por WhatsApp</a>` : ''}<button class="pn-btn" id="pn-wcopy">Copiar mensaje</button><button class="pn-btn" id="pn-wrut">Armar su rutina</button><button class="pn-btn" id="pn-wclose" style="color:#6b7385">Cerrar</button></div></div>`;
+    document.getElementById('pn-wcopy').onclick = async ()=>{ try{ await navigator.clipboard.writeText(r.texto); }catch(e){ const t = document.getElementById('pn-wtxt'); t.select(); document.execCommand('copy'); } document.getElementById('pn-wcopy').textContent = 'Copiado ✓'; };
+    document.getElementById('pn-wclose').onclick = ()=>{ state.pnNew = null; render(); };
+    document.getElementById('pn-wrut').onclick = ()=>{ state.edKey = r.key; state.ed = null; state.pnNew = null; state.panelSec = 'rutinas'; render(); };
+    return;
+  }
+  const hid = pnHidden();
+  const bases = Object.keys(ROUTINES).filter(k=> ROUTINES[k] && Object.keys(ROUTINES[k]).length > 1);
+  box.innerHTML = `<div class="pn-card" style="margin-bottom:16px;max-width:820px"><h2>Nueva alumna</h2>
+    <div class="pn-form">
+      <label>Nombre (con el que va a entrar)<input id="na-n" autocomplete="off" placeholder="vanesa"></label>
+      <label>Clave (mínimo 6)<input id="na-c" autocomplete="off" value="${escapeHtml(st.clave || '')}"></label>
+      <label>Teléfono (para el WhatsApp)<input id="na-t" autocomplete="off" placeholder="+54 9 11 5555 1234"></label>
+      <label>Días por semana<select id="na-d">${[2,3,4,5,6].map(n=>`<option value="${n}"${n === 3 ? ' selected' : ''}>${n}</option>`).join('')}</select></label>
+      <label>Fecha de inicio<input type="date" id="na-i" value="${todayISO()}"></label>
+      <label>Es<select id="na-g"><option value="femenino">Mujer</option><option value="masculino">Hombre</option></select></label>
+      <label>Rutina inicial<select id="na-b"><option value="">Vacía (la armo yo)</option>${bases.map(k=>`<option value="${k}">Copiar la de ${escapeHtml(pnCap(k))}</option>`).join('')}</select></label>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pn-btn pri" id="na-go">Crear alumna</button><button class="pn-btn" id="na-x" style="color:#6b7385">Cancelar</button></div>
+    <div class="pn-msg" id="na-msg"></div></div>`;
+  const $ = id=> document.getElementById(id);
+  if(!st.clave){ st.clave = 'Russ' + pnRand4(); $('na-c').value = st.clave; }
+  $('na-n').oninput = ()=>{ const v = $('na-n').value.trim(); if(v && /^Russ\d{4}$/.test($('na-c').value)) $('na-c').value = pnCap(v.split(' ')[0]) + pnRand4().slice(0,4); };
+  $('na-x').onclick = ()=>{ state.pnNew = null; render(); };
+  $('na-go').onclick = async ()=>{
+    const msg = $('na-msg'), btn = $('na-go');
+    const f = { nombre:$('na-n').value.trim(), clave:$('na-c').value, tel:$('na-t').value.trim(), dias:Number($('na-d').value), inicio:$('na-i').value || todayISO(), genero:$('na-g').value, base:$('na-b').value };
+    msg.className = 'pn-msg'; msg.textContent = 'Creando… un momento'; btn.disabled = true;
+    try{
+      const key = await pnCrearAlumna(f);
+      await loadAdminData();
+      state.pnNew = { result:{ key, nombre:f.nombre, clave:f.clave, tel:f.tel, texto:pnWelcome(f.nombre, f.clave) } };
+      render();
+    }catch(e){ msg.className = 'pn-msg err'; msg.textContent = e.message; btn.disabled = false; }
   };
 }
 
@@ -2829,8 +2917,8 @@ function computeWeekCount(data){
 }
 
 // ===== Inicio con línea de tiempo (Braian, Mae y yo) =====
-const NEW_HOME_USERS = ['braian','mae','yo','lorena'];
-function usesNewHome(name){ return NEW_HOME_USERS.indexOf(routineKey(name)) !== -1; }
+const OLD_HOME_USERS = ['anderson','roiner','minervis'];
+function usesNewHome(name){ return OLD_HOME_USERS.indexOf(routineKey(name)) === -1; }
 
 // Igual que computeWeekCount, pero un día en que solo se hizo el extra (Día Juntos) no cuenta.
 function computeWeekCountNoExtra(data, routine){
@@ -3199,7 +3287,7 @@ const EXERCISE_LIBRARY = {
   '🔗 Otros': ['Puente','Hip a 1 pierna','RDL','Abducción','Scapular push-ups','Squat thrust','Butt kicks','Skipping','Puente a una pierna','Y-T-W','Walking lunges','Extensión de tríceps (peso corporal)','Deslizamiento escapular en pared','Ángel de nieve invertido','Flexión pike','Plancha de oso con traslado','Plancha lateral + abducción de cadera','Hidrante de cadera','Sentadilla búlgara','Elevación de pierna acostada de lado','Pulsos de sentadilla','Puente de glúteos 1 y ½','Caminata de oso','Extensión de tríceps en anillas','Plancha en anillas','Curl femoral en anillas','Remo en anillas','Face Pull en anillas']
 };
 
-function storageKey(name){ return 'clienta:' + name.trim().toLowerCase(); }
+function storageKey(name){ return 'clienta:' + authSlug(name); }
 
 const SUPABASE_URL = 'https://yarqttoduryzhinnxgio.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_IKFhc2x6r1AdB0IS8b4Nlw_TwowDq34';
@@ -3262,6 +3350,7 @@ async function dbSet(nombre, data){
 // Rutinas en la base: si existe 'rutina:<nombre>' reemplaza a la del código; sin conexión usa la copia del celular
 function rtApplyRoutine(key, r){
   if(!r || !r.dias) return false;
+  if(r.config) CLIENT_CONFIG[key] = Object.assign({}, CLIENT_CONFIG[key] || {}, r.config);
   const out = {}; (r.orden || Object.keys(r.dias)).forEach(k=>{ if(r.dias[k]) out[k] = r.dias[k]; });
   if(!Object.keys(out).length) return false;
   ROUTINES[key] = out; return true;
