@@ -1190,22 +1190,56 @@
   .ed-pre{font-weight:700;font-size:14px;color:#4a5266;white-space:nowrap}
   .ed-day input:not([type=checkbox]){border:1px solid #cfd4e1;border-radius:8px;padding:8px 9px;font-size:14px;font-family:inherit;background:#fff;color:#1c2230;min-width:0}
   .ed-dn{flex:1;font-weight:700}
-  .ed-it{display:grid;grid-template-columns:135px minmax(150px,1.6fr) 80px 64px 105px 80px minmax(120px,1.3fr) auto auto;gap:6px;align-items:center;padding:6px 0}
-  .ed-it.k{grid-template-columns:135px minmax(150px,1.6fr) minmax(150px,1fr) minmax(120px,1.3fr) auto}
   .ed-it.special{display:flex;gap:8px;background:#f3f4f7;border-radius:8px;padding:8px 10px;margin:4px 0}
   .ed-sp{flex:1;font-size:14px}.ed-sp small{color:#6b7385}
   .ed-sw{font-size:12.5px;color:#6b7385;display:flex;gap:4px;align-items:center;white-space:nowrap}
   .ed-note{margin:0 0 10px}.ed-note label{display:block;font-size:13px;font-weight:600;color:#4a5266;margin-bottom:5px}.ed-note small{font-weight:400;color:#6b7385}
   .ed-note textarea{width:100%;box-sizing:border-box;border:1px solid #cfd4e1;border-radius:8px;padding:9px 11px;font-size:14.5px;font-family:inherit;color:#1c2230;background:#fffaf0;resize:vertical}
-  .ed-nota{grid-column:1 / -1;background:#fffaf0}
+  .ed-it{padding:9px 0;border-top:1px dashed #e3e6ee}
+  .ed-l1{display:grid;grid-template-columns:132px minmax(170px,1.7fr) 100px 84px 150px 96px auto;gap:6px;align-items:center}
+  .ed-l1.k{grid-template-columns:132px minmax(170px,1.2fr) minmax(150px,1fr) auto}
+  .ed-l2{display:grid;grid-template-columns:minmax(120px,.9fr) auto minmax(200px,2fr);gap:6px;align-items:center;margin-top:6px}
+  .ed-l2.k{grid-template-columns:minmax(120px,.9fr) minmax(200px,2fr)}
+  .ed-sl,.ed-pk{border:1px solid #cfd4e1;border-radius:8px;padding:8px 9px;font-size:14px;font-family:inherit;background:#fff;color:#1c2230;min-width:0;width:100%;text-align:left}
+  .ed-pk{cursor:pointer;display:flex;justify-content:space-between;gap:6px;border-color:#9fb0ff}
+  .ed-pk:after{content:"▾";color:#9aa3b8}
+  .ed-pk.empty{color:#9aa3b8;font-weight:400}
+  .ed-nota{background:#fffaf0}
+  #ed-pop{position:fixed;z-index:95;background:#fff;border:1px solid #cfd4e1;border-radius:12px;box-shadow:0 14px 34px rgba(28,34,48,.22);padding:10px;width:380px;font-family:Inter,"Segoe UI",system-ui,sans-serif;color:#1c2230}
+  #ed-pop input{width:100%;box-sizing:border-box;border:1px solid #3d5afe;border-radius:8px;padding:9px 10px;font-size:15px;font-family:inherit;margin-bottom:6px;outline:none}
+  .ed-pl{max-height:min(340px,48vh);overflow:auto}
+  .ed-pg{font-size:11.5px;letter-spacing:.06em;color:#6b7385;margin:8px 4px 3px}
+  .ed-po{display:flex;justify-content:space-between;width:100%;background:none;border:0;text-align:left;padding:9px 10px;border-radius:8px;font-size:14.5px;font-family:inherit;color:#1c2230;cursor:pointer}
+  .ed-po:hover{background:#eef1ff}.ed-po small{color:#6b7385}
+  .ed-sum{position:fixed;z-index:55;background:#1c2230;color:#fff;font-family:Inter,"Segoe UI",system-ui,sans-serif}
+  .ed-sum small{color:#9aa3b8;letter-spacing:.07em;font-size:11.5px;display:block}
+  .ed-sh{background:none;border:0;color:#fff;font-family:inherit;text-align:left;width:100%;padding:0;cursor:default}
+  .ed-st{font-size:26px;font-weight:800;margin:3px 0 10px;display:block}.ed-st span{font-size:14px;font-weight:500;color:#9aa3b8}
+  .ed-sc,.ed-sa{display:none}
+  .ed-sm{display:flex;align-items:center;gap:8px;margin:7px 0;font-size:13.5px}.ed-sm b{width:92px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ed-sbar{flex:1;height:8px;background:#2b3448;border-radius:99px;position:relative;overflow:hidden}.ed-sbar i{display:block;height:100%;background:#d4848f;border-radius:99px}.ed-sbar.ok i{background:#1f9d6b}
+  .ed-sbar u{position:absolute;top:0;bottom:0;left:50%;width:2px;background:#fff;opacity:.45}
+  .ed-sm span{width:24px;text-align:right;color:#cfd4e1}
+  .ed-sd{margin-top:10px;border-top:1px solid #2b3448;padding-top:9px;display:flex;gap:6px;flex-wrap:wrap;font-size:12.5px;color:#cfd4e1}.ed-sd span{background:#2b3448;border-radius:99px;padding:3px 10px}
+  .ed-sn{font-size:11.5px;color:#9aa3b8;margin-top:8px}
+  @media(min-width:1200px){
+    .pn-main.ed-main{padding-right:344px}
+    .ed-sum{right:24px;top:24px;width:292px;border-radius:14px;padding:16px;box-shadow:0 12px 30px rgba(28,34,48,.3)}
+  }
+  @media(max-width:1199px){
+    .ed-sum{left:12px;right:84px;bottom:14px;border-radius:14px;padding:10px 14px;box-shadow:0 8px 24px rgba(28,34,48,.35)}
+    .ed-sh{cursor:pointer;display:flex;flex-wrap:wrap;align-items:center;gap:2px 10px}
+    .ed-sh small{width:100%}.ed-st{font-size:18px;margin:0}.ed-sc{display:inline;font-size:13px;color:#cfd4e1;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ed-sa{display:inline;color:#9aa3b8}
+    .ed-sb{display:none;margin-top:10px;max-height:52vh;overflow:auto}.ed-sum.open .ed-sb{display:block}
+  }
   .ed-ct{display:flex}
   .ed-ct .ag-ic:disabled{opacity:.3;cursor:default}
   @media(max-width:900px){
     .ed-wk{padding:4px 12px 14px}
+    .ed-l1,.ed-l1.k{grid-template-columns:1fr 1fr}.ed-l1 .ed-pk{grid-column:1 / -1}.ed-l1 .ed-ct{grid-column:1 / -1;justify-content:flex-end}
+    .ed-l2,.ed-l2.k{grid-template-columns:1fr}
+    #ed-pop{left:8px !important;right:8px;width:auto}
     .ed-bar{top:60px}
-    .ed-it,.ed-it.k{grid-template-columns:1fr 1fr 1fr;border-top:1px dashed #e3e6ee;padding:10px 0}
-    .ed-it .ed-sec,.ed-it .ed-ej,.ed-it .ed-v,.ed-it .ed-w{grid-column:1 / -1}
-    .ed-it .ed-ct{grid-column:1 / -1;justify-content:flex-end}
     .ed-pre{font-size:12px}
   }
 </style>
@@ -2686,21 +2720,120 @@ function edSections(){
   Object.keys(ROUTINES).forEach(k=> Object.keys(ROUTINES[k]).forEach(d=> ROUTINES[k][d].forEach(e=>{ if(e.seccion) s.add(e.seccion); })));
   return Array.from(s);
 }
-function edItemRow(it, di, ii, n, lo){
+const ED_MIN = 10;
+const ED_OPT = {
+  series:['2 series','3 series','4 series','5 series','6 series'],
+  reps:['6','8','10','12','13','15','18','20','25','30 seg','45 seg','60 seg','Hasta el fallo'],
+  peso:['Peso corporal','Barra sola','Liga','Banda','Banda amarilla (4.5 kg)','Banda verde (6.8 kg)','Banda roja (9.1 kg)','Banda azul (11.3 kg)','Banda negra (13.6 kg)','1 kg','2 kg','2.5 kg','3 kg','4 kg','5 kg','6 kg','7 kg','8 kg','10 kg','12 kg','15 kg','20 kg','3 bloques','4 bloques','5 bloques','6 bloques','Según máquina'],
+  descanso:['20 seg','25 seg','30 seg','35 seg','40 seg','45 seg','60 seg','90 seg','2 min']
+};
+function edLib(){ if(!state.edLib) state.edLib = { notas:{}, custom:{ series:[], reps:[], peso:[], descanso:[] } }; return state.edLib; }
+function edLoadLib(cb){
+  if(state.edLibLoaded) return; state.edLibLoaded = true;
+  dbGet('admin:biblioteca').then(d=>{ if(d){ const l = edLib(); l.notas = d.notas || {}; l.custom = Object.assign({ series:[], reps:[], peso:[], descanso:[] }, d.custom || {}); if(cb) cb(); } }).catch(()=>{ state.edLibLoaded = false; });
+}
+function edLibNota(name){
+  const l = edLib(); if(l.notas[name]) return l.notas[name];
+  let r = '';
+  Object.keys(ROUTINES).forEach(k=> Object.keys(ROUTINES[k]).forEach(d=> ROUTINES[k][d].forEach(e=>{ if(!r && e.ejercicio === name && e.nota) r = e.nota; })));
+  return r;
+}
+function edMuscle(sec){ return String(sec || '').replace(/^[^\p{L}]+/u, '').trim() || 'Otros'; }
+function edNorm(t){ return String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+function edCatalog(){
+  const cats = [];
+  const add = (sec, name)=>{
+    const m = edMuscle(sec); let c = cats.find(x=> edMuscle(x.sec) === m);
+    if(!c){ c = { sec, names:[] }; cats.push(c); }
+    if(name && c.names.indexOf(name) < 0) c.names.push(name);
+  };
+  Object.keys(EXERCISE_LIBRARY).forEach(k=> { add(k); EXERCISE_LIBRARY[k].forEach(n=> add(k, n)); });
+  Object.keys(ROUTINES).forEach(k=> Object.keys(ROUTINES[k]).forEach(d=> ROUTINES[k][d].forEach(e=>{ if(e.ejercicio && e.seccion && (e.tipo === 'carga' || e.tipo === 'checklist')) add(e.seccion, e.ejercicio); })));
+  cats.forEach(c=> c.names.sort((a,b)=> a.localeCompare(b)));
+  return cats;
+}
+function edSecOptions(){ return edCatalog().map(c=>c.sec); }
+function edSel(ed, di, ii, f, val, ph){
+  const key = di + ':' + ii + ':' + f, l = edLib();
+  if(ed.custom && ed.custom[key]) return `<input class="ed-sl" data-f="${key}" value="${escapeHtml(val || '')}" placeholder="${ph} (escribe)" autofocus>`;
+  const opts = ED_OPT[f].concat((l.custom[f] || []).filter(x=> ED_OPT[f].indexOf(x) < 0));
+  if(val && opts.indexOf(val) < 0) opts.push(val);
+  return `<select class="ed-sl" data-sel="${key}"><option value="">${ph}</option>${opts.map(o=>`<option${o === val ? ' selected' : ''}>${escapeHtml(o)}</option>`).join('')}<option value="__otro">✏️ Otro…</option></select>`;
+}
+function edItemRow(it, di, ii, n, lo, ed){
   const ctrl = `<div class="ed-ct"><button class="ag-ic" data-up="${di}:${ii}" title="Subir"${ii <= lo ? ' disabled' : ''}>↑</button><button class="ag-ic" data-dn="${di}:${ii}" title="Bajar"${ii === n - 1 ? ' disabled' : ''}>↓</button><button class="ag-ic" data-rm="${di}:${ii}" title="Quitar">✕</button></div>`;
   if(it.tipo !== 'carga' && it.tipo !== 'checklist'){
     return `<div class="ed-it special"><div class="ed-sp">🧩 ${escapeHtml(it.titulo || it.ejercicio || 'Bloque especial')} <small>(bloque especial: pídele a Claude que lo cambie)</small></div>${ctrl}</div>`;
   }
   const f = (name, ph, cls)=> `<input class="${cls || ''}" data-f="${di}:${ii}:${name}" value="${escapeHtml(it[name] === undefined || it[name] === null ? '' : String(it[name]))}" placeholder="${ph}">`;
   const carga = it.tipo === 'carga';
-  return `<div class="ed-it ${carga ? 'c' : 'k'}">
-    <input class="ed-sec" list="ed-secs" data-f="${di}:${ii}:seccion" value="${escapeHtml(it.seccion || '')}" placeholder="Sección">
-    <input class="ed-ej" list="ed-names" data-f="${di}:${ii}:ejercicio" value="${escapeHtml(it.ejercicio || '')}" placeholder="Ejercicio">
-    ${carga ? f('series','Series','ed-s') : ''}${f('reps', carga ? 'Reps' : 'Detalle (ej: 15 min)', carga ? 'ed-s' : 'ed-w')}${carga ? f('peso','Peso','ed-s') + f('descanso','Descanso','ed-s') : ''}
-    ${f('video','Link del video','ed-v')}
-    ${carga ? `<label class="ed-sw"><input type="checkbox" data-sp="${di}:${ii}"${it.sinPeso ? ' checked' : ''}> sin peso</label>` : ''}
-    ${ctrl}
-    ${f('nota','💡 Nota técnica de este ejercicio (opcional)','ed-nota')}</div>`;
+  const secs = edSecOptions(); if(it.seccion && !secs.some(x=> edMuscle(x) === edMuscle(it.seccion))) secs.push(it.seccion);
+  const secSel = `<select class="ed-sl" data-sel="${di}:${ii}:seccion"><option value="">Músculo</option>${secs.map(x=>`<option${edMuscle(x) === edMuscle(it.seccion) ? ' selected' : ''} value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join('')}</select>`;
+  const pk = `<button type="button" class="ed-pk${it.ejercicio ? '' : ' empty'}" data-pick="${di}:${ii}">${escapeHtml(it.ejercicio || 'Elegir ejercicio…')}</button>`;
+  return `<div class="ed-it"><div class="ed-l1 ${carga ? '' : 'k'}">${secSel}${pk}
+    ${carga ? edSel(ed, di, ii, 'series', it.series, 'Series') + edSel(ed, di, ii, 'reps', it.reps, 'Reps') + edSel(ed, di, ii, 'peso', it.peso, 'Peso') + edSel(ed, di, ii, 'descanso', it.descanso, 'Descanso') : f('reps', 'Detalle (ej: 15 min · ritmo suave)', 'ed-sl')}
+    ${ctrl}</div>
+    <div class="ed-l2 ${carga ? '' : 'k'}">${f('video', 'Link del video', 'ed-sl')}${carga ? `<label class="ed-sw"><input type="checkbox" data-sp="${di}:${ii}"${it.sinPeso ? ' checked' : ''}> sin peso</label>` : ''}${f('nota', '💡 Nota técnica de este ejercicio (opcional)', 'ed-sl ed-nota')}</div></div>`;
+}
+function edSumData(ed){
+  const groups = edGroups(ed);
+  let g = groups.find(x=> String(x.k) === String(ed.focusWeek));
+  if(!g) { const open = groups.filter(x=> ed.open[x.k]); g = open.length ? open[open.length - 1] : groups[groups.length - 1]; }
+  if(!g) return null;
+  const mus = {}; let total = 0; const perDay = [];
+  g.idx.forEach(di=>{
+    const d = ed.days[di]; let dn = 0;
+    d.items.forEach(it=>{
+      if(it.tipo !== 'carga') return;
+      const sr = parseInt(it.series, 10) || 0; if(!sr) return;
+      const m = edMuscle(it.seccion); if(/movilidad/i.test(m)) return;
+      const sec = it.seccion || m;
+      mus[m] = mus[m] || { sec, n:0 }; mus[m].n += sr; total += sr; dn += sr;
+    });
+    const mm = d.pre.match(/Día (\d+)/); perDay.push({ lb: mm ? 'Día ' + mm[1] : 'Día', n: dn });
+  });
+  return { label: g.label, total, rows: Object.keys(mus).map(k=> ({ m:k, sec:mus[k].sec, n:mus[k].n })).sort((a,b)=> b.n - a.n), perDay, days: g.idx.length };
+}
+function edSumHtml(ed){
+  const d = edSumData(ed); if(!d) return '';
+  const top = d.rows.slice(0, 3).map(r=> edMuscle(r.sec) + ' ' + r.n).join(' · ');
+  return `<div class="ed-sum${state.edSumOpen ? ' open' : ''}" id="ed-sum"><button class="ed-sh" id="ed-sum-t"><small>RESUMEN · ${escapeHtml(d.label.toUpperCase())}</small><span class="ed-st">${d.total} series <span>en ${d.days} ${d.days === 1 ? 'día' : 'días'}</span></span><span class="ed-sc">${escapeHtml(top)}</span><span class="ed-sa">▴</span></button>
+    <div class="ed-sb">${d.rows.length ? d.rows.map(r=>`<div class="ed-sm"><b title="${escapeHtml(r.m)}">${escapeHtml(r.sec)}</b><div class="ed-sbar${r.n >= ED_MIN ? ' ok' : ''}"><i style="width:${Math.min(100, Math.round(r.n / (ED_MIN * 2) * 100))}%"></i><u></u></div><span>${r.n}</span></div>`).join('') : '<div class="ed-sn">Todavía no hay series cargadas</div>'}
+      <div class="ed-sd">${d.perDay.map(x=>`<span>${x.lb} · ${x.n}</span>`).join('')}</div><div class="ed-sn">La rayita blanca marca ${ED_MIN} series por músculo a la semana</div></div></div>`;
+}
+function edUpdateSum(){
+  const old = document.getElementById('ed-sum'); if(!old || !state.ed) return;
+  const t = document.createElement('div'); t.innerHTML = edSumHtml(state.ed); const nw = t.firstChild; if(!nw) return;
+  old.replaceWith(nw); edBindSum();
+}
+function edBindSum(){ const t = document.getElementById('ed-sum-t'); if(t) t.onclick = ()=>{ state.edSumOpen = !state.edSumOpen; document.getElementById('ed-sum').classList.toggle('open', !!state.edSumOpen); }; }
+function edClosePicker(){ const p = document.getElementById('ed-pop'); if(p) p.remove(); document.removeEventListener('mousedown', edPickOut, true); }
+function edPickOut(e){ const p = document.getElementById('ed-pop'); if(p && !p.contains(e.target)) edClosePicker(); }
+function edOpenPicker(target, onPick){
+  edClosePicker();
+  const cats = edCatalog(), pop = document.createElement('div'); pop.id = 'ed-pop';
+  pop.innerHTML = '<input id="ed-ps" placeholder="🔍 Buscar ejercicio…" autocomplete="off"><div class="ed-pl" id="ed-pl"></div>';
+  document.body.appendChild(pop);
+  const r = target.getBoundingClientRect(), w = Math.max(r.width, 360);
+  pop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - w - 8)) + 'px'; pop.style.width = w + 'px';
+  const below = window.innerHeight - r.bottom; pop.style.top = (below > 300 ? r.bottom + 4 : Math.max(8, r.top - 330)) + 'px';
+  const draw = ()=>{
+    const q = edNorm(document.getElementById('ed-ps').value.trim()); let h = '', any = false, exact = false;
+    cats.forEach(c=>{
+      const ns = c.names.filter(n=> !q || edNorm(n).indexOf(q) > -1 || edNorm(c.sec).indexOf(q) > -1);
+      if(!ns.length) return; any = true;
+      h += `<div class="ed-pg">${escapeHtml(c.sec.toUpperCase())}</div>` + ns.map(n=>{ if(edNorm(n) === q) exact = true; return `<button class="ed-po" data-pn="${escapeHtml(n)}" data-ps="${escapeHtml(c.sec)}">${escapeHtml(n)}</button>`; }).join('');
+    });
+    const raw = document.getElementById('ed-ps').value.trim();
+    if(raw && !exact) h += `<div class="ed-pg">OTRO</div><button class="ed-po" style="color:#3d5afe" data-pn="${escapeHtml(raw)}" data-ps="">+ Usar «${escapeHtml(raw)}» como ejercicio nuevo</button>`;
+    if(!any && !raw) h = '<div class="ed-pg">No hay ejercicios todavía</div>';
+    const pl = document.getElementById('ed-pl'); pl.innerHTML = h;
+    pl.querySelectorAll('[data-pn]').forEach(b=> b.onclick = ()=>{ const n = b.getAttribute('data-pn'), sc = b.getAttribute('data-ps'); edClosePicker(); onPick(n, sc || null); });
+  };
+  draw();
+  const inp = document.getElementById('ed-ps'); inp.oninput = draw; inp.onkeydown = e=>{ if(e.key === 'Escape') edClosePicker(); if(e.key === 'Enter'){ const f = document.querySelector('#ed-pl .ed-po'); if(f) f.click(); } };
+  inp.focus();
+  setTimeout(()=> document.addEventListener('mousedown', edPickOut, true), 0);
 }
 function edRender(main){
   const hid = pnHidden();
@@ -2714,8 +2847,6 @@ function edRender(main){
   if(ed.open.__init !== true){ ed.open.__init = true; if(groups.length) ed.open[groups[groups.length - 1].k] = true; }
   const nm = k=> k.charAt(0).toUpperCase() + k.slice(1);
   main.innerHTML = `<h1 class="pn-h1">Rutinas</h1><p class="pn-sub">Edita lo que ve cada alumna. Al guardar, lo ve al instante en su app.</p>
-    <datalist id="ed-names">${edNames().map(n=>`<option value="${escapeHtml(n)}">`).join('')}</datalist>
-    <datalist id="ed-secs">${edSections().map(n=>`<option value="${escapeHtml(n)}">`).join('')}</datalist>
     <div class="ag-chips">${keys.map(k=>`<button type="button" data-ak="${k}" class="${k === cur ? 'on' : ''}">${escapeHtml(nm(k))}</button>`).join('')}</div>
     ${keys.length ? '' : '<div class="pn-empty">No hay alumnas activas. Reactiva una en Alumnas.</div>'}
     <div class="ed-bar"><div><button class="pn-btn" id="ed-copy">+ Nueva semana (copia de la última)</button></div>
@@ -2723,10 +2854,11 @@ function edRender(main){
     ${groups.map(g=>`<div class="pn-card ed-wk"><button class="ed-wh" data-tg="${g.k}"><b>${escapeHtml(g.label)}</b><small>${g.idx.length} ${g.idx.length === 1 ? 'día' : 'días'}</small><span>${ed.open[g.k] ? '▾' : '▸'}</span></button>
       ${ed.open[g.k] ? g.idx.map(di=>{ const d = ed.days[di]; return `<div class="ed-day"><div class="ed-dh"><span class="ed-pre">${escapeHtml(d.pre)}</span><input class="ed-dn" data-dn-name="${di}" value="${escapeHtml(d.nom)}" placeholder="Nombre del día"><button class="ag-ic" data-rmday="${di}" title="Quitar día">🗑</button></div>
         <div class="ed-note"><label>💛 Nota o mensaje para empezar el día <small>(ella lo ve arriba de la rutina)</small></label><textarea data-note="${di}" rows="2" placeholder="Ej: hoy cuida la técnica y baja el peso si sientes molestia en el hombro">${escapeHtml((d.items.find(x=>x.tipo === 'mensaje') || {}).texto || '')}</textarea></div>
-        ${d.items.map((it, ii)=> it.tipo === 'mensaje' ? '' : edItemRow(it, di, ii, d.items.length, d.items[0] && d.items[0].tipo === 'mensaje' ? 0 : -1)).join('')}
+        ${d.items.map((it, ii)=> it.tipo === 'mensaje' ? '' : edItemRow(it, di, ii, d.items.length, d.items[0] && d.items[0].tipo === 'mensaje' ? 0 : -1, ed)).join('')}
         <button class="pn-btn" data-add="${di}">+ Agregar ejercicio</button></div>`; }).join('') + `<button class="pn-btn" data-addday="${g.k}" style="margin-top:6px">+ Agregar día a esta semana</button>` : ''}</div>`).join('')}
-    <p class="pn-sub" style="font-size:13px;margin-top:14px">Ojo: si cambias el nombre o el orden de un día que la alumna ya hizo, sus tildes de ese día pueden quedar corridas. Para semanas nuevas no hay problema.</p>`;
-  const dirty = ()=>{ ed.dirty = true; ed.msg = ''; const b = document.getElementById('ed-save'); if(b){ b.disabled = false; b.textContent = 'Guardar cambios'; } const m = document.getElementById('ed-msg'); if(m) m.textContent = ''; };
+    <p class="pn-sub" style="font-size:13px;margin-top:14px">Ojo: si cambias el nombre o el orden de un día que la alumna ya hizo, sus tildes de ese día pueden quedar corridas. Para semanas nuevas no hay problema.</p>${edSumHtml(ed)}`;
+  main.classList.add('ed-main'); edBindSum(); edLoadLib(()=>{ if((state.panelSec || '') === 'rutinas' && !ed.dirty) edRender(main); });
+  const dirty = ()=>{ edUpdateSum(); ed.dirty = true; ed.msg = ''; const b = document.getElementById('ed-save'); if(b){ b.disabled = false; b.textContent = 'Guardar cambios'; } const m = document.getElementById('ed-msg'); if(m) m.textContent = ''; };
   main.querySelectorAll('[data-ak]').forEach(b=> b.onclick = ()=>{ if(ed.dirty && !confirm('Tienes cambios sin guardar. ¿Cambiar de alumna igual?')) return; state.edKey = b.getAttribute('data-ak'); state.ed = null; render(); });
   main.querySelectorAll('[data-tg]').forEach(b=> b.onclick = ()=>{ const k = b.getAttribute('data-tg'); const kk = isNaN(Number(k)) ? k : Number(k); ed.open[kk] = !ed.open[kk]; edRender(main); });
   const vmap = edVideoMap();
@@ -2734,8 +2866,26 @@ function edRender(main){
     const p = inp.getAttribute('data-f').split(':'), it = ed.days[Number(p[0])].items[Number(p[1])], f = p[2];
     it[f] = inp.value.trim();
     if(f === 'video' && !it.video) it.video = null;
+    if(inp.classList.contains('ed-sl') && ['series','reps','peso','descanso'].indexOf(f) > -1 && it[f]){ const cs = edLib().custom[f] = edLib().custom[f] || []; if(ED_OPT[f].indexOf(it[f]) < 0 && cs.indexOf(it[f]) < 0) cs.push(it[f]); if(ed.custom) delete ed.custom[inp.getAttribute('data-f')]; dirty(); edRender(main); return; }
     if(f === 'ejercicio' && it.ejercicio && !it.video && vmap[it.ejercicio]){ it.video = vmap[it.ejercicio]; dirty(); edRender(main); return; }
     dirty();
+  });
+  main.querySelectorAll('.ed-wk').forEach(w=> w.addEventListener('mousedown', ()=>{ const h = w.querySelector('[data-tg]'); if(h){ ed.focusWeek = h.getAttribute('data-tg'); edUpdateSum(); } }));
+  main.querySelectorAll('[data-sel]').forEach(sel=> sel.onchange = ()=>{
+    const p = sel.getAttribute('data-sel').split(':'), it = ed.days[Number(p[0])].items[Number(p[1])], f = p[2], v = sel.value;
+    if(v === '__otro'){ ed.custom = ed.custom || {}; ed.custom[sel.getAttribute('data-sel')] = true; edRender(main); return; }
+    it[f] = v; dirty();
+    if(f === 'seccion') edRender(main);
+  });
+  main.querySelectorAll('[data-pick]').forEach(b=> b.onclick = ()=>{
+    const p = b.getAttribute('data-pick').split(':').map(Number);
+    edOpenPicker(b, (name, sec)=>{
+      const it = ed.days[p[0]].items[p[1]]; it.ejercicio = name;
+      if(sec && edMuscle(it.seccion) !== edMuscle(sec)) it.seccion = sec;
+      if(!it.video && vmap[name]) it.video = vmap[name];
+      if(!it.nota){ const nn = edLibNota(name); if(nn) it.nota = nn; }
+      dirty(); edRender(main);
+    });
   });
   main.querySelectorAll('[data-note]').forEach(t=> t.onchange = ()=>{
     const d = ed.days[Number(t.getAttribute('data-note'))], v = t.value.trim();
@@ -2787,6 +2937,13 @@ function edRender(main){
     const btn = document.getElementById('ed-save'); btn.disabled = true; btn.textContent = 'Guardando…';
     try{
       await dbSet('rutina:' + ed.key, body);
+      try{
+        const fresh = (await dbGet('admin:biblioteca')) || {}; const l = edLib();
+        const notas = Object.assign({}, fresh.notas || {}, l.notas);
+        Object.keys(dias).forEach(k=> dias[k].forEach(it=>{ if(it.ejercicio && it.nota) notas[it.ejercicio] = it.nota; }));
+        const custom = {}; ['series','reps','peso','descanso'].forEach(f=>{ custom[f] = Array.from(new Set(((fresh.custom || {})[f] || []).concat(l.custom[f] || []))); });
+        l.notas = notas; l.custom = custom; await dbSet('admin:biblioteca', { notas, custom });
+      }catch(e){}
       rtApplyRoutine(ed.key, body);
       ed.dirty = false; ed.err = false; ed.msg = 'Guardado ✓ Ya lo ve ' + ed.key.charAt(0).toUpperCase() + ed.key.slice(1);
       state.ed = edBuild(ed.key); state.ed.msg = ed.msg; state.ed.open = ed.open;
