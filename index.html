@@ -2775,8 +2775,9 @@ function edRender(main){
     const labels = ed.days.map(edLabel);
     if(new Set(labels).size !== labels.length){ ed.msg = 'Hay dos días con el mismo nombre'; ed.err = true; edRender(main); return; }
     if(ed.days.some(d=> !d.nom && !d.pre)){ ed.msg = 'Falta el nombre de un día'; ed.err = true; edRender(main); return; }
+    const PH = 'Tu rutina se está preparando';
     const dias = {}; ed.days.forEach(d=>{
-      dias[edLabel(d)] = d.items.filter(it=> it.tipo !== 'carga' && it.tipo !== 'checklist' ? true : (it.ejercicio && it.ejercicio.trim())).map(it=>{
+      dias[edLabel(d)] = d.items.filter(it=> !(it.ejercicio === PH && d.items.some(o=> o !== it && o.tipo !== 'mensaje' && o.ejercicio !== PH))).filter(it=> it.tipo !== 'carga' && it.tipo !== 'checklist' ? true : (it.ejercicio && it.ejercicio.trim())).map(it=>{
         const o = Object.assign({}, it); if(o.tipo === 'checklist'){ o.series = '-'; o.peso = 'Sin peso'; delete o.sinPeso; delete o.descanso; }
         else if(o.tipo === 'carga'){ if(o.sinPeso && !o.peso) o.peso = 'Peso corporal'; o.sinPeso = !!o.sinPeso; if(!o.descanso) delete o.descanso; }
         if(o.video === '' || o.video === undefined) o.video = null; if(!o.nota) delete o.nota; return o; });
