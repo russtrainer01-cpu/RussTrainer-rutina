@@ -1197,6 +1197,7 @@
   .ed-sw{font-size:12.5px;color:#6b7385;display:flex;gap:4px;align-items:center;white-space:nowrap}
   .ed-note{margin:0 0 10px}.ed-note label{display:block;font-size:13px;font-weight:600;color:#4a5266;margin-bottom:5px}.ed-note small{font-weight:400;color:#6b7385}
   .ed-note textarea{width:100%;box-sizing:border-box;border:1px solid #cfd4e1;border-radius:8px;padding:9px 11px;font-size:14.5px;font-family:inherit;color:#1c2230;background:#fffaf0;resize:vertical}
+  .ed-nota{grid-column:1 / -1;background:#fffaf0}
   .ed-ct{display:flex}
   .ed-ct .ag-ic:disabled{opacity:.3;cursor:default}
   @media(max-width:900px){
@@ -2698,7 +2699,8 @@ function edItemRow(it, di, ii, n, lo){
     ${carga ? f('series','Series','ed-s') : ''}${f('reps', carga ? 'Reps' : 'Detalle (ej: 15 min)', carga ? 'ed-s' : 'ed-w')}${carga ? f('peso','Peso','ed-s') + f('descanso','Descanso','ed-s') : ''}
     ${f('video','Link del video','ed-v')}
     ${carga ? `<label class="ed-sw"><input type="checkbox" data-sp="${di}:${ii}"${it.sinPeso ? ' checked' : ''}> sin peso</label>` : ''}
-    ${ctrl}</div>`;
+    ${ctrl}
+    ${f('nota','💡 Nota técnica de este ejercicio (opcional)','ed-nota')}</div>`;
 }
 function edRender(main){
   const hid = pnHidden();
@@ -2777,7 +2779,7 @@ function edRender(main){
       dias[edLabel(d)] = d.items.filter(it=> it.tipo !== 'carga' && it.tipo !== 'checklist' ? true : (it.ejercicio && it.ejercicio.trim())).map(it=>{
         const o = Object.assign({}, it); if(o.tipo === 'checklist'){ o.series = '-'; o.peso = 'Sin peso'; delete o.sinPeso; delete o.descanso; }
         else if(o.tipo === 'carga'){ if(o.sinPeso && !o.peso) o.peso = 'Peso corporal'; o.sinPeso = !!o.sinPeso; if(!o.descanso) delete o.descanso; }
-        if(o.video === '' || o.video === undefined) o.video = null; return o; });
+        if(o.video === '' || o.video === undefined) o.video = null; if(!o.nota) delete o.nota; return o; });
     });
     const body = { orden: labels, dias };
     if(CLIENT_CONFIG[ed.key]) body.config = Object.assign({}, CLIENT_CONFIG[ed.key]);
@@ -3785,9 +3787,9 @@ function render(){
       <div class="brand">russ.trainer</div>
       <h1>¡${masc ? 'Bienvenido' : 'Bienvenida'}, ${escapeHtml(state.clienta)}! ${masc ? '💪' : '🩷'}</h1>
       <p class="sub">Entrenamos desde el amor, no desde la exigencia. Este es tu espacio para registrar cada entreno y ver tu progreso real, semana a semana. Vamos paso a paso, junt${masc ? 'os' : 'as'}.</p>
-      <label>Si querés, contame tu peso actual (kg)</label>
+      <label>Si quieres, cuéntame tu peso actual (kg)</label>
       <input type="number" step="0.1" min="0" id="w-weight" placeholder="Ej: 65.5" />
-      <p class="sub" style="margin:-6px 0 16px; font-size:13px;">Esto es solo un registro personal para vos, no una exigencia — si preferís no compartirlo por ahora, no hay ningún problema.</p>
+      <p class="sub" style="margin:-6px 0 16px; font-size:13px;">Esto es solo un registro personal para ti, no una exigencia — si prefieres no compartirlo por ahora, no hay ningún problema.</p>
       <button class="btn-primary" id="welcome-save-btn">Empezar</button>
       <button class="btn-ghost" id="welcome-skip-btn" style="width:100%; margin-top:10px;">Prefiero no decirlo por ahora</button>
     `;
@@ -4604,7 +4606,7 @@ function render(){
           <div class="rest-overlay-label">Descanso</div>
           <div class="rest-overlay-time" id="rest-overlay-time">${formatMMSS(state.uiResting[overlayIdx])}</div>
           <button class="rest-overlay-cancel" data-idx="${overlayIdx}">Cancelar</button>
-          ${overlayItem && overlayItem.nota ? `<div class="rest-overlay-tip"><strong>Recordá esto para la próxima serie:</strong><br/>${escapeHtml(overlayItem.nota)}</div>` : ''}
+          ${overlayItem && overlayItem.nota ? `<div class="rest-overlay-tip"><strong>Recuerda esto para la próxima serie:</strong><br/>${escapeHtml(overlayItem.nota)}</div>` : ''}
         </div>
       ` : ''}
     `;
@@ -5188,7 +5190,7 @@ async function onEnter(){
   try{
     state.data = await loadClienta(name);
   }catch(e){
-    err.textContent = '⚠️ No se pudo conectar con la base de datos. Revisá tu conexión a internet y volvé a intentar — tu información no se perdió.';
+    err.textContent = '⚠️ No se pudo conectar con la base de datos. Revisa tu conexión a internet y vuelve a intentar — tu información no se perdió.';
     err.classList.remove('hidden');
     state.clienta = null;
     return;
