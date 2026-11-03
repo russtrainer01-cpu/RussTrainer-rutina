@@ -2547,9 +2547,26 @@ function agTaskRow(i, star){
     ${star ? `<button class="ag-ic" data-star="${escapeHtml(i.t)}" title="Hacer de esta mi más importante">☆</button>` : ''}
     ${i.own ? `<button class="ag-ic" data-del="${i.id}" title="Borrar">✕</button>` : ''}</div>`;
 }
+function agSoundOn(){ try{ return localStorage.getItem('rt_ag_mute') !== '1'; }catch(e){ return true; } }
+async function agChime(all){
+  if(!agSoundOn()) return;
+  const ctx = await ensureAudioContext(); if(!ctx) return;
+  const t0 = ctx.currentTime + 0.01;
+  const tone = (f, at, dur, type, vol)=>{
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, t0 + at);
+    g.gain.exponentialRampToValueAtTime(vol, t0 + at + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + at + dur);
+    o.connect(g); g.connect(ctx.destination); o.start(t0 + at); o.stop(t0 + at + dur + 0.05);
+  };
+  if(all){ [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i)=>{ tone(f, i * 0.09, 0.7, 'triangle', 0.16); tone(f * 2, i * 0.09, 0.4, 'sine', 0.04); }); }
+  else { tone(880, 0, 0.45, 'sine', 0.16); tone(1318.5, 0.09, 0.6, 'sine', 0.14); tone(2637, 0.09, 0.25, 'sine', 0.03); }
+}
 function agBindRows(main){
   main.querySelectorAll('[data-ck]').forEach(b=> b.onclick = ()=>{
     const id = b.getAttribute('data-ck');
+    if(!b.classList.contains('on')){ const left = main.querySelectorAll('[data-ck]:not(.on)').length; agChime(left === 1); }
     if(id.indexOf('r:') === 0 || id.indexOf('a:') === 0) agToggleHecha(id);
     else agMutate(ag=>{ const t = ag.tareas.find(x=>x.id === id); if(t) t.done = !t.done; });
   });
@@ -2574,7 +2591,7 @@ function agRenderAgenda(main, pending){
   const rep = ag.repetir.map(r=>`<div class="ag-t"><div class="ag-tx"><span class="ag-nm">${escapeHtml(r.t)}</span><small>${(r.dias || []).length === 7 ? 'Todos los días' : AG_ORDEN.filter(d=>(r.dias || []).indexOf(d) > -1).map(d=>AG_DIAS[d].slice(0,3)).join(' · ')}${r.hora ? ' · ' + r.hora : ''}</small></div>${agTag(r.cat)}<button class="ag-ic" data-delr="${r.id}" title="Quitar">✕</button></div>`).join('');
   main.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap"><div><h1 class="pn-h1">Mi agenda · hoy</h1>
-    <p class="pn-sub">${fechaTxt.charAt(0).toUpperCase() + fechaTxt.slice(1)} · ${done} de ${items.length} listas ${agSyncBadge()}</p></div></div>
+    <p class="pn-sub">${fechaTxt.charAt(0).toUpperCase() + fechaTxt.slice(1)} · ${done} de ${items.length} listas ${agSyncBadge()} <button class="ag-ic" id="ag-snd" title="Sonido al tachar">${agSoundOn() ? '🔔' : '🔕'}</button></p></div></div>
     <div class="ag-norte"><small>LO MÁS IMPORTANTE DE HOY ⭐</small>
       <input id="ag-norte" value="${escapeHtml(norte)}" placeholder="¿Cuál es tu norte hoy? Escríbelo aquí" maxlength="120"></div>
     <div class="pn-cols">
@@ -2597,6 +2614,7 @@ function agRenderAgenda(main, pending){
             <div style="display:flex;gap:8px;flex-wrap:wrap"><select id="ag-rc">${Object.keys(AG_CATS).map(k=>`<option value="${k}">${AG_CATS[k][0]}</option>`).join('')}</select><input type="time" id="ag-rh"><button class="pn-btn pri" id="ag-rb">Agregar</button></div></div></div>
       </div></div>`;
   agBindRows(main);
+  const snd = document.getElementById('ag-snd'); if(snd) snd.onclick = ()=>{ try{ localStorage.setItem('rt_ag_mute', agSoundOn() ? '1' : '0'); }catch(e){} snd.textContent = agSoundOn() ? '🔔' : '🔕'; if(agSoundOn()) agChime(false); };
   const nin = document.getElementById('ag-norte');
   nin.onchange = ()=>{ const v = nin.value.trim(); agMutate(a=>{ a.norte = v ? { fecha:iso, texto:v } : null; }); };
   const qi = document.getElementById('ag-q');
