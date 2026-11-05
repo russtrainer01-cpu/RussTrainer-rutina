@@ -2612,12 +2612,12 @@ const SUP_CATS = ['Proteínas','Creatina','Energía','Vitaminas','Otros'];
 function supState(){ if(!state.sup) state.sup = { items:null, edit:null, busy:false, msg:'' }; return state.sup; }
 async function supLoad(cb){
   const st = supState(); if(st.items !== null || st.busy) return; st.busy = true;
-  try{ const d = await dbGet(SUP_ROW); st.items = (d && Array.isArray(d.items)) ? d.items : []; st.wa = (d && d.whatsapp) || ''; }catch(e){ st.items = []; st.msg = 'No se pudo leer el catálogo. Revisa tu conexión.'; }
+  try{ const d = await dbGet(SUP_ROW); st.items = (d && Array.isArray(d.items)) ? d.items : []; st.wa = (d && d.whatsapp) || ''; st.oc = (d && Array.isArray(d.ocultarA)) ? d.ocultarA : []; }catch(e){ st.items = []; st.msg = 'No se pudo leer el catálogo. Revisa tu conexión.'; }
   st.busy = false; if(cb) cb();
 }
 async function supSave(){
   const st = supState();
-  try{ await dbSet(SUP_ROW, { items: st.items, whatsapp: st.wa || '' }); st.msg = 'Guardado ✓'; }catch(e){ st.msg = 'No se pudo guardar. Revisa tu conexión e intenta de nuevo.'; }
+  try{ await dbSet(SUP_ROW, { items: st.items, whatsapp: st.wa || '', ocultarA: st.oc || [] }); st.msg = 'Guardado ✓'; }catch(e){ st.msg = 'No se pudo guardar. Revisa tu conexión e intenta de nuevo.'; }
 }
 async function supResize(file, max){
   if(window.createImageBitmap){
