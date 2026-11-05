@@ -2560,7 +2560,7 @@ function renderPanel(app){
   const pending = feed.filter(i=>i.comment && !i.respondido);
   const nav = [
     ['agenda','🗓️','Mi agenda'],['bandeja','💡','Bandeja'],['rutinas','📝','Rutinas'],['hoy','🏠','Alumnas hoy'],['alumnas','👥','Alumnas'],['comentarios','💬','Comentarios'],['claves','🔑','Claves'],'sep',
-    ['resumen','📋','Resumen semanal'],['actividad','🕐','Actividad'],['v:admin-plantilla','🖼️','Plantilla']
+    ['resumen','📋','Resumen semanal'],['actividad','🕐','Actividad']
   ];
   const navHtml = nav.map(n=> n === 'sep' ? '<div class="pn-sep"></div>' :
     `<button class="pn-nv${(n[0] === sec || (n[0] === 'alumnas' && sec === 'ficha')) ? ' on' : ''}" data-nav="${n[0]}"><span>${n[1]}</span>${n[2]}${n[0]==='comentarios' && pending.length ? `<span class="bd">${pending.length}</span>` : ''}${n[0]==='bandeja' && agGet().tareas.filter(t=>t.idea || !t.fecha).length ? `<span class="bd">${agGet().tareas.filter(t=>t.idea || !t.fecha).length}</span>` : ''}</button>`).join('');
