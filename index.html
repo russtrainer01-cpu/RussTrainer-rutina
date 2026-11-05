@@ -1124,6 +1124,8 @@
   .pn-sx .k{font-weight:700;font-size:13.5px;text-align:right;min-width:104px}.pn-sx .up{color:#17794a;font-size:12px;font-weight:700}.pn-sx .eq{color:#8a91a5;font-size:12px;font-weight:500}.pn-sx .rd{color:#17794a;background:#e0f5e9;border-radius:99px;padding:1px 8px;font-size:11.5px;font-weight:700}.pn-sx .rv{color:#b3261e;background:#ffe9e6;border-radius:99px;padding:1px 8px;font-size:11.5px;font-weight:700}
   .pn-sx.rev{background:#fff7f5;margin:0 -12px;padding:10px 12px;border-radius:8px;border-top-color:transparent}
   .pn-pl{border-radius:99px;padding:3px 11px;font-size:12.5px;font-weight:700}.pn-pl.g{background:#e0f5e9;color:#17794a}.pn-pl.o{background:#fff0d9;color:#a45b00}
+  .pn-rs{display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid #eceef4;cursor:pointer}.pn-rs:first-of-type{border-top:0}.pn-rs .pn-nm b{display:block}.pn-rs .pn-nm small{color:#8a91a5;font-size:12.5px}
+  .pn-bds{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.pn-bd{border-radius:99px;padding:2px 10px;font-size:12px;font-weight:600}.pn-bd.rd{background:#ffe9e6;color:#b3261e}.pn-bd.am{background:#fff0d9;color:#a45b00}
   .pn-crumb{color:#6b7385;font-size:13.5px;margin-bottom:12px}.pn-lnk{background:none;border:0;padding:0;font:inherit;color:#3d5afe;cursor:pointer}
   .pn-ftop{display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap}.pn-bigav{width:60px;height:60px;border-radius:50%;background:#f3d9df;color:#b04a62;display:grid;place-items:center;font-weight:700;font-size:24px}.pn-fbtns{margin-left:auto;display:flex;gap:8px}
   .pn-note{background:#fffbe8;border:1px solid #efe2a0;border-radius:8px;padding:10px 12px;font-size:14px;margin-bottom:8px;color:#5f5410}.pn-note small{color:#8a7a20}
@@ -2531,7 +2533,7 @@ function renderPanel(app){
   const pending = feed.filter(i=>i.comment && !i.respondido);
   const nav = [
     ['agenda','🗓️','Mi agenda'],['bandeja','💡','Bandeja'],['rutinas','📝','Rutinas'],['hoy','🏠','Alumnas hoy'],['alumnas','👥','Alumnas'],['comentarios','💬','Comentarios'],['claves','🔑','Claves'],'sep',
-    ['v:admin-summary','📋','Resumen semanal'],['actividad','🕐','Actividad'],['v:admin-calendar','📅','Calendario'],['v:admin-plantilla','🖼️','Plantilla'],['v:admin-cuaderno','📓','Cuaderno']
+    ['resumen','📋','Resumen semanal'],['actividad','🕐','Actividad'],['v:admin-calendar','📅','Calendario'],['v:admin-plantilla','🖼️','Plantilla'],['v:admin-cuaderno','📓','Cuaderno']
   ];
   const navHtml = nav.map(n=> n === 'sep' ? '<div class="pn-sep"></div>' :
     `<button class="pn-nv${(n[0] === sec || (n[0] === 'alumnas' && sec === 'ficha')) ? ' on' : ''}" data-nav="${n[0]}"><span>${n[1]}</span>${n[2]}${n[0]==='comentarios' && pending.length ? `<span class="bd">${pending.length}</span>` : ''}${n[0]==='bandeja' && agGet().tareas.filter(t=>t.idea || !t.fecha).length ? `<span class="bd">${agGet().tareas.filter(t=>t.idea || !t.fecha).length}</span>` : ''}</button>`).join('');
@@ -2599,6 +2601,37 @@ function renderPanel(app){
     const ac = document.getElementById('pn-allc'); if(ac) ac.onclick = ()=>{ state.panelSec='comentarios'; render(); };
   }
   else if(sec === 'ficha'){ pnFicha(main); }
+  else if(sec === 'resumen'){
+    const list = pnRows().filter(r=>!r.hidden).map(r=>{
+      const f = r.c.data.ficha, wi = weekEndInfo(f.semanaInicio);
+      const needsNew = !f.semanaInicio || (wi && wi.daysLeft <= 0);
+      const soon = wi && wi.daysLeft > 0 && wi.daysLeft <= 3;
+      const gap = daysSince(lastActivityDate(r.c.data));
+      const inactive = gap === null || gap >= 3;
+      const pc = buildActivityFeed({[r.key]: r.c}).filter(i=>i.comment && !i.respondido).length;
+      const venc = daysUntil(r.c.data.vencimiento);
+      const vence = venc !== null && venc <= 7;
+      const items = [];
+      if(needsNew) items.push(['rd', 'Armar semana nueva']);
+      else if(soon) items.push(['am', 'Su semana termina en ' + wi.daysLeft + (wi.daysLeft === 1 ? ' día' : ' días')]);
+      if(inactive) items.push(['rd', gap === null ? 'Sin actividad todavía' : gap + ' días sin entrenar']);
+      if(pc) items.push(['am', pc + (pc === 1 ? ' comentario sin responder' : ' comentarios sin responder')]);
+      if(vence) items.push(['am', venc < 0 ? 'Plan vencido' : venc === 0 ? 'Su plan vence hoy' : 'Su plan vence en ' + venc + ' días']);
+      const urg = (needsNew ? 20 : 0) + (soon ? 8 : 0) + (inactive ? 10 : 0) + pc * 2 + (vence ? 6 : 0);
+      return { r, items, urg };
+    }).sort((a,b)=> b.urg - a.urg);
+    const need = list.filter(x=>x.items.length), ok = list.filter(x=>!x.items.length);
+    const card = x=>`<div class="pn-rs" data-det="${x.r.key}"><div class="pn-av">${escapeHtml(x.r.c.displayName.charAt(0))}</div>
+      <div class="pn-nm" style="flex:1"><b>${escapeHtml(x.r.c.displayName)}</b><small>${x.r.week}/${x.r.target} esta semana</small>
+        ${x.items.length ? `<div class="pn-bds">${x.items.map(i=>`<span class="pn-bd ${i[0]}">${escapeHtml(i[1])}</span>`).join('')}</div>` : ''}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">${x.items.length ? `<button class="pn-btn" data-rut="${x.r.key}">Editar su rutina</button>` : ''}${x.items.length ? pnWaBtn(x.r, '') : ''}</div></div>`;
+    main.innerHTML = `<h1 class="pn-h1">Resumen semanal</h1><p class="pn-sub">Quién necesita algo de ti esta semana, empezando por lo más urgente</p>
+      <div class="pn-card" style="max-width:900px"><h2>Necesitan algo de ti${need.length ? ' · ' + need.length : ''}</h2>${need.length ? need.map(card).join('') : '<div class="pn-empty">Todas están al día 🎉</div>'}</div>
+      ${ok.length ? `<div class="pn-card" style="max-width:900px;margin-top:18px"><h2>Todo al día · ${ok.length}</h2>${ok.map(card).join('')}</div>` : ''}`;
+    main.querySelectorAll('.pn-rs').forEach(r=> r.onclick = ()=>{ state.adminSelected = r.getAttribute('data-det'); state.view='admin-detail'; render(); });
+    main.querySelectorAll('[data-rut]').forEach(b=> b.onclick = (e)=>{ e.stopPropagation(); state.edKey = b.getAttribute('data-rut'); state.ed = null; state.panelSec = 'rutinas'; render(); });
+    detailBtns();
+  }
   else if(sec === 'actividad'){
     const fKey = state.actKey || '', onlyC = !!state.actOnlyC, onlyH = !!state.actOnlyH;
     const hard = i=> i.feeling && /Dif[ií]cil|l[ií]mite/i.test(i.feeling);
@@ -4412,53 +4445,6 @@ function render(){
     `;
     document.getElementById('back-btn').onclick = ()=>{ state.view='dashboard'; render(); };
     document.getElementById('update-weight-save').onclick = onUpdateWeight;
-  }
-  else if(state.view === 'admin-summary'){
-    const keys = Object.keys(state.adminData);
-    const rows = keys.map(key=>{
-      const c = state.adminData[key];
-      const gap = daysSince(lastActivityDate(c.data));
-      const weekCount = computeWeekCount(c.data);
-      const target = weeklyTarget(c.displayName);
-      const weekInfo = weekEndInfo(c.data.ficha.semanaInicio);
-      const needsNewWeek = !c.data.ficha.semanaInicio || (weekInfo && weekInfo.daysLeft <= 0);
-      const weekSoon = weekInfo && weekInfo.daysLeft > 0 && weekInfo.daysLeft <= 3;
-      const pendingComments = buildActivityFeed({[key]: c}).filter(i=>i.comment && !i.respondido).length;
-      const inactive = gap === null || gap >= 3;
-      let urgency = 0;
-      if(needsNewWeek) urgency += 20;
-      if(weekSoon) urgency += 8;
-      if(inactive) urgency += 10;
-      urgency += pendingComments * 2;
-      return { key, c, gap, weekCount, target, weekInfo, needsNewWeek, weekSoon, pendingComments, inactive, urgency };
-    });
-    rows.sort((a,b)=> b.urgency - a.urgency);
-    app.innerHTML = `
-      <button class="back" id="back-btn">&larr; Volver</button>
-      <div class="brand">russ.trainer</div>
-      <h1>📋 Resumen semanal</h1>
-      <p class="sub">Ordenadas primero las que necesitan algo de vos.</p>
-      <div id="summary-list"></div>
-    `;
-    document.getElementById('back-btn').onclick = ()=>{ state.view='admin-list'; render(); };
-    const wrap = document.getElementById('summary-list');
-    rows.forEach(r=>{
-      const box = document.createElement('button');
-      box.className = 'card';
-      box.style.cssText = 'text-align:left; width:100%; border:1px solid var(--border); border-left:3px solid ' + (r.urgency > 0 ? '#c65f5f' : 'var(--rose)') + '; cursor:pointer; background:var(--bg-card); font-family:inherit;';
-      const badges = [];
-      if(r.needsNewWeek) badges.push('<span style="color:#c65f5f; font-weight:700;">📅 Armar semana nueva</span>');
-      else if(r.weekSoon) badges.push(`<span style="color:var(--rose-dark); font-weight:700;">📅 Semana termina en ${r.weekInfo.daysLeft}d</span>`);
-      if(r.inactive) badges.push(`<span style="color:#c65f5f; font-weight:700;">⚠️ ${r.gap === null ? 'Sin actividad' : r.gap + 'd sin entrenar'}</span>`);
-      if(r.pendingComments > 0) badges.push(`<span style="color:var(--rose-dark); font-weight:700;">💬 ${r.pendingComments} pendiente${r.pendingComments>1?'s':''}</span>`);
-      box.innerHTML = `
-        <div style="font-weight:700; margin-bottom:4px;">${escapeHtml(r.c.displayName)}</div>
-        <div class="sub" style="margin:0 0 6px;">${r.weekCount}/${r.target} esta semana</div>
-        ${badges.length ? `<div style="display:flex; flex-wrap:wrap; gap:8px; font-size:12px;">${badges.join('')}</div>` : '<div class="sub" style="margin:0; color:#5b8f6f;">✓ Todo al día</div>'}
-      `;
-      box.onclick = ()=>{ state.adminSelected = r.key; state.view = 'admin-detail'; render(); };
-      wrap.appendChild(box);
-    });
   }
   else if(state.view === 'admin-comments'){
     const allComments = buildActivityFeed(state.adminData).filter(i=>i.comment);
