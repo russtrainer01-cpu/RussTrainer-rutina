@@ -840,6 +840,7 @@
     animation-iteration-count:1, infinite;
     animation-fill-mode:forwards, none;
   }
+  .msg-read-btn{background:transparent;border:1px solid currentColor;color:inherit;border-radius:999px;padding:6px 14px;font:inherit;font-size:13px;cursor:pointer;opacity:.85}
   .personal-message-card{
     background:linear-gradient(135deg, rgba(212,132,143,0.15), rgba(212,132,143,0.05));
     border:1px solid rgba(212,132,143,0.3);
@@ -3690,6 +3691,11 @@ function descargarRutinaPDF(items){
     rtToast('Rutina descargada · la encuentras en Descargas');
   }catch(e){ console.error(e); rtToast('No se pudo descargar la rutina'); }
 }
+function msgReadKey(day, texto){
+  let h = 5381; const t = String(texto || '');
+  for(let i = 0; i < t.length; i++){ h = ((h << 5) + h + t.charCodeAt(i)) | 0; }
+  return String(day) + '|' + (h >>> 0).toString(36);
+}
 function persistUiProgress(){
   if(!state.clienta) return;
   try{
@@ -4882,9 +4888,17 @@ function render(){
         return;
       }
       if(item.tipo === 'mensaje'){
+        const mkey = msgReadKey(state.routineDay, item.texto);
+        if(state.data.mensajesLeidos && state.data.mensajesLeidos[mkey]) return;
         const card = document.createElement('div');
         card.className = 'personal-message-card';
-        card.innerHTML = `💛 ${escapeHtml(item.texto)}`;
+        card.innerHTML = `💛 ${escapeHtml(item.texto)}<div style="margin-top:10px;text-align:right"><button type="button" class="msg-read-btn">Entendido ✓</button></div>`;
+        card.querySelector('.msg-read-btn').onclick = async ()=>{
+          if(!state.data.mensajesLeidos) state.data.mensajesLeidos = {};
+          state.data.mensajesLeidos[mkey] = todayISO();
+          try{ await saveClienta(state.clienta, state.data); }catch(e){}
+          render();
+        };
         wrap.appendChild(card);
         return;
       }
