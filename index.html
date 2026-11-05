@@ -1174,6 +1174,7 @@
   .sp-dots{display:flex;justify-content:center;gap:7px;margin-top:10px}.sp-dots i{width:6px;height:6px;border-radius:50%;background:#d9cbc2}.sp-dots i.on{background:#2b2521}
   body.has-tabbar #app{padding-bottom:110px}
   #tabbar{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:480px;background:rgba(255,255,255,.97);border-top:1px solid #eadfd7;display:flex;justify-content:space-around;align-items:flex-end;padding:8px 4px calc(10px + env(safe-area-inset-bottom));z-index:60;backdrop-filter:blur(8px)}
+  .sup-ord{border-top:1px solid #eceef4;padding:12px 0}.sup-ord:first-of-type{border-top:0}.sup-oh{display:flex;gap:10px;align-items:baseline;font-size:14px}.sup-oh span{color:#8a91a5;font-size:12.5px}.sup-ol{font-size:13px;color:#4a5068;margin:4px 0 8px}.sup-os{display:flex;gap:6px;flex-wrap:wrap}.sup-ob{border:1px solid #e3e6ee;background:#fff;border-radius:999px;padding:6px 12px;font-family:inherit;font-size:12.5px;color:#6b7289;cursor:pointer}.sup-ob.on{background:#3d5afe;border-color:#3d5afe;color:#fff;font-weight:700}
   .tb-i{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:inherit;font-size:10.5px;color:#a09389;width:20%;cursor:pointer;padding:2px 0}.tb-i svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.tb-i.on{color:#b9707c;font-weight:700}
   .tb-c{margin-top:-22px}.tb-c i{width:50px;height:50px;border-radius:50%;background:#2b2521;display:grid;place-items:center;box-shadow:0 6px 14px rgba(43,37,33,.3);border:4px solid #fcfcf7}.tb-c i svg{stroke:#fff;width:22px;height:22px}.tb-c span{color:#2b2521;font-weight:700}
   #tb-dim{position:fixed;inset:0;background:rgba(43,37,33,.3);z-index:58}
@@ -2630,6 +2631,33 @@ async function supResize(file, max){
     img.src = url;
   });
 }
+
+function supAllOrders(){
+  const out = [];
+  Object.keys(state.adminData || {}).forEach(k=>{
+    const c = state.adminData[k]; const L = (c && c.data && c.data.pedidos) || [];
+    L.forEach(p=> out.push({ key:k, nombre:c.displayName, p }));
+  });
+  out.sort((a,b)=> (b.p.fecha || '').localeCompare(a.p.fecha || '') || String(b.p.id).localeCompare(String(a.p.id)));
+  return out;
+}
+const SUP_ESTADOS = ['Por coordinar','Pagado','Entregado'];
+async function supSetEstado(key, id, estado){
+  const c = state.adminData[key]; if(!c) return;
+  const fresh = await loadClienta(c.displayName);
+  const p = (fresh.pedidos || []).find(x=> String(x.id) === String(id)); if(!p) return;
+  p.estado = estado; await saveClienta(c.displayName, fresh); c.data = fresh;
+}
+function supOrdersCard(){
+  const L = supAllOrders(), money = v=> '$' + Number(v || 0).toLocaleString('es-AR');
+  const pend = L.filter(o=> (o.p.estado || 'Por coordinar') === 'Por coordinar').length;
+  const rows = L.map(o=>{ const est = o.p.estado || 'Por coordinar';
+    return `<div class="sup-ord"><div class="sup-oh"><b>${escapeHtml(o.nombre)}</b><span>${formatDate(o.p.fecha)}</span><span style="margin-left:auto;font-weight:700">${money(o.p.total)}</span></div>
+      <div class="sup-ol">${(o.p.items || []).map(i=> i.cant + ' x ' + escapeHtml(i.nombre)).join(' · ')}</div>
+      <div class="sup-os">${SUP_ESTADOS.map(e=> `<button class="sup-ob${e === est ? ' on' : ''}" data-oe="${escapeHtml(o.key)}|${escapeHtml(String(o.p.id))}|${e}">${e}</button>`).join('')}</div></div>`; }).join('');
+  return `<div class="pn-card" style="max-width:820px;margin-bottom:18px"><h2>Pedidos${L.length ? ' · ' + L.length : ''}${pend ? ` <span class="pn-tag">${pend} por coordinar</span>` : ''}</h2>
+    ${L.length ? rows : '<div class="pn-empty">Todavía no hay pedidos. Cuando una alumna haga uno, aparece aquí.</div>'}</div>`;
+}
 function supRender(main){
   const st = supState();
   main.classList.add('pn-fi');
@@ -2654,6 +2682,7 @@ function supRender(main){
     <div class="pn-msg err" id="sp-err"></div></div>` : '';
   main.innerHTML = `<h1 class="pn-h1">Suplementos</h1><p class="pn-sub">Carga aquí tus productos y su guía. Las alumnas ven la sección en su app en cuanto haya al menos un producto disponible.</p>
     ${st.msg ? `<div class="pn-msg ${/^Guardado/.test(st.msg) ? 'ok' : 'err'}" style="margin-bottom:12px">${escapeHtml(st.msg)}</div>` : ''}
+    ${supOrdersCard()}
     <div class="pn-card" style="max-width:820px;margin-bottom:18px"><h2>Tu WhatsApp para pedidos</h2><p class="pn-sub" style="margin:0 0 6px;font-size:13px">A este número les llega el pedido a tus alumnas. Con código de país, sin espacios ni signos (ej: 5491127836341)</p>
       <div style="display:flex;gap:8px"><input id="sp-wa" value="${escapeHtml(st.wa || '')}" placeholder="5491100000000" style="flex:1"><button class="pn-btn pri" id="sp-wa-s">Guardar</button></div></div>
     ${form}
@@ -2666,6 +2695,7 @@ function supRender(main){
         <button class="pn-btn" data-edit="${p.id}">Editar</button><button class="pn-btn" data-del="${p.id}" style="color:#b3261e">Borrar</button></div>`).join('') : '<div class="pn-empty">Todavía no cargaste productos. Toca "+ Nuevo producto".</div>'}
       ${st.items.length ? '<p style="font-size:12px;color:#8a91a5;margin:12px 0 0">El interruptor azul = disponible · gris = agotado</p>' : ''}</div>`;
   const $ = id=> document.getElementById(id);
+  main.querySelectorAll('[data-oe]').forEach(b=> b.onclick = async ()=>{ const [k,id,e] = b.getAttribute('data-oe').split('|'); b.disabled = true; try{ await supSetEstado(k, id, e); }catch(x){ st.msg = 'No se pudo cambiar el estado. Revisa tu conexión.'; } render(); });
   const wb = $('sp-wa-s'); if(wb) wb.onclick = async ()=>{ st.wa = $('sp-wa').value.replace(/\D/g, ''); await supSave(); render(); };
   const nu = $('sp-nuevo'); if(nu) nu.onclick = ()=>{ st.msg = ''; st.edit = { id:'', nombre:'', marca:'', precio:'', categoria:'Proteínas', resumen:'', sirve:'', como:'', cuando:'', cuidado:'', recomendado:false, disponible:true, foto:'', fotos:[] }; render(); };
   main.querySelectorAll('[data-edit]').forEach(b=> b.onclick = ()=>{ const p = st.items.find(x=>x.id === b.getAttribute('data-edit')); if(p){ st.msg = ''; st.edit = JSON.parse(JSON.stringify(p)); if(!Array.isArray(st.edit.fotos)) st.edit.fotos = st.edit.foto ? [st.edit.foto] : []; render(); } });
@@ -3124,6 +3154,9 @@ function agDayItems(pending){
     items.push({ id:'r:' + r.id, t:r.t, cat:r.cat, hora:r.hora || '', done:hechas.indexOf('r:' + r.id) > -1, sub:'Se repite' });
   });
   if(pending && pending.length) items.push({ id:'a:com', t:'Responder comentarios de alumnas', cat:'alumnas', hora:'', done:hechas.indexOf('a:com') > -1, sub:'Automática · ' + pending.length + (pending.length === 1 ? ' pendiente' : ' pendientes'), go:'comentarios' });
+  supAllOrders().filter(o=> (o.p.estado || 'Por coordinar') === 'Por coordinar').forEach(o=>{
+    items.push({ id:'a:ped:' + o.p.id, t:'Responder el pedido de ' + o.nombre, cat:'alumnas', hora:'', done:hechas.indexOf('a:ped:' + o.p.id) > -1, sub:'Automática · pedido de suplementos ' + supMoney(o.p.total), go:'suplementos' });
+  });
   const hid = pnHidden();
   Object.keys(state.adminData || {}).filter(k=> hid.indexOf(k) < 0).map(k=>({ k, c:state.adminData[k] })).forEach(r=>{
     const st = pnStatus(r.c);
