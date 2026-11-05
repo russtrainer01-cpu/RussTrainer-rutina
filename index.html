@@ -1174,7 +1174,7 @@
   .sp-dots{display:flex;justify-content:center;gap:7px;margin-top:10px}.sp-dots i{width:6px;height:6px;border-radius:50%;background:#d9cbc2}.sp-dots i.on{background:#2b2521}
   body.has-tabbar #app{padding-bottom:110px}
   #tabbar{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:480px;background:rgba(255,255,255,.97);border-top:1px solid #eadfd7;display:flex;justify-content:space-around;align-items:flex-end;padding:8px 4px calc(10px + env(safe-area-inset-bottom));z-index:60;backdrop-filter:blur(8px)}
-  .tb-i{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:inherit;font-size:10.5px;color:#a09389;width:64px;cursor:pointer;padding:2px 0}.tb-i svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.tb-i.on{color:#2b2521;font-weight:700}
+  .tb-i{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:inherit;font-size:10.5px;color:#a09389;width:20%;cursor:pointer;padding:2px 0}.tb-i svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.tb-i.on{color:#b9707c;font-weight:700}
   .tb-c{margin-top:-22px}.tb-c i{width:50px;height:50px;border-radius:50%;background:#2b2521;display:grid;place-items:center;box-shadow:0 6px 14px rgba(43,37,33,.3);border:4px solid #fcfcf7}.tb-c i svg{stroke:#fff;width:22px;height:22px}.tb-c span{color:#2b2521;font-weight:700}
   #tb-dim{position:fixed;inset:0;background:rgba(43,37,33,.3);z-index:58}
   #tb-sheet{position:fixed;left:50%;transform:translateX(-50%);bottom:68px;width:100%;max-width:480px;background:#fff;border-radius:22px 22px 0 0;padding:16px 16px 12px;z-index:59;box-shadow:0 -10px 30px rgba(43,37,33,.18)}
@@ -2785,10 +2785,11 @@ function renderSupCart(app){
 }
 
 // ---- Barra inferior de las alumnas ----
-const TB_VIEWS = ['dashboard','sup','progreso','perfil','pedidos'];
+const TB_VIEWS = ['dashboard','sup','progreso','perfil','pedidos','recetas','guias'];
 const TB_ICONS = {
   home:'<path d="M3 11l9-8 9 8M5 10v10h14V10"/>', chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>', bag:'<path d="M5 8h14l-1 12H6L5 8zM9 8a3 3 0 016 0"/>',
-  more:'<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>', user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 15-5 16 0"/>'
+  more:'<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>', user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 15-5 16 0"/>',
+  bowl:'<path d="M4 12h16a8 8 0 01-16 0zM9 8c0-2 2-2 2-4M14 8c0-2 2-2 2-4"/>', book:'<path d="M5 4h10a3 3 0 013 3v13H8a3 3 0 01-3-3zM9 9h6M9 13h6"/>'
 };
 function tbIcon(n){ return '<svg viewBox="0 0 24 24" aria-hidden="true">' + TB_ICONS[n] + '</svg>'; }
 function renderTabBar(){
@@ -2797,11 +2798,12 @@ function renderTabBar(){
   document.body.classList.toggle('has-tabbar', show);
   if(!show){ if(bar) bar.remove(); if(sheet) sheet.remove(); if(dim) dim.remove(); state.moreOpen = false; return; }
   const hasSup = supAvail().length > 0;
-  const cur = state.view === 'sup' ? 'sup' : state.view === 'dashboard' ? 'home' : state.view === 'pedidos' ? 'more' : state.view;
+  const cur = state.view === 'sup' ? 'sup' : state.view === 'dashboard' ? 'home' : (state.view === 'pedidos' || state.view === 'progreso' || state.view === 'perfil') ? 'more' : state.view;
   const item = (id, ic, lb, on)=> `<button class="tb-i${on ? ' on' : ''}" data-tb="${id}">${tbIcon(ic)}<span>${lb}</span></button>`;
-  const html = item('home','home','Inicio', cur === 'home') + item('progreso','chart','Progreso', cur === 'progreso')
-    + (hasSup ? `<button class="tb-i tb-c${cur === 'sup' ? ' on' : ''}" data-tb="sup"><i>${tbIcon('bag')}</i><span>Suplementos</span></button>` : '')
-    + item('more','more','Más', state.moreOpen || cur === 'more') + item('perfil','user','Perfil', cur === 'perfil');
+  const html = item('home','home','Inicio', cur === 'home')
+    + (hasSup ? item('sup','bag','Suplementos', cur === 'sup') : '')
+    + item('recetas','bowl','Recetas', cur === 'recetas') + item('guias','book','Guías', cur === 'guias')
+    + item('more','more','Más', state.moreOpen || cur === 'more');
   if(!bar){ bar = document.createElement('nav'); bar.id = 'tabbar'; document.body.appendChild(bar); }
   bar.innerHTML = html;
   bar.querySelectorAll('[data-tb]').forEach(b=> b.onclick = ()=>{
@@ -2815,9 +2817,10 @@ function renderTabBar(){
     sheet = document.createElement('div'); sheet.id = 'tb-sheet';
     const np = (state.data && state.data.pedidos ? state.data.pedidos.length : 0);
     sheet.innerHTML = `<h4>Más de Russ</h4><div class="tb-g">
+      <button data-mo="progreso"><b>Mi progreso</b><small>Tus ejercicios y rachas</small></button>
+      <button data-mo="perfil"><b>Mi perfil</b><small>Tus datos</small></button>
       <button data-mo="pedidos"><b>Mis pedidos</b><small>${np ? np + (np === 1 ? ' pedido' : ' pedidos') : 'Estado de tus compras'}</small></button>
-      <button data-mo="guide"><b>Cómo usar la app</b><small>Un recorrido rápido</small></button>
-      <div class="soon"><b>Recetas</b><small>Pronto</small></div><div class="soon"><b>Guías</b><small>Pronto</small></div></div>`;
+      <button data-mo="guide"><b>Cómo usar la app</b><small>Un recorrido rápido</small></button></div>`;
     document.body.appendChild(sheet);
     sheet.querySelectorAll('[data-mo]').forEach(b=> b.onclick = ()=>{ const v = b.getAttribute('data-mo'); state.moreOpen = false; if(v === 'guide'){ state.guideStep = 0; } state.view = v; window.scrollTo(0,0); render(); });
   }
@@ -4744,6 +4747,7 @@ function renderMain(){
     document.getElementById('guide-btn').onclick = ()=>{ state.guideStep = 0; state.view = 'guide'; window.scrollTo(0,0); render(); };
   }
   else if(state.view === 'progreso'){ renderProgreso(app); }
+  else if(state.view === 'recetas' || state.view === 'guias'){ const rc = state.view === 'recetas'; app.innerHTML = `<div class="sp-wrap"><div class="sp-br">russ.trainer</div><h1 class="sp-h1">${rc ? 'Recetas' : 'Guías'}</h1><div class="sp-s">Muy pronto</div><div class="empty">${rc ? 'Aquí vas a encontrar recetas simples para acompañar tu entrenamiento.' : 'Aquí vas a encontrar guías para sacarle más provecho a tu entrenamiento.'}</div></div>`; }
   else if(state.view === 'perfil'){ renderPerfil(app); }
   else if(state.view === 'pedidos'){ renderPedidos(app); }
   else if(state.view === 'sup'){ renderSup(app); }
