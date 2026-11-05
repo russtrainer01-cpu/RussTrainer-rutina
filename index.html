@@ -2707,7 +2707,7 @@ function supCartSave(){ try{ localStorage.setItem(supCartKey(), JSON.stringify(s
 function supCartCount(){ const c = supCart(); return Object.keys(c).reduce((a,k)=> a + (c[k] || 0), 0); }
 function supClientLoad(){
   if(state.supLoading || state.supCat !== undefined) return; state.supLoading = true;
-  dbGet(SUP_ROW).then(d=>{ state.supCat = d && Array.isArray(d.items) ? d : { items:[], whatsapp:'' }; }).catch(()=>{ state.supCat = null; }).then(()=>{ state.supLoading = false; if(state.view === 'dashboard') render(); });
+  dbGet(SUP_ROW).then(d=>{ state.supCat = d && Array.isArray(d.items) ? d : { items:[], whatsapp:'' }; if(Array.isArray(state.supCat.ocultarA) && state.supCat.ocultarA.indexOf(String(state.clienta||'').toLowerCase()) > -1){ state.supCat = { items:[], whatsapp:'' }; } }).catch(()=>{ state.supCat = null; }).then(()=>{ state.supLoading = false; if(state.view === 'dashboard') render(); });
 }
 function supHomeCard(){
   if(!supAvail().length) return '';
