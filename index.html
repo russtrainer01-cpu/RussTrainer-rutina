@@ -2601,7 +2601,10 @@ async function supSave(){
   const st = supState();
   try{ await dbSet(SUP_ROW, { items: st.items, whatsapp: st.wa || '' }); st.msg = 'Guardado ✓'; }catch(e){ st.msg = 'No se pudo guardar. Revisa tu conexión e intenta de nuevo.'; }
 }
-function supResize(file, max){
+async function supResize(file, max){
+  if(window.createImageBitmap){
+    try{ const bmp = await createImageBitmap(file); const k = Math.min(1, max / Math.max(bmp.width, bmp.height)); const c = document.createElement('canvas'); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k); c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height); return c.toDataURL('image/jpeg', 0.78); }catch(e){}
+  }
   return new Promise((res, rej)=>{
     const img = new Image(), url = URL.createObjectURL(file);
     img.onload = ()=>{ const k = Math.min(1, max / Math.max(img.width, img.height)); const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', 0.78)); };
@@ -2652,7 +2655,13 @@ function supRender(main){
   if(e){
     const read = ()=>{ ['nombre','marca','resumen','sirve','como','cuando','cuidado'].forEach(k=>{ e[k] = $('sp-' + k).value.trim(); }); e.precio = $('sp-precio').value; e.categoria = $('sp-cat').value; e.recomendado = $('sp-rec').checked; };
     $('sp-foto').onclick = ()=> $('sp-file').click();
-    $('sp-file').onchange = async ()=>{ const f = $('sp-file').files[0]; if(!f) return; read(); try{ e.foto = await supResize(f, 520); }catch(x){ $('sp-err').textContent = 'No se pudo leer esa foto'; return; } render(); };
+    $('sp-file').onchange = async ()=>{
+      const f = $('sp-file').files[0]; if(!f) return; read();
+      $('sp-err').textContent = 'Subiendo la foto…';
+      try{ e.foto = await supResize(f, 520); }catch(x){ $('sp-err').textContent = 'No se pudo leer esa foto. Prueba con otra o tómale una captura de pantalla y súbela.'; return; }
+      if(e.id && e.nombre){ e.precio = e.precio === '' ? 0 : Number(e.precio); st.items = st.items.map(x=> x.id === e.id ? e : x); await supSave(); st.msg = /^Guardado/.test(st.msg) ? 'Foto guardada ✓' : st.msg; }
+      render();
+    };
     const nf = $('sp-nofoto'); if(nf) nf.onclick = ()=>{ read(); e.foto = ''; render(); };
     $('sp-cancel').onclick = ()=>{ st.edit = null; render(); };
     $('sp-guardar').onclick = async ()=>{
