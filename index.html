@@ -1126,6 +1126,10 @@
   .pn-pl{border-radius:99px;padding:3px 11px;font-size:12.5px;font-weight:700}.pn-pl.g{background:#e0f5e9;color:#17794a}.pn-pl.o{background:#fff0d9;color:#a45b00}
   .pn-rs{display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid #eceef4;cursor:pointer}.pn-rs:first-of-type{border-top:0}.pn-rs .pn-nm b{display:block}.pn-rs .pn-nm small{color:#8a91a5;font-size:12.5px}
   .pn-bds{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.pn-bd{border-radius:99px;padding:2px 10px;font-size:12px;font-weight:600}.pn-bd.rd{background:#ffe9e6;color:#b3261e}.pn-bd.am{background:#fff0d9;color:#a45b00}
+  .pn-cmh{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.pn-cg{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.pn-cw{text-align:center;font-size:12px;color:#8a91a5;font-weight:700;padding:4px 0}
+  .pn-cd{aspect-ratio:1.15;border:1px solid #eceef4;background:#fff;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;font-family:inherit;font-size:14px;color:#1c2230;padding:0}.pn-cd.e{border:0;background:none;cursor:default}.pn-cd.t span{background:#3d5afe;color:#fff;border-radius:99px;padding:1px 8px}.pn-cd.s{border-color:#1c2230;box-shadow:inset 0 0 0 1px #1c2230}
+  .pn-cd i{display:flex;gap:3px;height:6px}.pn-cd u,.pn-lg u{display:inline-block;width:6px;height:6px;border-radius:50%}.pn-lg{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;font-size:12px;color:#6b7385}.pn-lg span{display:flex;align-items:center;gap:5px}
+  .pn-ce{border-left:4px solid #ccc;background:#f7f8fc;border-radius:8px;padding:10px 12px;margin-top:8px}.pn-ce b{display:block;font-size:14px}.pn-ce small{color:#8a91a5;font-size:12px}
   .pn-crumb{color:#6b7385;font-size:13.5px;margin-bottom:12px}.pn-lnk{background:none;border:0;padding:0;font:inherit;color:#3d5afe;cursor:pointer}
   .pn-ftop{display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap}.pn-bigav{width:60px;height:60px;border-radius:50%;background:#f3d9df;color:#b04a62;display:grid;place-items:center;font-weight:700;font-size:24px}.pn-fbtns{margin-left:auto;display:flex;gap:8px}
   .pn-note{background:#fffbe8;border:1px solid #efe2a0;border-radius:8px;padding:10px 12px;font-size:14px;margin-bottom:8px;color:#5f5410}.pn-note small{color:#8a7a20}
@@ -2017,6 +2021,11 @@ function getCalendarEventsForMonth(year, month){
       addEvent(todayStr, { type:'comentario', icon:'💬', label: c.displayName + ' (' + byClient[key] + ')', color:'#4a90b8', key });
     });
   }
+  agGet().tareas.forEach(t=>{
+    if(!t.idea && t.fecha && t.fecha.slice(0,7) === monthStr){
+      addEvent(t.fecha, { type:'tarea', icon:'✅', label: (t.hora ? t.hora + ' · ' : '') + t.t, color:'#3d5afe', done:t.done });
+    }
+  });
   (state.trainerEvents || []).forEach(ev=>{
     if(ev.date.slice(0,7) === monthStr){
       addEvent(ev.date, { type:'custom', icon:'📌', label: ev.text, color:'#6fa86f' });
@@ -2308,6 +2317,24 @@ function pnRows(){
   });
   return all;
 }
+function pnUrgent(r){
+  const f = r.c.data.ficha, wi = weekEndInfo(f.semanaInicio);
+  const needsNew = !f.semanaInicio || (wi && wi.daysLeft <= 0);
+  const soon = !!(wi && wi.daysLeft > 0 && wi.daysLeft <= 3);
+  const gap = daysSince(lastActivityDate(r.c.data));
+  const inactive = gap === null || gap >= 3;
+  const pc = buildActivityFeed({[r.key]: r.c}).filter(i=>i.comment && !i.respondido).length;
+  const venc = daysUntil(r.c.data.vencimiento);
+  const vence = venc !== null && venc <= 7;
+  const items = [];
+  if(needsNew) items.push(['rd', 'Armar semana nueva']);
+  else if(soon) items.push(['am', 'Su semana termina en ' + wi.daysLeft + (wi.daysLeft === 1 ? ' día' : ' días')]);
+  if(inactive) items.push(['rd', gap === null ? 'Sin actividad todavía' : gap + ' días sin entrenar']);
+  if(pc) items.push(['am', pc + (pc === 1 ? ' comentario sin responder' : ' comentarios sin responder')]);
+  if(vence) items.push(['am', venc < 0 ? 'Plan vencido' : venc === 0 ? 'Su plan vence hoy' : 'Su plan vence en ' + venc + ' días']);
+  const urg = (needsNew ? 20 : 0) + (soon ? 8 : 0) + (inactive ? 10 : 0) + pc * 2 + (vence ? 6 : 0);
+  return { needsNew, soon, wi, gap, inactive, pc, venc, vence, items, urg };
+}
 function pnWaBtn(r, texto){
   const link = pnWa(r.c.data.ficha && r.c.data.ficha.telefono, r.c.displayName, texto);
   return link ? `<a class="pn-btn" href="${link}" target="_blank" rel="noopener">WhatsApp</a>` : `<button class="pn-btn" data-det="${r.key}" title="Falta el teléfono: agrégalo en su ficha">+ Teléfono</button>`;
@@ -2533,7 +2560,7 @@ function renderPanel(app){
   const pending = feed.filter(i=>i.comment && !i.respondido);
   const nav = [
     ['agenda','🗓️','Mi agenda'],['bandeja','💡','Bandeja'],['rutinas','📝','Rutinas'],['hoy','🏠','Alumnas hoy'],['alumnas','👥','Alumnas'],['comentarios','💬','Comentarios'],['claves','🔑','Claves'],'sep',
-    ['resumen','📋','Resumen semanal'],['actividad','🕐','Actividad'],['v:admin-calendar','📅','Calendario'],['v:admin-plantilla','🖼️','Plantilla'],['v:admin-cuaderno','📓','Cuaderno']
+    ['resumen','📋','Resumen semanal'],['actividad','🕐','Actividad'],['v:admin-plantilla','🖼️','Plantilla']
   ];
   const navHtml = nav.map(n=> n === 'sep' ? '<div class="pn-sep"></div>' :
     `<button class="pn-nv${(n[0] === sec || (n[0] === 'alumnas' && sec === 'ficha')) ? ' on' : ''}" data-nav="${n[0]}"><span>${n[1]}</span>${n[2]}${n[0]==='comentarios' && pending.length ? `<span class="bd">${pending.length}</span>` : ''}${n[0]==='bandeja' && agGet().tareas.filter(t=>t.idea || !t.fecha).length ? `<span class="bd">${agGet().tareas.filter(t=>t.idea || !t.fecha).length}</span>` : ''}</button>`).join('');
@@ -2602,24 +2629,7 @@ function renderPanel(app){
   }
   else if(sec === 'ficha'){ pnFicha(main); }
   else if(sec === 'resumen'){
-    const list = pnRows().filter(r=>!r.hidden).map(r=>{
-      const f = r.c.data.ficha, wi = weekEndInfo(f.semanaInicio);
-      const needsNew = !f.semanaInicio || (wi && wi.daysLeft <= 0);
-      const soon = wi && wi.daysLeft > 0 && wi.daysLeft <= 3;
-      const gap = daysSince(lastActivityDate(r.c.data));
-      const inactive = gap === null || gap >= 3;
-      const pc = buildActivityFeed({[r.key]: r.c}).filter(i=>i.comment && !i.respondido).length;
-      const venc = daysUntil(r.c.data.vencimiento);
-      const vence = venc !== null && venc <= 7;
-      const items = [];
-      if(needsNew) items.push(['rd', 'Armar semana nueva']);
-      else if(soon) items.push(['am', 'Su semana termina en ' + wi.daysLeft + (wi.daysLeft === 1 ? ' día' : ' días')]);
-      if(inactive) items.push(['rd', gap === null ? 'Sin actividad todavía' : gap + ' días sin entrenar']);
-      if(pc) items.push(['am', pc + (pc === 1 ? ' comentario sin responder' : ' comentarios sin responder')]);
-      if(vence) items.push(['am', venc < 0 ? 'Plan vencido' : venc === 0 ? 'Su plan vence hoy' : 'Su plan vence en ' + venc + ' días']);
-      const urg = (needsNew ? 20 : 0) + (soon ? 8 : 0) + (inactive ? 10 : 0) + pc * 2 + (vence ? 6 : 0);
-      return { r, items, urg };
-    }).sort((a,b)=> b.urg - a.urg);
+    const list = pnRows().filter(r=>!r.hidden).map(r=>{ const u = pnUrgent(r); return { r, items:u.items, urg:u.urg }; }).sort((a,b)=> b.urg - a.urg);
     const need = list.filter(x=>x.items.length), ok = list.filter(x=>!x.items.length);
     const card = x=>`<div class="pn-rs" data-det="${x.r.key}"><div class="pn-av">${escapeHtml(x.r.c.displayName.charAt(0))}</div>
       <div class="pn-nm" style="flex:1"><b>${escapeHtml(x.r.c.displayName)}</b><small>${x.r.week}/${x.r.target} esta semana</small>
@@ -2819,8 +2829,15 @@ function agDayItems(pending){
     const st = pnStatus(r.c);
     if(st.gap !== null && st.gap >= 4) items.push({ id:'a:' + r.k, t:'Escribirle a ' + r.c.displayName, cat:'alumnas', hora:'', done:hechas.indexOf('a:' + r.k) > -1, sub:'Automática · ' + st.gap + ' días sin entrenar', det:r.k, gap:st.gap });
   });
-  const auto = items.filter(i=>i.det).sort((a,b)=>b.gap - a.gap).slice(0, 3);
-  const rest = items.filter(i=>!i.det);
+  Object.keys(state.adminData || {}).filter(k=> hid.indexOf(k) < 0).forEach(k=>{
+    const r = pnRows().find(x=>x.key === k); if(!r) return;
+    const u = pnUrgent(r), nm = r.c.displayName;
+    if(u.needsNew) items.push({ id:'a:sem:' + k, t:'Armar la semana nueva de ' + nm, cat:'alumnas', hora:'', done:hechas.indexOf('a:sem:' + k) > -1, sub:'Automática · ' + (u.wi ? 'su semana ya venció' : 'sin semana cargada'), ed:k });
+    else if(u.wi && u.wi.daysLeft <= 1) items.push({ id:'a:sem:' + k, t:'Armar la semana nueva de ' + nm, cat:'alumnas', hora:'', done:hechas.indexOf('a:sem:' + k) > -1, sub:'Automática · su semana termina ' + (u.wi.daysLeft === 1 ? 'mañana' : 'hoy'), ed:k });
+    if(u.vence && u.venc <= 3) items.push({ id:'a:ven:' + k, t:'Renovar el plan de ' + nm, cat:'alumnas', hora:'', done:hechas.indexOf('a:ven:' + k) > -1, sub:'Automática · ' + (u.venc < 0 ? 'plan vencido' : u.venc === 0 ? 'vence hoy' : 'vence en ' + u.venc + ' días'), det:k, gap:-1 });
+  });
+  const auto = items.filter(i=>i.det && i.gap >= 0).sort((a,b)=>b.gap - a.gap).slice(0, 3);
+  const rest = items.filter(i=>!i.det || i.gap < 0);
   const all = rest.concat(auto);
   all.sort((a,b)=> (a.hora || '99:99').localeCompare(b.hora || '99:99'));
   return all;
@@ -2830,7 +2847,7 @@ function agTaskRow(i, star){
     <div class="ag-hr">${i.hora || ''}</div>
     <div class="ag-tx"><span class="ag-nm">${escapeHtml(i.t)}</span>${i.sub ? '<small' + (i.late ? ' style="color:#d64545"' : '') + '>' + escapeHtml(i.sub) + '</small>' : ''}</div>
     ${agTag(i.cat)}
-    ${(i.go || i.det) ? `<button class="pn-btn" data-go="${i.go || ''}" data-det="${i.det || ''}">Ver</button>` : ''}
+    ${i.ed ? `<button class="pn-btn" data-ed="${i.ed}">Editar su rutina</button>` : ((i.go || i.det) ? `<button class="pn-btn" data-go="${i.go || ''}" data-det="${i.det || ''}">Ver</button>` : '')}
     ${star ? `<button class="ag-ic" data-star="${escapeHtml(i.t)}" title="Hacer de esta mi más importante">☆</button>` : ''}
     ${i.own ? `<button class="ag-ic" data-del="${i.id}" title="Borrar">✕</button>` : ''}</div>`;
 }
@@ -2859,6 +2876,7 @@ function agBindRows(main){
   });
   main.querySelectorAll('[data-del]').forEach(b=> b.onclick = ()=> agDel(b.getAttribute('data-del')));
   main.querySelectorAll('[data-star]').forEach(b=> b.onclick = ()=>{ const tx = b.getAttribute('data-star'); agMutate(ag=>{ ag.norte = { fecha:agToday(), texto:tx }; }); });
+  main.querySelectorAll('[data-ed]').forEach(b=> b.onclick = ()=>{ state.edKey = b.getAttribute('data-ed'); state.ed = null; state.panelSec = 'rutinas'; render(); });
   main.querySelectorAll('[data-go]').forEach(b=> b.onclick = ()=>{
     const go = b.getAttribute('data-go'), det = b.getAttribute('data-det');
     if(go){ state.panelSec = go; render(); }
@@ -4505,121 +4523,6 @@ function render(){
       });
     }
   }
-  else if(state.view === 'admin-calendar'){
-    const year = state.calendarYear;
-    const month = state.calendarMonth;
-    const monthNames = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-    const weekdayLabels = ['D','L','M','M','J','V','S'];
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month+1, 0).getDate();
-    const eventsMap = state.adminData ? getCalendarEventsForMonth(year, month) : {};
-    const todayStr = todayISO();
-    const selected = state.calendarSelectedDate;
-
-    app.innerHTML = `
-      <div class="topbar">
-        <div>
-          <div class="brand">russ.trainer</div>
-          <div class="name">Tu calendario</div>
-        </div>
-        <button class="link-btn" id="cal-exit-btn">Salir</button>
-      </div>
-      <div class="cal-header">
-        <button class="cal-nav-btn" id="cal-prev-btn">‹</button>
-        <span class="cal-month-title">${monthNames[month]} ${year}</span>
-        <button class="cal-nav-btn" id="cal-next-btn">›</button>
-      </div>
-      <div class="cal-grid" id="cal-grid"></div>
-      <button class="btn-ghost" id="cal-list-btn" style="width:100%; margin-top:18px;">👥 Ver todas las alumnas</button>
-      <button class="btn-ghost" id="cal-plantilla-btn" style="width:100%; margin-top:8px;">🖼️ Plantilla de ejercicio</button>
-      <button class="btn-ghost" id="cal-cuaderno-btn" style="width:100%; margin-top:8px;">📓 Cuaderno de aprendizaje</button>
-      <button class="btn-ghost" id="cal-add-event-btn" style="width:100%; margin-top:8px;">+ Agregar evento propio</button>
-      <div id="cal-add-form" class="hidden card" style="margin-top:10px;">
-        <label>Fecha</label>
-        <input type="date" id="cal-event-date" value="${todayStr}" />
-        <label>Descripción</label>
-        <input type="text" id="cal-event-text" placeholder="Ej: Entrenamiento presencial con Ana" />
-        <button class="btn-primary" id="cal-event-save" style="margin-top:8px;">Guardar evento</button>
-      </div>
-      <h2 style="margin-top:22px;">${formatDate(selected)}</h2>
-      <div id="cal-agenda"></div>
-    `;
-
-    document.getElementById('cal-exit-btn').onclick = ()=>{ rtClearSession(); state.view='login'; state.adminData=null; render(); };
-    document.getElementById('cal-plantilla-btn').onclick = ()=>{ state.view='admin-plantilla'; render(); };
-    document.getElementById('cal-cuaderno-btn').onclick = ()=>{ state.view='admin-cuaderno'; render(); };
-    document.getElementById('cal-prev-btn').onclick = ()=>{
-      state.calendarMonth--;
-      if(state.calendarMonth < 0){ state.calendarMonth = 11; state.calendarYear--; }
-      render();
-    };
-    document.getElementById('cal-next-btn').onclick = ()=>{
-      state.calendarMonth++;
-      if(state.calendarMonth > 11){ state.calendarMonth = 0; state.calendarYear++; }
-      render();
-    };
-    document.getElementById('cal-list-btn').onclick = ()=>{ state.view='admin-list'; render(); };
-    document.getElementById('cal-add-event-btn').onclick = ()=>{
-      document.getElementById('cal-add-form').classList.toggle('hidden');
-    };
-    document.getElementById('cal-event-save').onclick = async ()=>{
-      const date = document.getElementById('cal-event-date').value;
-      const text = document.getElementById('cal-event-text').value.trim();
-      if(!date || !text) return;
-      state.trainerEvents = state.trainerEvents || [];
-      state.trainerEvents.push({ date, text });
-      await saveTrainerEvents(state.trainerEvents);
-      render();
-    };
-
-    const grid = document.getElementById('cal-grid');
-    weekdayLabels.forEach(w=>{
-      const el = document.createElement('div');
-      el.className = 'cal-weekday';
-      el.textContent = w;
-      grid.appendChild(el);
-    });
-    for(let i=0;i<firstDay;i++){
-      const el = document.createElement('div');
-      el.className = 'cal-day empty';
-      grid.appendChild(el);
-    }
-    for(let d=1; d<=daysInMonth; d++){
-      const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-      const dayEvents = eventsMap[dateStr] || [];
-      const el = document.createElement('div');
-      el.className = 'cal-day' + (dateStr === todayStr ? ' today' : '') + (dateStr === selected ? ' selected' : '');
-      el.innerHTML = `
-        <div class="cal-day-num">${d}</div>
-        <div class="cal-dots">${dayEvents.slice(0,4).map(e=>`<span class="cal-dot" style="background:${e.color};"></span>`).join('')}</div>
-      `;
-      el.onclick = ()=>{ state.calendarSelectedDate = dateStr; render(); };
-      grid.appendChild(el);
-    }
-
-    const agendaWrap = document.getElementById('cal-agenda');
-    const selectedEvents = eventsMap[selected] || [];
-    if(!state.adminData){
-      agendaWrap.innerHTML = '<div class="empty">Cargando...</div>';
-    } else if(selectedEvents.length === 0){
-      agendaWrap.innerHTML = '<div class="empty">Nada para este día.</div>';
-    } else {
-      selectedEvents.forEach(ev=>{
-        const item = document.createElement(ev.key ? 'button' : 'div');
-        item.className = 'cal-agenda-item' + (ev.key ? '' : ' static');
-        item.style.borderLeftColor = ev.color;
-        const typeLabel = ev.type === 'semana' ? 'Armar semana nueva' : ev.type === 'comentario' ? 'Comentarios pendientes' : ev.type === 'cumple' ? 'Cumpleaños' : ev.type === 'vencimiento' ? 'Vencimiento de plan' : '';
-        item.innerHTML = `<span style="font-size:18px;">${ev.icon}</span><div><div style="font-weight:700;">${escapeHtml(ev.label)}</div>${typeLabel ? `<div class="sub" style="margin:0;">${typeLabel}</div>` : ''}</div>`;
-        if(ev.key){
-          item.onclick = ()=>{
-            if(ev.type === 'comentario'){ state.view = 'admin-comments'; render(); return; }
-            state.adminSelected = ev.key; state.view = 'admin-detail'; render();
-          };
-        }
-        agendaWrap.appendChild(item);
-      });
-    }
-  }
   else if(state.view === 'admin-plantilla'){
     app.innerHTML = `
       <div class="topbar">
@@ -5340,7 +5243,7 @@ async function onEnter(){
     state.view = 'admin-list';
     render();
     loadAdminData();
-    loadTrainerEvents().then(events=>{ state.trainerEvents = events; if(state.view==='admin-calendar') render(); });
+    loadTrainerEvents().then(events=>{ state.trainerEvents = events;  });
     return;
   }
   localStorage.setItem('rt_session', name);
@@ -5483,7 +5386,7 @@ async function restoreSession(){
     state.view = 'admin-list';
     render();
     loadAdminData();
-    loadTrainerEvents().then(events=>{ state.trainerEvents = events; if(state.view==='admin-calendar') render(); });
+    loadTrainerEvents().then(events=>{ state.trainerEvents = events;  });
     return;
   }
   state.clienta = saved;
