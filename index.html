@@ -1172,6 +1172,17 @@
   .sp-gal{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:0;margin-top:8px;border-radius:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none}.sp-gal::-webkit-scrollbar{display:none}
   .sp-slide{flex:0 0 100%;scroll-snap-align:center;height:300px;background:#efe3dc;display:flex;align-items:center;justify-content:center}.sp-slide img{width:100%;height:100%;object-fit:cover}
   .sp-dots{display:flex;justify-content:center;gap:7px;margin-top:10px}.sp-dots i{width:6px;height:6px;border-radius:50%;background:#d9cbc2}.sp-dots i.on{background:#2b2521}
+  body.has-tabbar #app{padding-bottom:110px}
+  #tabbar{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:480px;background:rgba(255,255,255,.97);border-top:1px solid #eadfd7;display:flex;justify-content:space-around;align-items:flex-end;padding:8px 4px calc(10px + env(safe-area-inset-bottom));z-index:60;backdrop-filter:blur(8px)}
+  .tb-i{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:inherit;font-size:10.5px;color:#a09389;width:64px;cursor:pointer;padding:2px 0}.tb-i svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.tb-i.on{color:#2b2521;font-weight:700}
+  .tb-c{margin-top:-22px}.tb-c i{width:50px;height:50px;border-radius:50%;background:#2b2521;display:grid;place-items:center;box-shadow:0 6px 14px rgba(43,37,33,.3);border:4px solid #fcfcf7}.tb-c i svg{stroke:#fff;width:22px;height:22px}.tb-c span{color:#2b2521;font-weight:700}
+  #tb-dim{position:fixed;inset:0;background:rgba(43,37,33,.3);z-index:58}
+  #tb-sheet{position:fixed;left:50%;transform:translateX(-50%);bottom:68px;width:100%;max-width:480px;background:#fff;border-radius:22px 22px 0 0;padding:16px 16px 12px;z-index:59;box-shadow:0 -10px 30px rgba(43,37,33,.18)}
+  #tb-sheet h4{margin:0 0 10px;font-size:12px;letter-spacing:.12em;color:#b9707c;text-transform:uppercase}.tb-g{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .tb-g button,.tb-g .soon{background:#f8f3ee;border:0;border-radius:14px;padding:14px 12px;text-align:left;font-family:inherit;color:#2b2521;cursor:pointer}.tb-g .soon{opacity:.55;cursor:default}.tb-g b{display:block;font-size:14px}.tb-g small{display:block;color:#8a8078;font-size:11.5px;margin-top:2px}
+  .tb-prof{display:flex;align-items:center;gap:14px;margin-top:14px}.tb-av{width:54px;height:54px;border-radius:50%;background:var(--rose);color:#fff;display:grid;place-items:center;font-weight:800;font-size:18px}.tb-prof b{font-size:20px}
+  .sp-ord{border:1px solid #e6dcd3;border-radius:6px;padding:14px;margin-bottom:12px;background:#fff}.sp-oh{display:flex;justify-content:space-between;font-size:12.5px;color:#8a8078;margin-bottom:8px}.sp-oh em{font-style:normal;color:#8a5560;font-weight:700}.sp-ol{font-size:14.5px;padding:2px 0}.sp-ot{margin-top:8px;font-family:Georgia,serif;font-size:18px}
+  body.has-tabbar .sp-bar{bottom:84px}
   .pn-crumb{color:#6b7385;font-size:13.5px;margin-bottom:12px}.pn-lnk{background:none;border:0;padding:0;font:inherit;color:#3d5afe;cursor:pointer}
   .pn-ftop{display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap}.pn-bigav{width:60px;height:60px;border-radius:50%;background:#f3d9df;color:#b04a62;display:grid;place-items:center;font-weight:700;font-size:24px}.pn-fbtns{margin-left:auto;display:flex;gap:8px}
   .pn-note{background:#fffbe8;border:1px solid #efe2a0;border-radius:8px;padding:10px 12px;font-size:14px;margin-bottom:8px;color:#5f5410}.pn-note small{color:#8a7a20}
@@ -2771,6 +2782,73 @@ function renderSupCart(app){
     state.cart = {}; supCartSave();
     if(wa){ state.view = 'sup'; render(); }
   };
+}
+
+// ---- Barra inferior de las alumnas ----
+const TB_VIEWS = ['dashboard','sup','progreso','perfil','pedidos'];
+const TB_ICONS = {
+  home:'<path d="M3 11l9-8 9 8M5 10v10h14V10"/>', chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>', bag:'<path d="M5 8h14l-1 12H6L5 8zM9 8a3 3 0 016 0"/>',
+  more:'<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>', user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 15-5 16 0"/>'
+};
+function tbIcon(n){ return '<svg viewBox="0 0 24 24" aria-hidden="true">' + TB_ICONS[n] + '</svg>'; }
+function renderTabBar(){
+  let bar = document.getElementById('tabbar'), sheet = document.getElementById('tb-sheet'), dim = document.getElementById('tb-dim');
+  const show = !!state.clienta && TB_VIEWS.indexOf(state.view) > -1;
+  document.body.classList.toggle('has-tabbar', show);
+  if(!show){ if(bar) bar.remove(); if(sheet) sheet.remove(); if(dim) dim.remove(); state.moreOpen = false; return; }
+  const hasSup = supAvail().length > 0;
+  const cur = state.view === 'sup' ? 'sup' : state.view === 'dashboard' ? 'home' : state.view === 'pedidos' ? 'more' : state.view;
+  const item = (id, ic, lb, on)=> `<button class="tb-i${on ? ' on' : ''}" data-tb="${id}">${tbIcon(ic)}<span>${lb}</span></button>`;
+  const html = item('home','home','Inicio', cur === 'home') + item('progreso','chart','Progreso', cur === 'progreso')
+    + (hasSup ? `<button class="tb-i tb-c${cur === 'sup' ? ' on' : ''}" data-tb="sup"><i>${tbIcon('bag')}</i><span>Suplementos</span></button>` : '')
+    + item('more','more','Más', state.moreOpen || cur === 'more') + item('perfil','user','Perfil', cur === 'perfil');
+  if(!bar){ bar = document.createElement('nav'); bar.id = 'tabbar'; document.body.appendChild(bar); }
+  bar.innerHTML = html;
+  bar.querySelectorAll('[data-tb]').forEach(b=> b.onclick = ()=>{
+    const t = b.getAttribute('data-tb');
+    if(t === 'more'){ state.moreOpen = !state.moreOpen; render(); return; }
+    state.moreOpen = false; state.view = t === 'home' ? 'dashboard' : t; window.scrollTo(0,0); render();
+  });
+  if(sheet) sheet.remove(); if(dim) dim.remove();
+  if(state.moreOpen){
+    dim = document.createElement('div'); dim.id = 'tb-dim'; dim.onclick = ()=>{ state.moreOpen = false; render(); }; document.body.appendChild(dim);
+    sheet = document.createElement('div'); sheet.id = 'tb-sheet';
+    const np = (state.data && state.data.pedidos ? state.data.pedidos.length : 0);
+    sheet.innerHTML = `<h4>Más de Russ</h4><div class="tb-g">
+      <button data-mo="pedidos"><b>Mis pedidos</b><small>${np ? np + (np === 1 ? ' pedido' : ' pedidos') : 'Estado de tus compras'}</small></button>
+      <button data-mo="guide"><b>Cómo usar la app</b><small>Un recorrido rápido</small></button>
+      <div class="soon"><b>Recetas</b><small>Pronto</small></div><div class="soon"><b>Guías</b><small>Pronto</small></div></div>`;
+    document.body.appendChild(sheet);
+    sheet.querySelectorAll('[data-mo]').forEach(b=> b.onclick = ()=>{ const v = b.getAttribute('data-mo'); state.moreOpen = false; if(v === 'guide'){ state.guideStep = 0; } state.view = v; window.scrollTo(0,0); render(); });
+  }
+}
+function renderProgreso(app){
+  const exercises = Object.keys(state.data.exercises);
+  const streak = computeStreak(state.data), target = weeklyTarget(state.clienta);
+  const myRoutine = ROUTINES[routineKey(state.clienta)];
+  const weekCount = (myRoutine && usesNewHome(state.clienta)) ? computeWeekCountNoExtra(state.data, myRoutine) : computeWeekCount(state.data);
+  app.innerHTML = `<div class="sp-wrap"><div class="sp-br">russ.trainer</div><h1 class="sp-h1">Tu progreso</h1><div class="sp-s">Lo que has logrado, ejercicio por ejercicio</div>
+    <div class="stat-grid"><div class="stat-card"><div class="stat-num">${weekCount}/${target}</div><div class="stat-label">DÍAS ESTA SEMANA</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:#3f6b3f;">${streak > 0 ? '🔥 ' + streak : streak}</div><div class="stat-label">${streak === 1 ? 'DÍA SEGUIDO' : 'DÍAS SEGUIDOS'}</div></div></div>
+    <div class="sp-sec" style="margin-top:18px"><h4>Tus ejercicios</h4></div>
+    ${exercises.length === 0 ? '<div class="empty">Todavía no registraste ningún entrenamiento. Entra a tu rutina para empezar.</div>' : ''}
+    <div class="chip-list" id="chip-list"></div></div>`;
+  const cl = document.getElementById('chip-list');
+  exercises.forEach(ex=>{ const c = document.createElement('button'); c.className = 'chip'; c.textContent = ex; c.onclick = ()=>{ state.exBack = 'progreso'; state.view = 'exercise'; state.exercise = ex; render(); }; cl.appendChild(c); });
+}
+function renderPerfil(app){
+  const monthNum = computeMonthNumber(state.data.ficha.fechaInicio), initials = state.clienta.trim().slice(0,2).toUpperCase();
+  app.innerHTML = `<div class="sp-wrap"><div class="sp-br">russ.trainer</div><h1 class="sp-h1">Perfil</h1>
+    <div class="tb-prof"><div class="tb-av">${escapeHtml(initials)}</div><div><b>${escapeHtml(state.clienta)}</b>${monthNum ? `<span class="month-badge" style="background:${monthColor(monthNum)};margin-left:8px">Mes ${monthNum}</span>` : ''}</div></div>
+    <button class="sp-btn ghost" id="pf-guide" style="margin-top:18px">Cómo usar la app</button>
+    <button class="sp-btn ghost" id="pf-out" style="margin-top:10px">Cambiar de usuaria</button></div>`;
+  document.getElementById('pf-guide').onclick = ()=>{ state.guideStep = 0; state.view = 'guide'; window.scrollTo(0,0); render(); };
+  document.getElementById('pf-out').onclick = ()=>{ rtClearSession(); state.view = 'login'; state.clienta = null; state.data = null; render(); };
+}
+function renderPedidos(app){
+  const list = (state.data.pedidos || []).slice().reverse();
+  app.innerHTML = `<div class="sp-wrap"><div class="sp-br">russ.trainer</div><h1 class="sp-h1">Mis pedidos</h1><div class="sp-s">Lo que has pedido y cómo va</div>
+    ${list.length ? list.map(p=>`<div class="sp-ord"><div class="sp-oh"><span>${formatDate(p.fecha)}</span><em>${escapeHtml(p.estado || 'Por coordinar')}</em></div>${p.items.map(i=>`<div class="sp-ol">${i.cant} x ${escapeHtml(i.nombre)}</div>`).join('')}<div class="sp-ot">Total ${supMoney(p.total)}</div></div>`).join('') : '<div class="empty">Todavía no has hecho pedidos.</div>'}</div>`;
 }
 function renderPanel(app){
   const sec = state.panelSec || 'agenda';
@@ -4444,7 +4522,8 @@ function cqRender(){
   });
 }
 
-function render(){
+function render(){ renderMain(); try{ renderTabBar(); }catch(e){} }
+function renderMain(){
   const app = document.getElementById('app');
   document.body.classList.toggle('theme-masculine', !!(state.clienta && isMasculino(state.clienta)));
   const _gMasc = !!(state.clienta && isMasculino(state.clienta));
@@ -4574,7 +4653,6 @@ function render(){
           <div class="day-grid" id="routine-day-chips"></div>
         ` : ''}
       ` : ''}
-      ${supHomeCard()}
       <button class="link-btn" id="progress-toggle" style="margin-top:26px; font-size:17px; font-weight:700; background:none; border:none; cursor:pointer; padding:0; font-family:inherit; color:var(--text); display:block;">${state.uiExpanded['client-progress'] ? '▾' : '▸'} Tu progreso por ejercicio</button>
       ${state.uiExpanded['client-progress'] ? `
         ${exercises.length === 0 ? '<div class="empty">Todavía no registraste ningún entrenamiento. Entrá a tu rutina para empezar.</div>' : ''}
@@ -4594,7 +4672,6 @@ function render(){
         render();
       };
     }
-    const so = document.getElementById('sup-open'); if(so) so.onclick = ()=>{ state.view = 'sup'; window.scrollTo(0,0); render(); };
     supClientLoad();
     document.getElementById('progress-toggle').onclick = ()=>{
       if(state.uiExpanded['client-progress']) delete state.uiExpanded['client-progress'];
@@ -4666,6 +4743,9 @@ function render(){
     document.getElementById('switch-btn').onclick = ()=>{ rtClearSession(); state.view='login'; state.clienta=null; state.data=null; render(); };
     document.getElementById('guide-btn').onclick = ()=>{ state.guideStep = 0; state.view = 'guide'; window.scrollTo(0,0); render(); };
   }
+  else if(state.view === 'progreso'){ renderProgreso(app); }
+  else if(state.view === 'perfil'){ renderPerfil(app); }
+  else if(state.view === 'pedidos'){ renderPedidos(app); }
   else if(state.view === 'sup'){ renderSup(app); }
   else if(state.view === 'sup-det'){ renderSupDet(app); }
   else if(state.view === 'sup-cart'){ renderSupCart(app); }
@@ -4819,7 +4899,7 @@ function render(){
           `).join('')}
       </div>
     `;
-    document.getElementById('back-btn').onclick = ()=>{ state.view='dashboard'; state.exercise=null; render(); };
+    document.getElementById('back-btn').onclick = ()=>{ state.view = state.exBack || 'dashboard'; state.exBack = null; state.exercise=null; render(); };
     document.getElementById('save-entry-btn').onclick = onSaveEntry;
     if(entries.length > 1){
       drawChart(entries);
