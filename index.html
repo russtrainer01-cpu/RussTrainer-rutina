@@ -1119,6 +1119,12 @@
   .pn-btn:hover{background:#f3f4f7}
   .pn-btn.pri{background:#3d5afe;color:#fff;border-color:#3d5afe}
   .pn-btn.pri:disabled{opacity:.5;cursor:default}
+  .pn-alert{background:#fff3f1;border:1px solid #f3c7c0;border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;gap:14px;align-items:center;max-width:860px}.pn-alert b{color:#b3261e}.pn-alert small{color:#6b7385}.pn-alert .pn-btn{margin-left:auto}
+  .pn-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.pn-chip{font-family:inherit;border:1px solid #e3e6ee;background:#fff;border-radius:99px;padding:7px 15px;font-size:13.5px;cursor:pointer;color:#1c2230}.pn-chip.on{background:#1c2230;color:#fff;border-color:#1c2230}
+  .pn-tog{display:flex;gap:18px;flex-wrap:wrap;margin:6px 0 18px;font-size:13.5px;color:#4a5370}.pn-tog label{display:flex;flex-direction:row;gap:8px;align-items:center;cursor:pointer;width:auto;margin:0;white-space:nowrap}.pn-tog input{width:auto;margin:0;flex:none}
+  .pn-day{font-size:12px;letter-spacing:.08em;color:#8a91a5;font-weight:700;margin:20px 0 6px}.pn-day:first-child{margin-top:0}
+  .pn-ev{display:flex;gap:14px;padding:13px 0;border-top:1px solid #eceef4;font-size:14.5px;line-height:1.45}.pn-ev.flag{background:#fffaf9;margin:0 -20px;padding:13px 20px;border-left:4px solid #e5584a}
+  .pn-say{margin-top:8px;background:#f4f5f9;border-left:3px solid #d9798a;border-radius:6px;padding:9px 12px;font-size:13.5px;color:#3a4156}
   .pn-cm{padding:13px 0;border-top:1px solid #e3e6ee}
   .pn-cm .t{font-size:14px;color:#6b7385;margin:4px 0 8px}
   .pn-empty{color:#6b7385;padding:18px 0;font-size:14px}
@@ -2200,6 +2206,7 @@ function buildActivityFeed(adminData){
         if(rec && rec.done){
           const item = dayItems[Number(idx)];
           items.push({
+            key: key,
             clienta: c.displayName,
             type: 'checklist',
             exercise: item ? item.ejercicio : 'Ejercicio',
@@ -2301,7 +2308,7 @@ function renderPanel(app){
   const pending = feed.filter(i=>i.comment && !i.respondido);
   const nav = [
     ['agenda','🗓️','Mi agenda'],['bandeja','💡','Bandeja'],['rutinas','📝','Rutinas'],['hoy','🏠','Alumnas hoy'],['alumnas','👥','Alumnas'],['comentarios','💬','Comentarios'],['claves','🔑','Claves'],'sep',
-    ['v:admin-summary','📋','Resumen semanal'],['v:admin-feed','🕐','Actividad'],['v:admin-calendar','📅','Calendario'],['v:admin-plantilla','🖼️','Plantilla'],['v:admin-cuaderno','📓','Cuaderno']
+    ['v:admin-summary','📋','Resumen semanal'],['actividad','🕐','Actividad'],['v:admin-calendar','📅','Calendario'],['v:admin-plantilla','🖼️','Plantilla'],['v:admin-cuaderno','📓','Cuaderno']
   ];
   const navHtml = nav.map(n=> n === 'sep' ? '<div class="pn-sep"></div>' :
     `<button class="pn-nv${n[0] === sec ? ' on' : ''}" data-nav="${n[0]}"><span>${n[1]}</span>${n[2]}${n[0]==='comentarios' && pending.length ? `<span class="bd">${pending.length}</span>` : ''}${n[0]==='bandeja' && agGet().tareas.filter(t=>t.idea || !t.fecha).length ? `<span class="bd">${agGet().tareas.filter(t=>t.idea || !t.fecha).length}</span>` : ''}</button>`).join('');
@@ -2367,6 +2374,38 @@ function renderPanel(app){
     main.querySelectorAll('.pn-row.click').forEach(r=> r.onclick = ()=>{ state.adminSelected = r.getAttribute('data-det'); state.view='admin-detail'; render(); });
     detailBtns(); respBtns();
     const ac = document.getElementById('pn-allc'); if(ac) ac.onclick = ()=>{ state.panelSec='comentarios'; render(); };
+  }
+  else if(sec === 'actividad'){
+    const fKey = state.actKey || '', onlyC = !!state.actOnlyC, onlyH = !!state.actOnlyH;
+    const hard = i=> i.feeling && /Dif[ií]cil|l[ií]mite/i.test(i.feeling);
+    const limit = i=> i.feeling && /l[ií]mite/i.test(i.feeling);
+    const recentLim = i=> limit(i) && daysSince(i.date) !== null && daysSince(i.date) <= 3;
+    const attention = feed.filter(i=> i.type === 'exercise' && !i.respondido && ((i.comment) || recentLim(i)));
+    let list = feed.filter(i=> (!fKey || i.key === fKey) && (!onlyC || i.comment) && (!onlyH || hard(i)));
+    const people = pnRows().filter(r=>!r.hidden);
+    const days = {};
+    list.slice(0, 120).forEach(i=>{ (days[i.date] = days[i.date] || []).push(i); });
+    const dayTxt = d=>{ const dt = new Date(d + 'T12:00:00'); if(isNaN(dt)) return String(d); const t = dt.toLocaleDateString('es-AR', { weekday:'long', day:'numeric', month:'long' }); return t.toUpperCase(); };
+    const evHtml = i=>{
+      const r = pnRows().find(x=>x.key === i.key);
+      const flag = i.type === 'exercise' && !i.respondido && (i.comment || recentLim(i));
+      const line = i.type === 'checklist' ? `<span style="color:#17794a">✓ Marcó como hecho</span> ${escapeHtml(i.exercise)}` :
+        `${escapeHtml(i.exercise)}${i.weight ? ' · ' + escapeHtml(String(i.weight)) + ' kg' : ''} · ${escapeHtml(String(i.reps || 0))} × ${escapeHtml(String(i.sets || 0))} ${i.feeling ? '<span class="pn-tag">' + escapeHtml(i.feeling) + '</span>' : ''}`;
+      return `<div class="pn-ev${flag ? ' flag' : ''}"><div class="pn-av">${escapeHtml(i.clienta.charAt(0))}</div><div style="flex:1;min-width:0"><div><b>${escapeHtml(i.clienta)}</b> · ${line}</div>
+        ${i.comment ? `<div class="pn-say">💬 ${escapeHtml(i.comment)}</div>` : ''}
+        ${i.type === 'exercise' && i.comment && !i.respondido ? `<div style="margin-top:9px;display:flex;gap:8px;flex-wrap:wrap"><button class="pn-btn" data-aresp="${escapeHtml(i.key)}|${escapeHtml(i.exercise)}|${escapeHtml(String(i.ts))}">✓ Ya respondí</button>${r ? pnWaBtn(r, '') : ''}<button class="pn-btn" data-det="${escapeHtml(i.key)}">Ver su ficha</button></div>` : ''}</div></div>`;
+    };
+    main.innerHTML = `<h1 class="pn-h1">Actividad</h1><p class="pn-sub">Lo que hacen y escriben tus alumnas, ordenado por día</p>
+      ${attention.length ? `<div class="pn-alert"><span style="font-size:22px">⚠️</span><div><b>${attention.length} ${attention.length === 1 ? 'necesita' : 'necesitan'} tu atención.</b><br><small>Comentarios sin responder o ejercicios marcados "Al límite"</small></div><button class="pn-btn" id="act-go">Ver ahora</button></div>` : ''}
+      <div class="pn-filters"><button class="pn-chip${!fKey ? ' on' : ''}" data-ak="">Todas</button>${people.map(r=>`<button class="pn-chip${fKey === r.key ? ' on' : ''}" data-ak="${escapeHtml(r.key)}">${escapeHtml(r.c.displayName)}</button>`).join('')}</div>
+      <div class="pn-tog"><label><input type="checkbox" id="act-c" ${onlyC ? 'checked' : ''}> Solo con comentario</label><label><input type="checkbox" id="act-h" ${onlyH ? 'checked' : ''}> Solo difícil o al límite</label></div>
+      <div class="pn-card" style="max-width:860px">${list.length ? Object.keys(days).map(d=>`<div class="pn-day">${dayTxt(d)}</div>` + days[d].map(evHtml).join('')).join('') : '<div class="pn-empty">No hay actividad con ese filtro.</div>'}</div>`;
+    main.querySelectorAll('[data-ak]').forEach(b=> b.onclick = ()=>{ state.actKey = b.getAttribute('data-ak'); render(); });
+    document.getElementById('act-c').onchange = e=>{ state.actOnlyC = e.target.checked; render(); };
+    document.getElementById('act-h').onchange = e=>{ state.actOnlyH = e.target.checked; render(); };
+    const go = document.getElementById('act-go'); if(go) go.onclick = ()=>{ state.actOnlyC = false; state.actOnlyH = false; state.actKey = ''; const f = main.querySelector('.pn-ev.flag'); if(f) f.scrollIntoView({ behavior:'smooth', block:'center' }); };
+    detailBtns();
+    main.querySelectorAll('[data-aresp]').forEach(b=> b.onclick = ()=>{ const p = b.getAttribute('data-aresp').split('|'); markCommentResponded(p[0], p[1], p.slice(2).join('|')); });
   }
   else if(sec === 'alumnas'){
     const all = pnRows().sort((a,b)=> (a.hidden - b.hidden) || a.c.displayName.localeCompare(b.c.displayName));
@@ -4149,40 +4188,6 @@ function render(){
     `;
     document.getElementById('back-btn').onclick = ()=>{ state.view='dashboard'; render(); };
     document.getElementById('update-weight-save').onclick = onUpdateWeight;
-  }
-  else if(state.view === 'admin-feed'){
-    const feed = buildActivityFeed(state.adminData);
-    app.innerHTML = `
-      <button class="back" id="back-btn">&larr; Volver</button>
-      <div class="brand">russ.trainer</div>
-      <h1>Actividad reciente</h1>
-      <div id="feed-list"></div>
-    `;
-    document.getElementById('back-btn').onclick = ()=>{ state.view='admin-list'; render(); };
-    const wrap = document.getElementById('feed-list');
-    if(feed.length === 0){
-      wrap.innerHTML = '<div class="empty">Todavía no hay actividad registrada.</div>';
-    } else {
-      feed.slice(0, 60).forEach(item=>{
-        const box = document.createElement('div');
-        box.className = 'card';
-        let line;
-        if(item.type === 'checklist'){
-          line = `✓ Marcó como hecho: <strong>${escapeHtml(item.exercise)}</strong>`;
-        } else {
-          line = `<strong>${escapeHtml(item.exercise)}</strong>${item.weight ? ' · ' + item.weight + 'kg' : ''} × ${item.reps || 0} × ${item.sets || 0}${item.feeling ? ' · ' + item.feeling : ''}`;
-        }
-        box.innerHTML = `
-          <div style="display:flex; justify-content:space-between; align-items:baseline;">
-            <span style="font-weight:700;">${escapeHtml(item.clienta)}</span>
-            <span class="sub" style="margin:0;">${formatDate(item.date)}</span>
-          </div>
-          <div class="sub" style="margin:4px 0 0; color:var(--text);">${line}</div>
-          ${item.comment ? `<div class="tip">💬 ${escapeHtml(item.comment)}</div>` : ''}
-        `;
-        wrap.appendChild(box);
-      });
-    }
   }
   else if(state.view === 'admin-summary'){
     const keys = Object.keys(state.adminData);
