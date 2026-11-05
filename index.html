@@ -1119,6 +1119,10 @@
   .pn-btn:hover{background:#f3f4f7}
   .pn-btn.pri{background:#3d5afe;color:#fff;border-color:#3d5afe}
   .pn-btn.pri:disabled{opacity:.5;cursor:default}
+  .pn-fi input:not([type=checkbox]),.pn-fi select{background:#fff;border:1px solid #e3e6ee;border-radius:8px;color:#1c2230}
+  .pn-crumb{color:#6b7385;font-size:13.5px;margin-bottom:12px}.pn-lnk{background:none;border:0;padding:0;font:inherit;color:#3d5afe;cursor:pointer}
+  .pn-ftop{display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap}.pn-bigav{width:60px;height:60px;border-radius:50%;background:#f3d9df;color:#b04a62;display:grid;place-items:center;font-weight:700;font-size:24px}.pn-fbtns{margin-left:auto;display:flex;gap:8px}
+  .pn-note{background:#fffbe8;border:1px solid #efe2a0;border-radius:8px;padding:10px 12px;font-size:14px;margin-bottom:8px;color:#5f5410}.pn-note small{color:#8a7a20}
   .pn-alert{background:#fff3f1;border:1px solid #f3c7c0;border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;gap:14px;align-items:center;max-width:860px}.pn-alert b{color:#b3261e}.pn-alert small{color:#6b7385}.pn-alert .pn-btn{margin-left:auto}
   .pn-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.pn-chip{font-family:inherit;border:1px solid #e3e6ee;background:#fff;border-radius:99px;padding:7px 15px;font-size:13.5px;cursor:pointer;color:#1c2230}.pn-chip.on{background:#1c2230;color:#fff;border-color:#1c2230}
   .pn-tog{display:flex;gap:18px;flex-wrap:wrap;margin:6px 0 18px;font-size:13.5px;color:#4a5370}.pn-tog label{display:flex;flex-direction:row;gap:8px;align-items:center;cursor:pointer;width:auto;margin:0;white-space:nowrap}.pn-tog input{width:auto;margin:0;flex:none}
@@ -2302,6 +2306,185 @@ function pnWaBtn(r, texto){
   const link = pnWa(r.c.data.ficha && r.c.data.ficha.telefono, r.c.displayName, texto);
   return link ? `<a class="pn-btn" href="${link}" target="_blank" rel="noopener">WhatsApp</a>` : `<button class="pn-btn" data-det="${r.key}" title="Falta el teléfono: agrégalo en su ficha">+ Teléfono</button>`;
 }
+function pnFicha(main){
+    main.classList.add('pn-fi');
+    const key = state.adminSelected;
+    const c = state.adminData[key];
+    if(!c){ state.view = 'admin-list'; state.panelSec = 'alumnas'; render(); return; }
+    const routine = ROUTINES[key] || {};
+    const lastActive = lastActivityDate(c.data);
+    const gap = daysSince(lastActive);
+    const isAlert = gap === null || gap >= 3;
+    const f = c.data.ficha;
+    const weekInfo = weekEndInfo(f.semanaInicio);
+    const weekAlert = weekInfo && weekInfo.daysLeft <= 3;
+    const notesExpanded = true;
+    const monthNum = computeMonthNumber(f.fechaInicio);
+    const pendC = buildActivityFeed({[key]: c}).filter(i=>i.comment && !i.respondido);
+    const lastC = buildActivityFeed({[key]: c}).filter(i=>i.comment)[0];
+    const feelings = buildActivityFeed({[key]: c}).filter(i=>i.feeling).slice(0, 10);
+    const waNumber = f.telefono ? f.telefono.replace(/\D/g,'') : '';
+    const waLink = waNumber ? 'https://wa.me/' + waNumber : '';
+    const opt = (v, cur)=> '<option value="' + v + '"' + (cur === v ? ' selected' : '') + '>' + v + '</option>';
+    const alerts = [];
+    if(isAlert) alerts.push('⚠️ ' + (lastActive ? 'Última actividad: ' + formatDate(lastActive) + ' (' + gap + ' días)' : 'Todavía no registró actividad'));
+    if(weekAlert) alerts.push('📅 ' + (weekInfo.daysLeft < 0 ? 'Su semana ya venció, hay que planificar la próxima' : weekInfo.daysLeft === 0 ? 'Su semana termina hoy' : 'Le queda' + (weekInfo.daysLeft===1?' 1 día':'n ' + weekInfo.daysLeft + ' días') + ' de su semana actual'));
+    main.innerHTML = `
+      <div class="pn-crumb"><button class="pn-lnk" id="back-btn">Alumnas</button> › <b>${escapeHtml(c.displayName)}</b></div>
+      <div class="pn-ftop"><div class="pn-bigav">${escapeHtml(c.displayName.charAt(0))}</div>
+        <div><h1 class="pn-h1" style="margin:0">${escapeHtml(c.displayName)}</h1><p class="pn-sub" style="margin:2px 0 0">${monthNum ? 'Mes ' + monthNum : ''}${f.fechaInicio ? (monthNum ? ' · ' : '') + 'desde el ' + formatDate(f.fechaInicio) : ''}</p></div>
+        <div class="pn-fbtns"><button class="pn-btn pri" id="f-edit-rutina">✏️ Editar su rutina</button>${waLink ? `<a class="pn-btn" href="${waLink}" target="_blank" rel="noopener">WhatsApp</a>` : ''}</div></div>
+      ${alerts.map(a=>`<div class="pn-alert" style="margin-bottom:10px">${escapeHtml(a)}</div>`).join('')}
+      <div class="pn-kps">
+        <div class="pn-kp"><small>Esta semana</small><b>${computeWeekCount(c.data)} de ${weeklyTarget(c.displayName)} días</b></div>
+        <div class="pn-kp"><small>Última vez que entrenó</small><b>${lastActive ? formatDate(lastActive) : '—'}</b></div>
+        <div class="pn-kp"><small>Racha</small><b>${computeStreak(c.data) > 0 ? '🔥 ' + computeStreak(c.data) : '—'}</b></div>
+        <div class="pn-kp"${pendC.length ? ' style="border-color:#f3c7c0;background:#fff7f5"' : ''}><small>Comentarios sin responder</small><b${pendC.length ? ' style="color:#b3261e"' : ''}>${pendC.length}</b></div>
+      </div>
+      <div class="pn-cols">
+        <div>
+          <div class="pn-card"><h2>Ficha</h2>
+            <label>Objetivo</label><select id="f-objetivo"><option value="">Elegir...</option>${['Definir / tonificar','Ganar masa muscular','Bajar de peso'].map(v=>opt(v, f.objetivo)).join('')}</select>
+            <label>Nivel</label><select id="f-nivel"><option value="">Elegir...</option>${['Principiante','Intermedio','Avanzado'].map(v=>opt(v, f.nivel)).join('')}</select>
+            <label>Restricciones o cuidados</label><input id="f-restricciones" value="${escapeHtml(f.restricciones)}" placeholder="Ej: Sin restricciones" />
+            <label>Teléfono (WhatsApp)</label><input id="f-telefono" value="${escapeHtml(f.telefono || '')}" placeholder="Ej: 5491123456789 (con código de país)" />
+            <div class="row"><div><label>Fecha de inicio</label><div style="display:flex; gap:6px;"><input type="date" id="f-fechainicio" value="${escapeHtml(f.fechaInicio)}" style="flex:1;" /><button type="button" class="pn-btn" id="f-fechainicio-hoy">Hoy</button></div></div>
+            <div><label>Cumpleaños</label><input type="text" id="f-cumple" value="${escapeHtml(f.cumpleanos)}" placeholder="MM-DD" /></div></div>
+            <label>Vencimiento del plan</label><input type="date" id="f-vencimiento" value="${escapeHtml(c.data.vencimiento)}" />
+            <label>Inicio de su semana actual</label><div style="display:flex; gap:6px;"><input type="date" id="f-semanainicio" value="${escapeHtml(f.semanaInicio)}" style="flex:1;" /><button type="button" class="pn-btn" id="f-semanainicio-hoy">Hoy</button></div>
+            <p class="pn-sub" style="margin:6px 0 12px;font-size:12.5px">Actualiza esto cada vez que le armes una semana nueva: así el panel te avisa cuando está por terminar.</p>
+            <button class="pn-btn pri" id="f-save-btn">Guardar ficha</button></div>
+          <div class="pn-card" style="margin-top:18px"><h2>🔒 Notas privadas</h2><p class="pn-sub" style="margin:0 0 8px;font-size:13px">Solo las ves tú, ella no</p>
+            <textarea id="note-input" rows="2" placeholder="Ej: le cuesta la rodilla derecha, evitar estocadas profundas" style="width:100%; background:#fffbe8; border:1px solid #efe2a0; border-radius:8px; padding:10px; font-family:inherit; font-size:14px;"></textarea>
+            <button class="pn-btn" id="note-save-btn" style="margin-top:8px">Agregar nota</button><div id="admin-notes" style="margin-top:10px"></div></div>
+          ${c.data.bodyWeight.length > 1 ? '<div class="pn-card" style="margin-top:18px"><h2>Peso</h2><div style="height:180px"><canvas id="admin-weight-chart"></canvas></div></div>' : ''}
+        </div>
+        <div>
+          <div class="pn-card"><h2>Sus días</h2><p class="pn-sub" style="margin:0 0 10px;font-size:13px">Toca un día para ver los últimos pesos y comentarios de cada ejercicio.</p><div id="admin-days"></div></div>
+          <div class="pn-card" style="margin-top:18px"><h2>Lo último que escribió</h2>
+            ${lastC ? `<div class="pn-sub" style="margin:0 0 4px;font-size:13px">${escapeHtml(lastC.exercise)} · ${formatDate(lastC.date)}${lastC.feeling ? ' · ' + escapeHtml(lastC.feeling) : ''}</div><div class="pn-say">💬 ${escapeHtml(lastC.comment)}</div>` : '<div class="pn-empty">Todavía no escribió comentarios.</div>'}</div>
+          <div class="pn-card" style="margin-top:18px"><h2>Resumen semanal</h2><button class="pn-btn" id="report-btn">📋 Generar resumen para copiar</button>
+            <textarea id="report-output" rows="6" class="hidden" readonly style="width:100%; margin-top:10px; border:1px solid #e3e6ee; border-radius:8px; padding:10px; font-family:inherit; font-size:13px;"></textarea></div>
+        </div>
+      </div>`;
+    document.getElementById('back-btn').onclick = ()=>{ state.view='admin-list'; state.panelSec='alumnas'; render(); };
+    document.getElementById('f-edit-rutina').onclick = ()=>{ state.edKey = key; state.ed = null; state.view='admin-list'; state.panelSec='rutinas'; render(); };
+    document.getElementById('f-save-btn').onclick = ()=> onSaveFicha(key);
+    document.getElementById('f-fechainicio-hoy').onclick = ()=>{ document.getElementById('f-fechainicio').value = todayISO(); };
+    document.getElementById('f-semanainicio-hoy').onclick = ()=>{ document.getElementById('f-semanainicio').value = todayISO(); };
+    document.getElementById('note-save-btn').onclick = ()=> onAddNote(key);
+    document.getElementById('report-btn').onclick = ()=> onGenerateReport(key);
+    if(c.data.bodyWeight.length > 1){
+      new Chart(document.getElementById('admin-weight-chart'), {
+        type:'line',
+        data:{ labels: c.data.bodyWeight.map(w=>formatDate(w.date)), datasets:[{ label:'Peso (kg)', data:c.data.bodyWeight.map(w=>w.weight), borderColor:'#d4848f', backgroundColor:'rgba(212,132,143,0.15)', fill:true, tension:0.3, pointRadius:3 }] },
+        options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{ticks:{color:'#8a8078'}}, y:{ticks:{color:'#8a8078'}} } }
+      });
+    }
+    const notesWrap = document.getElementById('admin-notes');
+    if(c.data.trainerNotes.length === 0){ notesWrap.innerHTML = '<div class="pn-empty">Sin notas todavía.</div>'; }
+    else c.data.trainerNotes.slice().reverse().forEach(n=>{ const box = document.createElement('div'); box.className = 'pn-note'; box.innerHTML = `<small>${formatDate(n.date)}</small><br/>${escapeHtml(n.text)}`; notesWrap.appendChild(box); });
+
+    const daysWrap = document.getElementById('admin-days');
+    const today = todayISO();
+    const { groups: adminGroups, groupLabels: adminGroupLabels, noSemana: adminNoSemana } = groupDaysBySemana(routine);
+    const adminSemanaKeys = Object.keys(adminGroups).map(Number).sort((a,b)=>a-b);
+    const adminMaxSemana = getCurrentSemana(c.data, routine);
+    const orderedDayLabels = [];
+    adminSemanaKeys.forEach(sNum=>{
+      orderedDayLabels.push({ header: sNum, headerLabel: adminGroupLabels[sNum], isCurrent: sNum === adminMaxSemana });
+      adminGroups[sNum].forEach(d=> orderedDayLabels.push({ dayLabel: d }));
+    });
+    adminNoSemana.forEach(d=> orderedDayLabels.push({ dayLabel: d, standalone: true }));
+
+    let lastSemanaExpanded = true;
+    orderedDayLabels.forEach(entry=>{
+      if(entry.header !== undefined){
+        const toggleKey = 'admin-semana-' + key + '-' + entry.header;
+        const semanaExpanded = entry.isCurrent || !!state.uiExpanded[toggleKey];
+        entry._semanaExpanded = semanaExpanded;
+        const header = document.createElement('button');
+        header.className = 'link-btn';
+        header.style.cssText = 'margin:18px 0 8px; font-size:15px; display:flex; align-items:center; gap:8px; background:none; border:none; cursor:pointer; padding:0; font-family:inherit; color:var(--text);';
+        header.innerHTML = `<span style="font-weight:700;">${semanaExpanded ? '▾' : '▸'} ${escapeHtml(entry.headerLabel)}</span>${entry.isCurrent ? ' <span class="month-badge" style="background:#5b8f6f;">👉 Actual</span>' : ''}`;
+        header.onclick = ()=>{
+          if(state.uiExpanded[toggleKey]) delete state.uiExpanded[toggleKey];
+          else state.uiExpanded[toggleKey] = true;
+          render();
+        };
+        daysWrap.appendChild(header);
+        lastSemanaExpanded = semanaExpanded;
+        return;
+      }
+      if(!entry.standalone && !lastSemanaExpanded) return;
+      const dayLabel = entry.dayLabel;
+      const { dayName } = parseDayLabel(dayLabel);
+      const items = routine[dayLabel];
+      const doneToday = isDayCompleteOn(c.data, dayLabel, items, today);
+      const lastDate = doneToday ? today : lastCompletionDate(c.data, dayLabel, items);
+      const dayKey = 'admin-day-' + dayLabel;
+      const dayExpanded = !!state.uiExpanded[dayKey];
+      const box = document.createElement('div');
+      box.className = 'pn-card';
+      box.style.cssText = 'margin-bottom:10px;padding:14px 16px;';
+      let inner = `
+        <div class="day-toggle-header" data-daykey="${dayKey}" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-weight:700;">${escapeHtml(dayName)}</div>
+          <span class="sub" style="margin:0;">${dayExpanded ? '‹ Colapsar' : 'Ver detalle ›'}</span>
+        </div>
+        <div class="sub" style="margin:2px 0 0;">${doneToday ? '✅ Completado hoy' : (lastDate ? 'Último completo: ' + formatDate(lastDate) : 'Todavía sin completar')}</div>
+      `;
+      if(dayExpanded){
+        inner += `<div style="margin-top:12px; border-top:1px solid var(--border); padding-top:10px;">`;
+        items.forEach(item=>{
+          if(item.tipo === 'mensaje') return;
+          if(item.tipo === 'checklist'){
+            inner += `<div class="sub" style="margin:0 0 8px; color:var(--text);"><strong>${escapeHtml(item.ejercicio)}</strong> — checklist</div>`;
+            return;
+          }
+          if(item.tipo === 'circuito'){
+            inner += `<div class="sub" style="margin:6px 0 4px; color:var(--text); font-weight:700;">🔄 ${escapeHtml(item.titulo || 'Circuito')} (${item.rondas} rondas)</div>`;
+            item.ejercicios.forEach(ex=>{
+              const entries = c.data.exercises[ex.ejercicio] || [];
+              const last = entries.length ? entries[entries.length-1] : null;
+              const nextNote = (c.data.nextWeekNotes && c.data.nextWeekNotes[ex.ejercicio]) || '';
+              inner += `<div style="margin:0 0 10px; padding-left:10px; border-left:2px solid var(--border);">
+                <div style="font-weight:600; color:var(--text); font-size:13px;">${escapeHtml(ex.ejercicio)}</div>
+                ${last ? `
+                  <div class="sub" style="margin:2px 0 0;">${formatDate(last.date)} · ${ex.sinPeso ? '' : last.weight + 'kg · '}${last.reps}${last.feeling ? ' · ' + last.feeling : ''}</div>
+                  ${last.comment ? `<div class="tip" style="margin:4px 0 0;">💬 ${escapeHtml(last.comment)}</div>` : ''}
+                ` : `<div class="sub" style="margin:2px 0 0;">Sin registros todavía</div>`}
+                <input type="text" class="nextweek-input" data-exercise="${escapeHtml(ex.ejercicio)}" value="${escapeHtml(nextNote)}" placeholder="📝 Para la próxima semana" style="margin-top:6px; font-size:12px; padding:7px 9px;" />
+              </div>`;
+            });
+            return;
+          }
+          const entries = c.data.exercises[item.ejercicio] || [];
+          const last = entries.length ? entries[entries.length-1] : null;
+          const nextNote = (c.data.nextWeekNotes && c.data.nextWeekNotes[item.ejercicio]) || '';
+          inner += `<div style="margin:0 0 14px;">
+            <div style="font-weight:600; color:var(--text);">${escapeHtml(item.ejercicio)}</div>
+            ${last ? `
+              <div class="sub" style="margin:2px 0 0;">${formatDate(last.date)} · ${item.sinPeso ? '' : last.weight + 'kg · '}${last.reps} × ${last.sets}${last.feeling ? ' · ' + last.feeling : ''}</div>
+              ${last.comment ? `<div class="tip" style="margin:4px 0 0;">💬 ${escapeHtml(last.comment)}</div>` : ''}
+            ` : `<div class="sub" style="margin:2px 0 0;">Sin registros todavía</div>`}
+            <input type="text" class="nextweek-input" data-exercise="${escapeHtml(item.ejercicio)}" value="${escapeHtml(nextNote)}" placeholder="📝 Para la próxima semana (ej: súbele peso)" style="margin-top:6px; font-size:13px; padding:8px 10px;" />
+          </div>`;
+        });
+        inner += `</div>`;
+      }
+      box.innerHTML = inner;
+      box.querySelector('.day-toggle-header').onclick = ()=>{
+        if(dayExpanded) delete state.uiExpanded[dayKey];
+        else state.uiExpanded[dayKey] = true;
+        render();
+      };
+      box.querySelectorAll('.nextweek-input').forEach(inp=>{
+        inp.onblur = ()=> onSaveNextWeekNote(key, inp.dataset.exercise, inp.value.trim());
+      });
+      daysWrap.appendChild(box);
+    });
+}
 function renderPanel(app){
   const sec = state.panelSec || 'agenda';
   const feed = buildActivityFeed(state.adminData || {});
@@ -2311,7 +2494,7 @@ function renderPanel(app){
     ['v:admin-summary','📋','Resumen semanal'],['actividad','🕐','Actividad'],['v:admin-calendar','📅','Calendario'],['v:admin-plantilla','🖼️','Plantilla'],['v:admin-cuaderno','📓','Cuaderno']
   ];
   const navHtml = nav.map(n=> n === 'sep' ? '<div class="pn-sep"></div>' :
-    `<button class="pn-nv${n[0] === sec ? ' on' : ''}" data-nav="${n[0]}"><span>${n[1]}</span>${n[2]}${n[0]==='comentarios' && pending.length ? `<span class="bd">${pending.length}</span>` : ''}${n[0]==='bandeja' && agGet().tareas.filter(t=>t.idea || !t.fecha).length ? `<span class="bd">${agGet().tareas.filter(t=>t.idea || !t.fecha).length}</span>` : ''}</button>`).join('');
+    `<button class="pn-nv${(n[0] === sec || (n[0] === 'alumnas' && sec === 'ficha')) ? ' on' : ''}" data-nav="${n[0]}"><span>${n[1]}</span>${n[2]}${n[0]==='comentarios' && pending.length ? `<span class="bd">${pending.length}</span>` : ''}${n[0]==='bandeja' && agGet().tareas.filter(t=>t.idea || !t.fecha).length ? `<span class="bd">${agGet().tareas.filter(t=>t.idea || !t.fecha).length}</span>` : ''}</button>`).join('');
   app.innerHTML = `
     <div class="pn-shell">
       <aside class="pn-side">
@@ -2325,7 +2508,7 @@ function renderPanel(app){
     const v = b.getAttribute('data-nav');
     state.pnMenu = false;
     if(v.indexOf('v:') === 0){ state.view = v.slice(2); render(); }
-    else { state.panelSec = v; render(); }
+    else { state.view = 'admin-list'; state.panelSec = v; render(); }
   });
   const shell = app.querySelector('.pn-shell'); if(state.pnMenu) shell.classList.add('menu-open');
   document.getElementById('pn-logo').onclick = ()=>{ state.pnMenu = !state.pnMenu; shell.classList.toggle('menu-open', !!state.pnMenu); };
@@ -2375,6 +2558,7 @@ function renderPanel(app){
     detailBtns(); respBtns();
     const ac = document.getElementById('pn-allc'); if(ac) ac.onclick = ()=>{ state.panelSec='comentarios'; render(); };
   }
+  else if(sec === 'ficha'){ pnFicha(main); }
   else if(sec === 'actividad'){
     const fKey = state.actKey || '', onlyC = !!state.actOnlyC, onlyH = !!state.actOnlyH;
     const hard = i=> i.feeling && /Dif[ií]cil|l[ií]mite/i.test(i.feeling);
@@ -3955,7 +4139,7 @@ function render(){
   document.body.classList.toggle('theme-masculine', !!(state.clienta && isMasculino(state.clienta)));
   const _gMasc = !!(state.clienta && isMasculino(state.clienta));
   const _gScr = state.view === 'guide' ? guideScreen() : null;
-  document.body.classList.toggle('panel-wide', state.view === 'admin-list');
+  document.body.classList.toggle('panel-wide', state.view === 'admin-list' || state.view === 'admin-detail');
   if(state.view !== 'admin-list' && typeof agFab === 'function') agFab();
   document.body.classList.toggle('routine-v2', (state.view === 'routine-day' || _gScr === 'routine') && !_gMasc);
   document.body.classList.toggle('home-v2', (state.view === 'dashboard' || _gScr === 'home') && !_gMasc);
@@ -4442,244 +4626,7 @@ function render(){
   else if(state.view === 'admin-list'){
     renderPanel(app);
   }
-  else if(state.view === 'admin-detail'){
-    const key = state.adminSelected;
-    const c = state.adminData[key];
-    const routine = ROUTINES[key];
-    const lastActive = lastActivityDate(c.data);
-    const gap = daysSince(lastActive);
-    const isAlert = gap === null || gap >= 3;
-    const f = c.data.ficha;
-    const weekInfo = weekEndInfo(f.semanaInicio);
-    const weekAlert = weekInfo && weekInfo.daysLeft <= 3;
-    const fichaExpanded = !!state.uiExpanded['admin-ficha'];
-    const notesExpanded = !!state.uiExpanded['admin-notes'];
-    const fichaSummary = (f.objetivo || f.nivel) ? [f.objetivo, f.nivel].filter(Boolean).join(' · ') : 'Sin completar todavía';
-    const monthNum = computeMonthNumber(f.fechaInicio);
-
-    const fichaHtml = !fichaExpanded
-      ? '<button class="card" id="ficha-toggle" style="width:100%; text-align:left; border:1px solid var(--border); border-left:3px solid var(--rose); cursor:pointer; background:var(--bg-card); font-family:inherit;">'
-        + '<div style="display:flex; justify-content:space-between; align-items:center;">'
-        + '<div><div style="font-weight:700;">📋 ' + escapeHtml(c.displayName) + '</div>'
-        + '<div class="sub" style="margin:2px 0 0;">' + escapeHtml(fichaSummary) + '</div></div>'
-        + '<span class="sub" style="margin:0;">Tocá para editar ›</span>'
-        + '</div></button>'
-      : '<div class="card">'
-        + '<button class="link-btn" id="ficha-collapse-btn" style="margin-bottom:10px;">‹ Colapsar</button>'
-        + '<label>Objetivo</label>'
-        + '<select id="f-objetivo"><option value="">Elegir...</option>'
-        + '<option value="Definir / tonificar"' + (f.objetivo==='Definir / tonificar'?' selected':'') + '>Definir / tonificar</option>'
-        + '<option value="Ganar masa muscular"' + (f.objetivo==='Ganar masa muscular'?' selected':'') + '>Ganar masa muscular</option>'
-        + '<option value="Bajar de peso"' + (f.objetivo==='Bajar de peso'?' selected':'') + '>Bajar de peso</option>'
-        + '</select>'
-        + '<label>Nivel</label>'
-        + '<select id="f-nivel"><option value="">Elegir...</option>'
-        + '<option value="Principiante"' + (f.nivel==='Principiante'?' selected':'') + '>Principiante</option>'
-        + '<option value="Intermedio"' + (f.nivel==='Intermedio'?' selected':'') + '>Intermedio</option>'
-        + '<option value="Avanzado"' + (f.nivel==='Avanzado'?' selected':'') + '>Avanzado</option>'
-        + '</select>'
-        + '<label>Restricciones</label>'
-        + '<input id="f-restricciones" value="' + escapeHtml(f.restricciones) + '" placeholder="Ej: Sin restricciones" />'
-        + '<label>Teléfono (WhatsApp)</label>'
-        + '<input id="f-telefono" value="' + escapeHtml(f.telefono || '') + '" placeholder="Ej: 5491123456789 (con código de país)" />'
-        + '<div class="row"><div><label>Fecha de inicio</label>'
-        + '<div style="display:flex; gap:6px;"><input type="date" id="f-fechainicio" value="' + escapeHtml(f.fechaInicio) + '" style="flex:1;" />'
-        + '<button type="button" class="btn-ghost" id="f-fechainicio-hoy" style="padding:0 12px; white-space:nowrap;">Hoy</button></div></div>'
-        + '<div><label>Cumpleaños</label><input type="text" id="f-cumple" value="' + escapeHtml(f.cumpleanos) + '" placeholder="MM-DD" /></div>'
-        + '</div></div>'
-        + '<div class="card">'
-        + '<label>Vencimiento del plan</label><input type="date" id="f-vencimiento" value="' + escapeHtml(c.data.vencimiento) + '" />'
-        + '<label>Inicio de su semana actual</label>'
-        + '<div style="display:flex; gap:6px;"><input type="date" id="f-semanainicio" value="' + escapeHtml(f.semanaInicio) + '" style="flex:1;" />'
-        + '<button type="button" class="btn-ghost" id="f-semanainicio-hoy" style="padding:0 12px; white-space:nowrap;">Hoy</button></div>'
-        + '<p class="sub" style="margin:-6px 0 12px; font-size:12px;">Actualizá esto cada vez que le armes una semana nueva — así el panel te avisa cuando está por terminar.</p>'
-        + '<button class="btn-primary" id="f-save-btn" style="margin-top:6px;">Guardar ficha</button>'
-        + '</div>';
-
-    const notesHtml = !notesExpanded
-      ? '<button class="card" id="notes-toggle" style="width:100%; text-align:left; border:1px solid var(--border); border-left:3px solid var(--rose); cursor:pointer; background:var(--bg-card); font-family:inherit;">'
-        + '<div style="display:flex; justify-content:space-between; align-items:center;">'
-        + '<div style="font-weight:700;">📝 Notas privadas (' + c.data.trainerNotes.length + ')</div>'
-        + '<span class="sub" style="margin:0;">Tocá para ver ›</span>'
-        + '</div></button>'
-      : '<div class="card">'
-        + '<button class="link-btn" id="notes-collapse-btn" style="margin-bottom:10px;">‹ Colapsar</button>'
-        + '<textarea id="note-input" rows="2" placeholder="Ej: le cuesta la rodilla derecha, evitar estocadas profundas" style="width:100%; background:var(--bg-elevated); border:1px solid var(--border); color:var(--text); border-radius:6px; padding:10px; font-family:inherit; font-size:14px;"></textarea>'
-        + '<button class="btn-primary" id="note-save-btn" style="margin-top:8px;">Agregar nota</button>'
-        + '</div><div id="admin-notes"></div>';
-
-    const monthBadgeHtml = monthNum ? '<span class="month-badge" style="background:' + monthColor(monthNum) + '; vertical-align:middle;">Mes ' + monthNum + '</span>' : '';
-    const waNumber = f.telefono ? f.telefono.replace(/\D/g,'') : '';
-    const waLink = waNumber ? 'https://wa.me/' + waNumber : '';
-
-    app.innerHTML = `
-      <button class="back" id="back-btn">&larr; Volver</button>
-      <div class="brand">russ.trainer</div>
-      <h1>${escapeHtml(c.displayName)} ${monthBadgeHtml}</h1>
-      ${waLink ? `<a href="${waLink}" target="_blank" rel="noopener" class="btn-ghost" style="display:block; text-align:center; text-decoration:none; margin-bottom:14px;">📲 Enviarle WhatsApp</a>` : ''}
-      ${isAlert ? `<div class="tip" style="border-left-color:#c65f5f; color:#c65f5f;">⚠️ ${lastActive ? 'Última actividad: ' + formatDate(lastActive) + ' (' + gap + ' días)' : 'Todavía no registró actividad'}</div>` : `<div class="sub">Última actividad: ${formatDate(lastActive)}</div>`}
-      ${weekAlert ? `<div class="tip" style="border-left-color:var(--rose-dark); color:var(--rose-dark);">📅 ${weekInfo.daysLeft < 0 ? 'Su semana ya venció, hay que planificar la próxima' : weekInfo.daysLeft === 0 ? 'Su semana termina hoy' : 'Le queda' + (weekInfo.daysLeft===1?' 1 día':'n ' + weekInfo.daysLeft + ' días') + ' de su semana actual'}</div>` : ''}
-
-      <h2 style="margin-top:20px;">Ficha</h2>
-      ${fichaHtml}
-
-      ${c.data.bodyWeight.length > 1 ? '<div id="admin-weight-chart-wrap" style="height:180px; background:var(--bg-card); border:1px solid var(--border); border-radius:6px; padding:12px; margin-bottom:16px;"><canvas id="admin-weight-chart"></canvas></div>' : ''}
-
-      <h2>Notas privadas</h2>
-      ${notesHtml}
-
-      <h2 style="margin-top:20px;">Resumen semanal</h2>
-      <button class="btn-ghost" id="report-btn" style="width:100%;">📋 Generar resumen para copiar</button>
-      <textarea id="report-output" rows="6" class="hidden" readonly style="width:100%; margin-top:10px; background:var(--bg-elevated); border:1px solid var(--border); color:var(--text); border-radius:6px; padding:10px; font-family:inherit; font-size:13px;"></textarea>
-
-      <h2 style="margin-top:20px;">Sus días</h2>
-      <p class="sub" style="margin:0 0 10px;">Tocá un día para ver los últimos pesos y comentarios de cada ejercicio.</p>
-      <div id="admin-days"></div>
-    `;
-    document.getElementById('back-btn').onclick = ()=>{ state.view='admin-list'; render(); };
-    if(fichaExpanded){
-      document.getElementById('f-save-btn').onclick = ()=> onSaveFicha(key);
-      document.getElementById('ficha-collapse-btn').onclick = ()=>{ delete state.uiExpanded['admin-ficha']; render(); };
-      document.getElementById('f-fechainicio-hoy').onclick = ()=>{ document.getElementById('f-fechainicio').value = todayISO(); };
-      document.getElementById('f-semanainicio-hoy').onclick = ()=>{ document.getElementById('f-semanainicio').value = todayISO(); };
-    } else {
-      document.getElementById('ficha-toggle').onclick = ()=>{ state.uiExpanded['admin-ficha'] = true; render(); };
-    }
-    if(notesExpanded){
-      document.getElementById('note-save-btn').onclick = ()=> onAddNote(key);
-      document.getElementById('notes-collapse-btn').onclick = ()=>{ delete state.uiExpanded['admin-notes']; render(); };
-    } else {
-      document.getElementById('notes-toggle').onclick = ()=>{ state.uiExpanded['admin-notes'] = true; render(); };
-    }
-    document.getElementById('report-btn').onclick = ()=> onGenerateReport(key);
-
-    if(c.data.bodyWeight.length > 1){
-      const ctx = document.getElementById('admin-weight-chart');
-      new Chart(ctx, {
-        type:'line',
-        data:{
-          labels: c.data.bodyWeight.map(w=>formatDate(w.date)),
-          datasets:[{ label:'Peso (kg)', data:c.data.bodyWeight.map(w=>w.weight), borderColor:'#d4848f', backgroundColor:'rgba(212,132,143,0.15)', fill:true, tension:0.3, pointRadius:3 }]
-        },
-        options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{ticks:{color:'#8a8078'}, grid:{color:'rgba(43,37,33,0.07)'}}, y:{ticks:{color:'#8a8078'}, grid:{color:'rgba(43,37,33,0.07)'}} } }
-      });
-    }
-
-    if(notesExpanded){
-      const notesWrap = document.getElementById('admin-notes');
-      if(c.data.trainerNotes.length === 0){
-        notesWrap.innerHTML = '<div class="empty">Sin notas todavía.</div>';
-      } else {
-        notesWrap.innerHTML = '';
-        c.data.trainerNotes.slice().reverse().forEach(n=>{
-          const box = document.createElement('div');
-          box.className = 'tip';
-          box.innerHTML = `<span class="sub" style="margin:0;">${formatDate(n.date)}</span><br/>${escapeHtml(n.text)}`;
-          notesWrap.appendChild(box);
-        });
-      }
-    }
-
-    const daysWrap = document.getElementById('admin-days');
-    const today = todayISO();
-    const { groups: adminGroups, groupLabels: adminGroupLabels, noSemana: adminNoSemana } = groupDaysBySemana(routine);
-    const adminSemanaKeys = Object.keys(adminGroups).map(Number).sort((a,b)=>a-b);
-    const adminMaxSemana = getCurrentSemana(c.data, routine);
-    const orderedDayLabels = [];
-    adminSemanaKeys.forEach(sNum=>{
-      orderedDayLabels.push({ header: sNum, headerLabel: adminGroupLabels[sNum], isCurrent: sNum === adminMaxSemana });
-      adminGroups[sNum].forEach(d=> orderedDayLabels.push({ dayLabel: d }));
-    });
-    adminNoSemana.forEach(d=> orderedDayLabels.push({ dayLabel: d, standalone: true }));
-
-    let lastSemanaExpanded = true;
-    orderedDayLabels.forEach(entry=>{
-      if(entry.header !== undefined){
-        const toggleKey = 'admin-semana-' + key + '-' + entry.header;
-        const semanaExpanded = entry.isCurrent || !!state.uiExpanded[toggleKey];
-        entry._semanaExpanded = semanaExpanded;
-        const header = document.createElement('button');
-        header.className = 'link-btn';
-        header.style.cssText = 'margin:18px 0 8px; font-size:15px; display:flex; align-items:center; gap:8px; background:none; border:none; cursor:pointer; padding:0; font-family:inherit; color:var(--text);';
-        header.innerHTML = `<span style="font-weight:700;">${semanaExpanded ? '▾' : '▸'} ${escapeHtml(entry.headerLabel)}</span>${entry.isCurrent ? ' <span class="month-badge" style="background:#5b8f6f;">👉 Actual</span>' : ''}`;
-        header.onclick = ()=>{
-          if(state.uiExpanded[toggleKey]) delete state.uiExpanded[toggleKey];
-          else state.uiExpanded[toggleKey] = true;
-          render();
-        };
-        daysWrap.appendChild(header);
-        lastSemanaExpanded = semanaExpanded;
-        return;
-      }
-      if(!entry.standalone && !lastSemanaExpanded) return;
-      const dayLabel = entry.dayLabel;
-      const { dayName } = parseDayLabel(dayLabel);
-      const items = routine[dayLabel];
-      const doneToday = isDayCompleteOn(c.data, dayLabel, items, today);
-      const lastDate = doneToday ? today : lastCompletionDate(c.data, dayLabel, items);
-      const dayKey = 'admin-day-' + dayLabel;
-      const dayExpanded = !!state.uiExpanded[dayKey];
-      const box = document.createElement('div');
-      box.className = 'card';
-      box.style.cssText = 'border:1px solid var(--border); border-left:3px solid var(--rose); background:var(--bg-card);';
-      let inner = `
-        <div class="day-toggle-header" data-daykey="${dayKey}" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
-          <div style="font-weight:700;">${escapeHtml(dayName)}</div>
-          <span class="sub" style="margin:0;">${dayExpanded ? '‹ Colapsar' : 'Ver detalle ›'}</span>
-        </div>
-        <div class="sub" style="margin:2px 0 0;">${doneToday ? '✅ Completado hoy' : (lastDate ? 'Último completo: ' + formatDate(lastDate) : 'Todavía sin completar')}</div>
-      `;
-      if(dayExpanded){
-        inner += `<div style="margin-top:12px; border-top:1px solid var(--border); padding-top:10px;">`;
-        items.forEach(item=>{
-          if(item.tipo === 'mensaje') return;
-          if(item.tipo === 'checklist'){
-            inner += `<div class="sub" style="margin:0 0 8px; color:var(--text);"><strong>${escapeHtml(item.ejercicio)}</strong> — checklist</div>`;
-            return;
-          }
-          if(item.tipo === 'circuito'){
-            inner += `<div class="sub" style="margin:6px 0 4px; color:var(--text); font-weight:700;">🔄 ${escapeHtml(item.titulo || 'Circuito')} (${item.rondas} rondas)</div>`;
-            item.ejercicios.forEach(ex=>{
-              const entries = c.data.exercises[ex.ejercicio] || [];
-              const last = entries.length ? entries[entries.length-1] : null;
-              const nextNote = (c.data.nextWeekNotes && c.data.nextWeekNotes[ex.ejercicio]) || '';
-              inner += `<div style="margin:0 0 10px; padding-left:10px; border-left:2px solid var(--border);">
-                <div style="font-weight:600; color:var(--text); font-size:13px;">${escapeHtml(ex.ejercicio)}</div>
-                ${last ? `
-                  <div class="sub" style="margin:2px 0 0;">${formatDate(last.date)} · ${ex.sinPeso ? '' : last.weight + 'kg · '}${last.reps}${last.feeling ? ' · ' + last.feeling : ''}</div>
-                  ${last.comment ? `<div class="tip" style="margin:4px 0 0;">💬 ${escapeHtml(last.comment)}</div>` : ''}
-                ` : `<div class="sub" style="margin:2px 0 0;">Sin registros todavía</div>`}
-                <input type="text" class="nextweek-input" data-exercise="${escapeHtml(ex.ejercicio)}" value="${escapeHtml(nextNote)}" placeholder="📝 Para la próxima semana" style="margin-top:6px; font-size:12px; padding:7px 9px;" />
-              </div>`;
-            });
-            return;
-          }
-          const entries = c.data.exercises[item.ejercicio] || [];
-          const last = entries.length ? entries[entries.length-1] : null;
-          const nextNote = (c.data.nextWeekNotes && c.data.nextWeekNotes[item.ejercicio]) || '';
-          inner += `<div style="margin:0 0 14px;">
-            <div style="font-weight:600; color:var(--text);">${escapeHtml(item.ejercicio)}</div>
-            ${last ? `
-              <div class="sub" style="margin:2px 0 0;">${formatDate(last.date)} · ${item.sinPeso ? '' : last.weight + 'kg · '}${last.reps} × ${last.sets}${last.feeling ? ' · ' + last.feeling : ''}</div>
-              ${last.comment ? `<div class="tip" style="margin:4px 0 0;">💬 ${escapeHtml(last.comment)}</div>` : ''}
-            ` : `<div class="sub" style="margin:2px 0 0;">Sin registros todavía</div>`}
-            <input type="text" class="nextweek-input" data-exercise="${escapeHtml(item.ejercicio)}" value="${escapeHtml(nextNote)}" placeholder="📝 Para la próxima semana (ej: subile peso)" style="margin-top:6px; font-size:13px; padding:8px 10px;" />
-          </div>`;
-        });
-        inner += `</div>`;
-      }
-      box.innerHTML = inner;
-      box.querySelector('.day-toggle-header').onclick = ()=>{
-        if(dayExpanded) delete state.uiExpanded[dayKey];
-        else state.uiExpanded[dayKey] = true;
-        render();
-      };
-      box.querySelectorAll('.nextweek-input').forEach(inp=>{
-        inp.onblur = ()=> onSaveNextWeekNote(key, inp.dataset.exercise, inp.value.trim());
-      });
-      daysWrap.appendChild(box);
-    });
-  }
+  else if(state.view === 'admin-detail'){ state.panelSec = 'ficha'; renderPanel(app); }
   else if(state.view === 'exercise'){
     const entries = state.data.exercises[state.exercise] || [];
     app.innerHTML = `
