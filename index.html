@@ -1123,6 +1123,17 @@
   .pn-sx{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid #eceef4}.pn-sx:first-of-type{border-top:0}.pn-sx .n{flex:1;min-width:0}.pn-sx .n b{font-size:14px;display:block}.pn-sx .n small{color:#8a91a5;font-size:12px}
   .pn-sx .k{font-weight:700;font-size:13.5px;text-align:right;min-width:104px}.pn-sx .up{color:#17794a;font-size:12px;font-weight:700}.pn-sx .eq{color:#8a91a5;font-size:12px;font-weight:500}.pn-sx .rd{color:#17794a;background:#e0f5e9;border-radius:99px;padding:1px 8px;font-size:11.5px;font-weight:700}.pn-sx .rv{color:#b3261e;background:#ffe9e6;border-radius:99px;padding:1px 8px;font-size:11.5px;font-weight:700}
   .pn-sx.rev{background:#fff7f5;margin:0 -12px;padding:10px 12px;border-radius:8px;border-top-color:transparent}
+  .ed-last{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:6px;font-size:12.5px;color:#6b7289;background:#f6f7fb;border-radius:8px;padding:6px 10px}.ed-last b{color:#2b2f45}.ed-last.none{color:#a2a8bc}.ed-last .cm{flex-basis:100%;color:#4a5068}.ed-last .sg{font-style:normal;border-radius:99px;padding:2px 9px;font-size:11.5px;font-weight:700}
+  .ed-ws{margin-bottom:14px;padding:14px 16px}.ed-ws>b{display:block;margin-bottom:8px}.ws-l{display:flex;gap:10px;align-items:baseline;margin-top:6px;font-size:13.5px}.ws-l em{font-style:normal;border-radius:99px;padding:2px 10px;font-size:12px;font-weight:700;flex:none}
+  .sg.rd{background:#e0f5e9;color:#17794a}.sg.rv{background:#fde4e0;color:#b3261e}.sg.mt{background:#eef0f6;color:#5b6280}.sg.nd{background:#f4f5f9;color:#a2a8bc}
+  .pn-hl{padding:18px 20px}.pn-hh{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}.pn-hh h2{margin:0}
+  .pn-sh,.pn-sr{display:grid;grid-template-columns:minmax(0,2.2fr) 1fr 1.2fr .9fr;gap:12px;align-items:center}.pn-sh{font-size:11.5px;color:#8a91a5;text-transform:uppercase;letter-spacing:.06em;padding:6px 0;border-bottom:1px solid #eceef4}
+  .pn-sr{padding:10px 0;border-bottom:1px solid #f1f2f7}.pn-sr:last-child{border-bottom:0}.pn-sr.rev{background:#fff7f5;margin:0 -12px;padding:10px 12px;border-radius:8px}
+  .pn-sr .n b,.pn-sr .w b{display:block;font-size:14px}.pn-sr small{color:#8a91a5;font-size:12px}.pn-sr .fe{font-size:13px}.pn-sr .fe.none{color:#b9bfd0}
+  .pn-sr .sg{justify-self:start;border-radius:99px;padding:3px 11px;font-size:12px;font-weight:700}.sg.rd{background:#e0f5e9;color:#17794a}.sg.rv{background:#fde4e0;color:#b3261e}.sg.mt{background:#eef0f6;color:#5b6280}.sg.nd{background:#f4f5f9;color:#a2a8bc}
+  .pn-sr .cm{grid-column:1/-1;font-size:13px;color:#4a5068;background:#f6f7fb;border-radius:8px;padding:6px 10px}
+  .pn-det>summary{cursor:pointer;list-style:none;background:#fff;border:1px solid #e3e6ee;border-radius:12px;padding:12px 16px;font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px}.pn-det>summary::-webkit-details-marker{display:none}.pn-det>summary:before{content:"▸";color:#8a91a5}.pn-det[open]>summary:before{content:"▾"}.pn-det>summary small{font-weight:400;color:#8a91a5;font-size:12.5px}.pn-det[open]>summary{margin-bottom:10px}
+  @media(max-width:700px){.pn-sh{display:none}.pn-sr{grid-template-columns:1fr 1fr}.pn-sr .n{grid-column:1/-1}}
   .pn-pl{border-radius:99px;padding:3px 11px;font-size:12.5px;font-weight:700}.pn-pl.g{background:#e0f5e9;color:#17794a}.pn-pl.o{background:#fff0d9;color:#a45b00}
   .pn-rs{display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid #eceef4;cursor:pointer}.pn-rs:first-of-type{border-top:0}.pn-rs .pn-nm b{display:block}.pn-rs .pn-nm small{color:#8a91a5;font-size:12.5px}
   .pn-bds{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.pn-bd{border-radius:99px;padding:2px 10px;font-size:12px;font-weight:600}.pn-bd.rd{background:#ffe9e6;color:#b3261e}.pn-bd.am{background:#fff0d9;color:#a45b00}
@@ -2417,16 +2428,25 @@ function pnSpark(nums, col){
   const pts = nums.map((v,i)=> (2 + i * 86 / (nums.length - 1)).toFixed(1) + ' ' + (27 - (v - mn) / rg * 24).toFixed(1));
   return '<svg width="90" height="30"><path d="M' + pts.join(' L') + '" fill="none" stroke="' + col + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 }
+function pnSug(r){
+  const fl = String((r.last && r.last.feeling) || '');
+  if(/l[ií]mite/i.test(fl)) return ['rv', 'Revisar'];
+  if(/F[aá]cil/i.test(fl) && r.nums.length) return ['rd', 'Subir'];
+  if(/Justo|Dif[ií]cil/i.test(fl)) return ['mt', 'Mantener'];
+  return ['nd', 'Sin dato'];
+}
 function pnStrengthHtml(c){
   const rows = pnStrength(c);
-  if(!rows.length) return '<div class="pn-card"><h2>Cómo va su fuerza</h2><div class="pn-empty">Todavía no registró ejercicios.</div></div>';
+  if(!rows.length) return '<div class="pn-card"><h2>Cómo le fue</h2><div class="pn-empty">Todavía no registró ejercicios.</div></div>';
   const kgTxt = v=> String(Math.round(v * 100) / 100).replace('.', ',');
-  const nReady = rows.filter(r=>r.ready).length, nRev = rows.filter(r=>r.review).length;
-  return `<div class="pn-card"><h2>Cómo va su fuerza</h2><p class="pn-sub" style="margin:0 0 6px;font-size:13px">Lo primero que debes mirar al armarle la semana siguiente</p>
-    ${rows.map(r=>`<div class="pn-sx${r.review ? ' rev' : ''}"><div class="n"><b>${escapeHtml(r.name)}</b><small>${r.n} ${r.n === 1 ? 'registro' : 'registros'}${r.review ? ' · al límite' : ''}</small></div>
-      ${pnSpark(r.nums, r.review ? '#e5584a' : (r.pct > 0 ? '#d9798a' : '#b9bfd0'))}
-      <div class="k">${r.cur === null ? 'sin peso' : (r.pct === null ? kgTxt(r.cur) + ' kg' : kgTxt(r.first) + ' → ' + kgTxt(r.cur) + ' kg')}<br>${r.review ? '<span class="rv">Revisar</span>' : r.ready ? '<span class="rd">Lista para subir</span>' : r.pct > 0 ? '<span class="up">▲ +' + r.pct + '%</span>' : r.pct === 0 ? '<span class="eq">igual</span>' : ''}</div></div>`).join('')}
-    ${(nReady || nRev) ? `<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">${nReady ? '<span class="pn-pl g">' + nReady + (nReady === 1 ? ' lista para subir' : ' listas para subir') + '</span>' : ''}${nRev ? '<span class="pn-pl o">' + nRev + ' para revisar</span>' : ''}</div>` : ''}</div>`;
+  const nUp = rows.filter(r=> pnSug(r)[1] === 'Subir').length, nRev = rows.filter(r=>r.review).length;
+  const fe = r=>{ const m = String((r.last && r.last.feeling) || '').match(/^\s*(\S+)\s+(.*)$/); return m ? '<span class="fe">' + m[1] + ' ' + escapeHtml(m[2]) + '</span>' : '<span class="fe none">—</span>'; };
+  return `<div class="pn-card pn-hl"><div class="pn-hh"><h2>Cómo le fue en cada ejercicio</h2><div>${nUp ? '<span class="pn-pl g">' + nUp + ' para subir</span> ' : ''}${nRev ? '<span class="pn-pl o">' + nRev + ' para revisar</span>' : ''}</div></div>
+    <div class="pn-sh"><span>Ejercicio</span><span>Última vez</span><span>Cómo se sintió</span><span>Sugerencia</span></div>
+    ${rows.map(r=>{ const sg = pnSug(r), l = r.last || {}, wt = r.cur === null ? 'sin peso' : (r.pct === null ? kgTxt(r.cur) + ' kg' : kgTxt(r.first) + ' → ' + kgTxt(r.cur) + ' kg');
+      return `<div class="pn-sr${r.review ? ' rev' : ''}"><div class="n"><b>${escapeHtml(r.name)}</b><small>${l.date ? formatDate(l.date) : ''} · ${r.n} ${r.n === 1 ? 'registro' : 'registros'}</small></div>
+      <div class="w"><b>${wt}</b><small>${l.sets || '-'} × ${l.reps || '-'}</small></div>${fe(r)}<span class="sg ${sg[0]}">${sg[1]}</span>
+      ${l.comment ? `<div class="cm">💬 ${escapeHtml(l.comment)}</div>` : ''}</div>`; }).join('')}</div>`;
 }
 function pnFicha(main){
     main.classList.add('pn-fi');
@@ -2463,9 +2483,10 @@ function pnFicha(main){
         <div class="pn-kp"><small>Racha</small><b>${computeStreak(c.data) > 0 ? '🔥 ' + computeStreak(c.data) : '—'}</b></div>
         <div class="pn-kp"${pendC.length ? ' style="border-color:#f3c7c0;background:#fff7f5"' : ''}><small>Comentarios sin responder</small><b${pendC.length ? ' style="color:#b3261e"' : ''}>${pendC.length}</b></div>
       </div>
-      <div class="pn-cols">
+      ${pnStrengthHtml(c)}
+      <div class="pn-cols" style="margin-top:18px">
         <div>
-          <div class="pn-card"><h2>Ficha</h2>
+          <details class="pn-det" data-dk="ficha"${state.uiExpanded['det-ficha'] ? ' open' : ''}><summary>Ficha y datos <small>objetivo, nivel, teléfono, semana</small></summary><div class="pn-card"><h2 style="display:none">Ficha</h2>
             <label>Objetivo</label><select id="f-objetivo"><option value="">Elegir...</option>${['Definir / tonificar','Ganar masa muscular','Bajar de peso'].map(v=>opt(v, f.objetivo)).join('')}</select>
             <label>Nivel</label><select id="f-nivel"><option value="">Elegir...</option>${['Principiante','Intermedio','Avanzado'].map(v=>opt(v, f.nivel)).join('')}</select>
             <label>Restricciones o cuidados</label><input id="f-restricciones" value="${escapeHtml(f.restricciones)}" placeholder="Ej: Sin restricciones" />
@@ -2475,21 +2496,21 @@ function pnFicha(main){
             <label>Vencimiento del plan</label><input type="date" id="f-vencimiento" value="${escapeHtml(c.data.vencimiento)}" />
             <label>Inicio de su semana actual</label><div style="display:flex; gap:6px;"><input type="date" id="f-semanainicio" value="${escapeHtml(f.semanaInicio)}" style="flex:1;" /><button type="button" class="pn-btn" id="f-semanainicio-hoy">Hoy</button></div>
             <p class="pn-sub" style="margin:6px 0 12px;font-size:12.5px">Actualiza esto cada vez que le armes una semana nueva: así el panel te avisa cuando está por terminar.</p>
-            <button class="pn-btn pri" id="f-save-btn">Guardar ficha</button></div>
-          <div class="pn-card" style="margin-top:18px"><h2>🔒 Notas privadas</h2><p class="pn-sub" style="margin:0 0 8px;font-size:13px">Solo las ves tú, ella no</p>
+            <button class="pn-btn pri" id="f-save-btn">Guardar ficha</button></div></details>
+          <details class="pn-det" data-dk="notas"${state.uiExpanded['det-notas'] ? ' open' : ''} style="margin-top:12px"><summary>🔒 Notas privadas <small>solo las ves tú</small></summary><div class="pn-card"><h2 style="display:none">Notas</h2><p class="pn-sub" style="margin:0 0 8px;font-size:13px">Solo las ves tú, ella no</p>
             <textarea id="note-input" rows="2" placeholder="Ej: le cuesta la rodilla derecha, evitar estocadas profundas" style="width:100%; background:#fffbe8; border:1px solid #efe2a0; border-radius:8px; padding:10px; font-family:inherit; font-size:14px;"></textarea>
-            <button class="pn-btn" id="note-save-btn" style="margin-top:8px">Agregar nota</button><div id="admin-notes" style="margin-top:10px"></div></div>
+            <button class="pn-btn" id="note-save-btn" style="margin-top:8px">Agregar nota</button><div id="admin-notes" style="margin-top:10px"></div></div></details>
           ${c.data.bodyWeight.length > 1 ? '<div class="pn-card" style="margin-top:18px"><h2>Peso</h2><div style="height:180px"><canvas id="admin-weight-chart"></canvas></div></div>' : ''}
         </div>
         <div>
-          ${pnStrengthHtml(c)}
-          <div class="pn-card" style="margin-top:18px"><h2>Sus días</h2><p class="pn-sub" style="margin:0 0 10px;font-size:13px">Toca un día para ver los últimos pesos y comentarios de cada ejercicio.</p><div id="admin-days"></div></div>
-          <div class="pn-card" style="margin-top:18px"><h2>Lo último que escribió</h2>
+          <details class="pn-det" data-dk="dias"${state.uiExpanded['det-dias'] ? ' open' : ''}><summary>Sus días <small>detalle por día de rutina</small></summary><div class="pn-card"><p class="pn-sub" style="margin:0 0 10px;font-size:13px">Toca un día para ver los últimos pesos y comentarios de cada ejercicio.</p><div id="admin-days"></div></div></details>
+          <div class="pn-card" style="margin-top:12px"><h2>Lo último que escribió</h2>
             ${lastC ? `<div class="pn-sub" style="margin:0 0 4px;font-size:13px">${escapeHtml(lastC.exercise)} · ${formatDate(lastC.date)}${lastC.feeling ? ' · ' + escapeHtml(lastC.feeling) : ''}</div><div class="pn-say">💬 ${escapeHtml(lastC.comment)}</div>` : '<div class="pn-empty">Todavía no escribió comentarios.</div>'}</div>
           <div class="pn-card" style="margin-top:18px"><h2>Resumen semanal</h2><button class="pn-btn" id="report-btn">📋 Generar resumen para copiar</button>
             <textarea id="report-output" rows="6" class="hidden" readonly style="width:100%; margin-top:10px; border:1px solid #e3e6ee; border-radius:8px; padding:10px; font-family:inherit; font-size:13px;"></textarea></div>
         </div>
       </div>`;
+    main.querySelectorAll('details.pn-det').forEach(d=> d.addEventListener('toggle', ()=>{ const k = 'det-' + d.getAttribute('data-dk'); if(d.open) state.uiExpanded[k] = true; else delete state.uiExpanded[k]; }));
     document.getElementById('back-btn').onclick = ()=>{ state.view='admin-list'; state.panelSec='alumnas'; render(); };
     document.getElementById('f-edit-rutina').onclick = ()=>{ state.edKey = key; state.ed = null; state.view='admin-list'; state.panelSec='rutinas'; render(); };
     document.getElementById('f-save-btn').onclick = ()=> onSaveFicha(key);
@@ -3416,6 +3437,19 @@ function edSel(ed, di, ii, f, val, ph){
   if(val && opts.indexOf(val) < 0) opts.push(val);
   return `<select class="ed-sl" data-sel="${key}"><option value="">${ph}</option>${opts.map(o=>`<option${o === val ? ' selected' : ''}>${escapeHtml(o)}</option>`).join('')}<option value="__otro">✏️ Otro…</option></select>`;
 }
+function edLastLine(key, name){
+  const c = state.adminData && state.adminData[key]; if(!c || !name) return '';
+  const r = pnStrength(c).find(x=> x.name === name); if(!r) return '<div class="ed-last none">Sin registros todavía</div>';
+  const l = r.last || {}, sg = pnSug(r), kg = r.cur === null ? 'sin peso' : String(r.cur).replace('.', ',') + ' kg';
+  return `<div class="ed-last"><span>Última vez ${l.date ? formatDate(l.date) : ''}: <b>${kg}</b> · ${l.sets || '-'}×${l.reps || '-'}${l.feeling ? ' · ' + escapeHtml(l.feeling) : ''}</span><em class="sg ${sg[0]}">${sg[1]}</em>${l.comment ? `<span class="cm">💬 ${escapeHtml(l.comment)}</span>` : ''}</div>`;
+}
+function edWeekSummary(key){
+  const c = state.adminData && state.adminData[key]; if(!c) return '';
+  const rows = pnStrength(c); if(!rows.length) return '<div class="pn-card ed-ws"><b>Cómo le fue</b><span class="pn-sub" style="margin:0 0 0 8px">Todavía no registró ejercicios.</span></div>';
+  const up = rows.filter(r=> pnSug(r)[1] === 'Subir').map(r=> r.name), rv = rows.filter(r=> r.review).map(r=> r.name), mt = rows.length - up.length - rv.length;
+  const line = (cls, t, arr)=> arr.length ? `<div class="ws-l"><em class="sg ${cls}">${t}</em><span>${arr.map(escapeHtml).join(' · ')}</span></div>` : '';
+  return `<div class="pn-card ed-ws"><b>Cómo le fue la última semana</b>${line('rd', 'Subir', up)}${line('rv', 'Revisar', rv)}<div class="ws-l"><em class="sg mt">Mantener</em><span>${mt} ${mt === 1 ? 'ejercicio' : 'ejercicios'} sin cambios</span></div></div>`;
+}
 function edItemRow(it, di, ii, n, lo, ed){
   const ctrl = `<div class="ed-ct"><button class="ag-ic" data-up="${di}:${ii}" title="Subir"${ii <= lo ? ' disabled' : ''}>↑</button><button class="ag-ic" data-dn="${di}:${ii}" title="Bajar"${ii === n - 1 ? ' disabled' : ''}>↓</button><button class="ag-ic" data-rm="${di}:${ii}" title="Quitar">✕</button></div>`;
   if(it.tipo !== 'carga' && it.tipo !== 'checklist'){
@@ -3429,7 +3463,7 @@ function edItemRow(it, di, ii, n, lo, ed){
   return `<div class="ed-it"><div class="ed-l1 ${carga ? '' : 'k'}">${secSel}${pk}
     ${carga ? edSel(ed, di, ii, 'series', it.series, 'Series') + edSel(ed, di, ii, 'reps', it.reps, 'Reps') + edSel(ed, di, ii, 'peso', it.peso, 'Peso') + edSel(ed, di, ii, 'descanso', it.descanso, 'Descanso') : f('reps', 'Detalle (ej: 15 min · ritmo suave)', 'ed-sl')}
     ${ctrl}</div>
-    <div class="ed-l2 ${carga ? '' : 'k'}">${f('video', 'Link del video', 'ed-sl')}${carga ? `<label class="ed-sw"><input type="checkbox" data-sp="${di}:${ii}"${it.sinPeso ? ' checked' : ''}> sin peso</label>` : ''}${f('nota', '💡 Nota técnica de este ejercicio (opcional)', 'ed-sl ed-nota')}</div></div>`;
+    <div class="ed-l2 ${carga ? '' : 'k'}">${f('video', 'Link del video', 'ed-sl')}${carga ? `<label class="ed-sw"><input type="checkbox" data-sp="${di}:${ii}"${it.sinPeso ? ' checked' : ''}> sin peso</label>` : ''}${f('nota', '💡 Nota técnica de este ejercicio (opcional)', 'ed-sl ed-nota')}</div>${carga ? edLastLine(ed.key, it.ejercicio) : ''}</div>`;
 }
 function edSumData(ed){
   const groups = edGroups(ed);
@@ -3507,6 +3541,7 @@ function edRender(main){
     ${keys.length ? '' : '<div class="pn-empty">No hay alumnas activas. Reactiva una en Alumnas.</div>'}
     <div class="ed-bar"><div><button class="pn-btn" id="ed-copy">+ Nueva semana (copia de la última)</button></div>
       <div style="display:flex;gap:10px;align-items:center"><span class="pn-msg ${ed.err ? 'err' : 'ok'}" id="ed-msg">${escapeHtml(ed.msg || '')}</span><button class="pn-btn pri" id="ed-save"${ed.dirty ? '' : ' disabled'}>${ed.dirty ? 'Guardar cambios' : 'Sin cambios'}</button></div></div>
+    ${edWeekSummary(cur)}
     ${groups.map(g=>`<div class="pn-card ed-wk"><button class="ed-wh" data-tg="${g.k}"><b>${escapeHtml(g.label)}</b><small>${g.idx.length} ${g.idx.length === 1 ? 'día' : 'días'}</small><span>${ed.open[g.k] ? '▾' : '▸'}</span></button>
       ${ed.open[g.k] ? g.idx.map(di=>{ const d = ed.days[di]; return `<div class="ed-day"><div class="ed-dh"><span class="ed-pre">${escapeHtml(d.pre)}</span><input class="ed-dn" data-dn-name="${di}" value="${escapeHtml(d.nom)}" placeholder="Nombre del día"><button class="ag-ic" data-rmday="${di}" title="Quitar día">🗑</button></div>
         <div class="ed-note"><label>💛 Nota o mensaje para empezar el día <small>(ella lo ve arriba de la rutina)</small></label><textarea data-note="${di}" rows="2" placeholder="Ej: hoy cuida la técnica y baja el peso si sientes molestia en el hombro">${escapeHtml((d.items.find(x=>x.tipo === 'mensaje') || {}).texto || '')}</textarea></div>
