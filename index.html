@@ -2338,11 +2338,16 @@ async function saveTrainerEvents(events){
 
 async function loadAdminData(){
   state.adminData = {};
-  let extra = [];
-  try{
-    const res = await fetch(SUPABASE_URL + '/rest/v1/clientes?nombre=like.' + encodeURIComponent('rutina:*') + '&select=nombre', { headers: await sbH() });
-    if(res.ok) extra = (await res.json()).map(r=> String(r.nombre).slice(7));
-  }catch(e){}
+  state.adminLoadErr = false;
+  let extra = [], ok = false;
+  for(let t = 0; t < 3 && !ok; t++){
+    try{
+      const res = await fetch(SUPABASE_URL + '/rest/v1/clientes?nombre=like.' + encodeURIComponent('rutina:*') + '&select=nombre', { headers: await sbH() });
+      if(res.ok){ const names = (await res.json()).map(r=> String(r.nombre)); extra = names.map(n=> n.slice(7)); ok = true; }
+    }catch(e){}
+    if(!ok) await new Promise(r=> setTimeout(r, 600));
+  }
+  if(!ok) state.adminLoadErr = true;
   const keys = Object.keys(ROUTINES).concat(extra.filter(k=> !(k in ROUTINES)));
   for(const key of keys){
     const data = await loadClienta(key);
@@ -3027,7 +3032,8 @@ function renderPanel(app){
   }
   else if(sec === 'alumnas'){
     const all = pnRows().sort((a,b)=> (a.hidden - b.hidden) || a.c.displayName.localeCompare(b.c.displayName));
-    main.innerHTML = `<h1 class="pn-h1">Alumnas</h1><p class="pn-sub">Toca una para ver su detalle. Las que ya no entrenan las pasas a inactivas: dejan de aparecer en tus pendientes y no se borra nada. Puedes reactivarlas cuando quieras.</p>
+    const errBar = state.adminLoadErr ? '<div class="pn-alert" style="background:#fde4e0;border:1px solid #f3b8b1;border-radius:10px;padding:12px 14px;margin-bottom:14px">No pude cargar todas tus alumnas. <button class="pn-btn" id="al-retry" style="margin-left:8px">Reintentar</button></div>' : '';
+    main.innerHTML = `<h1 class="pn-h1">Alumnas</h1>${errBar}<p class="pn-sub">Toca una para ver su detalle. Las que ya no entrenan las pasas a inactivas: dejan de aparecer en tus pendientes y no se borra nada. Puedes reactivarlas cuando quieras.</p>
       <div id="pn-new"></div>
       <div class="pn-card">${all.map(r=>{
         const venc = daysUntil(r.c.data.vencimiento); const wi = weekEndInfo(r.c.data.ficha.semanaInicio);
@@ -3039,6 +3045,7 @@ function renderPanel(app){
           <div class="pn-prog"><div class="pn-bar"><i style="width:${Math.min(100, Math.round(r.week / (r.target || 1) * 100))}%;background:${r.st.col}"></i></div><small>${r.week}/${r.target} esta semana</small></div>
           <div class="pn-st" style="color:${r.st.col}">● ${r.st.txt}${avisos.length ? '<div style="color:#6b7385;font-weight:500;font-size:12.5px;margin-top:3px">' + avisos.join(' · ') + '</div>' : ''}</div>
           <div style="display:flex;gap:6px">${pnWaBtn(r, '')}<button class="pn-btn" style="color:#6b7385" data-hide="${r.key}">${r.hidden ? 'Reactivar' : 'Pasar a inactiva'}</button></div></div>`;
+    const rb = document.getElementById('al-retry'); if(rb) rb.onclick = async ()=>{ rb.disabled = true; rb.textContent = 'Cargando…'; await loadAdminData(); };
       }).join('')}</div>`;
     main.querySelectorAll('.pn-row.click').forEach(r=> r.onclick = ()=>{ state.adminSelected = r.getAttribute('data-det'); state.view='admin-detail'; render(); });
     detailBtns(); pnNewAlumna(document.getElementById('pn-new'));
