@@ -2415,9 +2415,9 @@ function pnStrength(c){
     const first = nums.length ? nums[0] : null, cur = nums.length ? nums[nums.length - 1] : null;
     const pct = (first && cur && nums.length > 1) ? Math.round((cur - first) / first * 100) : null;
     const fl = String(last.feeling || '');
-    const ready = /F[aá]cil/i.test(fl) && nums.length > 0;
+    const txt = String(last.weight || '').trim(); const ready = /F[aá]cil/i.test(fl) && (nums.length > 0 || !!txt);
     const review = /l[ií]mite/i.test(fl);
-    rows.push({ name, n: arr.length, nums, first, cur, pct, ready, review, last });
+    rows.push({ name, n: arr.length, nums, first, cur, pct, ready, review, last, txt });
   });
   rows.sort((a,b)=> (b.review - a.review) || (b.ready - a.ready) || ((b.pct === null ? -1 : b.pct) - (a.pct === null ? -1 : a.pct)));
   return rows;
@@ -2431,7 +2431,7 @@ function pnSpark(nums, col){
 function pnSug(r){
   const fl = String((r.last && r.last.feeling) || '');
   if(/l[ií]mite/i.test(fl)) return ['rv', 'Revisar'];
-  if(/F[aá]cil/i.test(fl) && r.nums.length) return ['rd', 'Subir'];
+  if(/F[aá]cil/i.test(fl) && (r.nums.length || r.txt)) return ['rd', 'Subir'];
   if(/Justo|Dif[ií]cil/i.test(fl)) return ['mt', 'Mantener'];
   return ['nd', 'Sin dato'];
 }
@@ -2443,7 +2443,7 @@ function pnStrengthHtml(c){
   const fe = r=>{ const m = String((r.last && r.last.feeling) || '').match(/^\s*(\S+)\s+(.*)$/); return m ? '<span class="fe">' + m[1] + ' ' + escapeHtml(m[2]) + '</span>' : '<span class="fe none">—</span>'; };
   return `<div class="pn-card pn-hl"><div class="pn-hh"><h2>Cómo le fue en cada ejercicio</h2><div>${nUp ? '<span class="pn-pl g">' + nUp + ' para subir</span> ' : ''}${nRev ? '<span class="pn-pl o">' + nRev + ' para revisar</span>' : ''}</div></div>
     <div class="pn-sh"><span>Ejercicio</span><span>Última vez</span><span>Cómo se sintió</span><span>Sugerencia</span></div>
-    ${rows.map(r=>{ const sg = pnSug(r), l = r.last || {}, wt = r.cur === null ? 'sin peso' : (r.pct === null ? kgTxt(r.cur) + ' kg' : kgTxt(r.first) + ' → ' + kgTxt(r.cur) + ' kg');
+    ${rows.map(r=>{ const sg = pnSug(r), l = r.last || {}, wt = r.cur === null ? (r.txt ? escapeHtml(r.txt) : 'sin peso') : (r.pct === null ? kgTxt(r.cur) + ' kg' : kgTxt(r.first) + ' → ' + kgTxt(r.cur) + ' kg');
       return `<div class="pn-sr${r.review ? ' rev' : ''}"><div class="n"><b>${escapeHtml(r.name)}</b><small>${l.date ? formatDate(l.date) : ''} · ${r.n} ${r.n === 1 ? 'registro' : 'registros'}</small></div>
       <div class="w"><b>${wt}</b><small>${l.sets || '-'} × ${l.reps || '-'}</small></div>${fe(r)}<span class="sg ${sg[0]}">${sg[1]}</span>
       ${l.comment ? `<div class="cm">💬 ${escapeHtml(l.comment)}</div>` : ''}</div>`; }).join('')}</div>`;
@@ -3440,7 +3440,7 @@ function edSel(ed, di, ii, f, val, ph){
 function edLastLine(key, name){
   const c = state.adminData && state.adminData[key]; if(!c || !name) return '';
   const r = pnStrength(c).find(x=> x.name === name); if(!r) return '<div class="ed-last none">Sin registros todavía</div>';
-  const l = r.last || {}, sg = pnSug(r), kg = r.cur === null ? 'sin peso' : String(r.cur).replace('.', ',') + ' kg';
+  const l = r.last || {}, sg = pnSug(r), kg = r.cur === null ? (r.txt ? escapeHtml(r.txt) : 'sin peso') : String(r.cur).replace('.', ',') + ' kg';
   return `<div class="ed-last"><span>Última vez ${l.date ? formatDate(l.date) : ''}: <b>${kg}</b> · ${l.sets || '-'}×${l.reps || '-'}${l.feeling ? ' · ' + escapeHtml(l.feeling) : ''}</span><em class="sg ${sg[0]}">${sg[1]}</em>${l.comment ? `<span class="cm">💬 ${escapeHtml(l.comment)}</span>` : ''}</div>`;
 }
 function edWeekSummary(key){
