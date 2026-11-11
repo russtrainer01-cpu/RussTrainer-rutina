@@ -1279,6 +1279,12 @@
   .g-more{display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:#f6f7fb;border-radius:8px;padding:8px}.g-more .ed-sl{width:auto;flex:1 1 150px}.g-more .ed-nota{flex:2 1 260px}
   .g-foot{padding:12px 14px;border-top:1px solid #e3e6ee}.g-foot .ed-dh{display:flex;gap:8px;align-items:center;margin-bottom:8px}.g-foot .ed-dn{flex:1;border:1px solid #cfd4e1;border-radius:8px;padding:8px 9px;font-size:15px;font-weight:700;background:#fff;font-family:inherit}.g-foot .ed-pre{font-size:13px;color:#6b7289;font-weight:600;white-space:nowrap}.g-note summary{cursor:pointer;font-size:13px;font-weight:600;color:#6b7289}.g-note textarea{width:100%;margin-top:6px;border:1px solid #f0e2b8;background:#fffaf0;border-radius:8px;padding:8px;font-family:inherit;font-size:14px;box-sizing:border-box}
 
+  .lib-bar{display:flex;gap:10px;margin:0 0 10px}.lib-q{flex:1;border:1px solid #cfd4e1;border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;background:#fff}
+  .lib-chips{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px;align-items:center}.lib-chips button{border:1px solid #cfd4e1;background:#fff;border-radius:99px;padding:6px 12px;font-size:13px;cursor:pointer;font-family:inherit;color:#2b2f45}.lib-chips button.on{background:#2b2f45;color:#fff;border-color:#2b2f45}.lib-chips .lib-warn{background:#fdecec;color:#b04a4a;border-color:#f3c9c9;font-weight:700}.lib-chips .lib-warn.on{background:#b04a4a;color:#fff}
+  .lib-tb td{vertical-align:top;padding:8px 8px}.lib-n{font-weight:700;min-width:150px}.lib-t{color:#6b7289;font-size:12.5px;max-width:300px}.lib-mus{font-size:12px;background:#f7eef0;color:#b9707c;padding:2px 8px;border-radius:99px;white-space:nowrap}.lib-ok{color:#2f8a5b;font-weight:700;text-decoration:none;white-space:nowrap}.lib-no{color:#b04a4a;font-weight:700;white-space:nowrap}
+  .lib-form{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;padding:6px 0}.lib-form label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:#6b7289}.lib-form label.w{grid-column:1 / -1}.lib-form input,.lib-form select,.lib-form textarea{border:1px solid #cfd4e1;border-radius:8px;padding:8px 9px;font-size:14px;font-family:inherit;background:#fff;color:#1c2230}.lib-act{grid-column:1 / -1;display:flex;gap:8px}.lib-del{margin-left:auto;color:#b04a4a}
+  @media (max-width:760px){.lib-form{grid-template-columns:1fr}}
+
   .ed-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 14px;position:sticky;top:0;background:#f3f4f7;padding:10px 0;z-index:5}
   .ed-wk{margin-bottom:14px;padding:6px 18px 18px}
   .ed-wh{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;padding:12px 0;font-family:inherit;font-size:17px;color:#1c2230;cursor:pointer;text-align:left}
@@ -2926,7 +2932,7 @@ function renderPanel(app){
   const feed = buildActivityFeed(state.adminData || {});
   const pending = feed.filter(i=>i.comment && !i.respondido);
   const nav = [
-    ['agenda','🗓️','Mi agenda'],['bandeja','💡','Bandeja'],['rutinas','📝','Rutinas'],['suplementos','💊','Suplementos'],['hoy','🏠','Alumnas hoy'],['alumnas','👥','Alumnas'],['comentarios','💬','Comentarios'],['claves','🔑','Claves'],'sep',
+    ['agenda','🗓️','Mi agenda'],['bandeja','💡','Bandeja'],['rutinas','📝','Rutinas'],['biblioteca','📚','Biblioteca'],['suplementos','💊','Suplementos'],['hoy','🏠','Alumnas hoy'],['alumnas','👥','Alumnas'],['comentarios','💬','Comentarios'],['claves','🔑','Claves'],'sep',
     ['resumen','📋','Resumen semanal'],['actividad','🕐','Actividad']
   ];
   const navHtml = nav.map(n=> n === 'sep' ? '<div class="pn-sep"></div>' :
@@ -2953,6 +2959,7 @@ function renderPanel(app){
   agFab(); agLoad();
   if(sec === 'bandeja'){ agRenderBandeja(main); return; }
   if(sec === 'rutinas'){ edRender(main); return; }
+  if(sec === 'biblioteca'){ libRender(main); return; }
   if(sec === 'suplementos'){ supRender(main); return; }
   if(!state.adminData){ main.innerHTML = '<h1 class="pn-h1">Hola, Russ</h1><p class="pn-sub">Cargando a tus alumnas…</p>'; return; }
   const rows = pnRows().filter(r=>!r.hidden);
@@ -3378,6 +3385,118 @@ function agOpenModal(){
   upd(); $('#agm-t').focus();
 }
 
+
+// ===== Biblioteca de ejercicios (panel de Russ) =====
+const LIB_MUS = ['Glúteos','Cuádriceps','Isquios','Aductores','Gemelos','Espalda','Pecho','Hombros','Bíceps','Tríceps','Core','Cardio','Movilidad'];
+const LIB_EQ = ['Peso corporal','Mancuernas','Barra','Máquina','Polea','Bandas','Kettlebell','Tobilleras'];
+const LIB_GR = [['Glúteos',['Glúteos']],['Piernas',['Cuádriceps','Isquios','Aductores','Gemelos']],['Espalda',['Espalda']],['Pecho',['Pecho']],['Hombros',['Hombros']],['Brazos',['Bíceps','Tríceps']],['Core',['Core']],['Cardio',['Cardio']],['Movilidad',['Movilidad']]];
+function libItems(){ return state.libItems || []; }
+function libFromRaw(a){ return (a || []).map(x=>({ n:x[0], m:x[1] || '', e:x[2] || '', v:x[3] || '', t:x[4] || '' })); }
+function libToRaw(items){ return items.map(x=>[x.n, x.m, x.e, x.v, x.t]); }
+function libFind(name){ const k = edNorm(name); return libItems().find(x=> edNorm(x.n) === k); }
+function libRoutinesWith(name){
+  const k = edNorm(name), out = [];
+  Object.keys(ROUTINES).forEach(rk=>{ let has = false; Object.keys(ROUTINES[rk] || {}).forEach(d=> (ROUTINES[rk][d] || []).forEach(e=>{ if(e.ejercicio && edNorm(e.ejercicio) === k) has = true; })); if(has) out.push(rk); });
+  return out;
+}
+async function libSave(){
+  try{ const fresh = (await dbGet('admin:biblioteca')) || {}; await dbSet('admin:biblioteca', Object.assign({}, fresh, { ejercicios: libToRaw(state.libItems) })); state.libMsg = 'Guardado ✓'; state.libErr = false; }
+  catch(e){ state.libMsg = 'No se pudo guardar. Revisa tu conexión'; state.libErr = true; }
+}
+function libLoad(cb){
+  if(state.libLoading) return; state.libLoading = true;
+  Promise.all([dbGet('admin:biblioteca'), Promise.all(Object.keys(ROUTINES).map(k=> rtOverlay(k).catch(()=>{})))]).then(r=>{
+    const d = r[0] || {}; state.libItems = libFromRaw(d.ejercicios); state.libLoading = false; state.libMerged = true;
+    let added = 0;
+    Object.keys(ROUTINES).forEach(rk=> Object.keys(ROUTINES[rk] || {}).forEach(dn=> (ROUTINES[rk][dn] || []).forEach(e=>{
+      if(!e.ejercicio || (e.tipo !== 'carga' && e.tipo !== 'checklist') || /se está preparando/i.test(e.ejercicio)) return;
+      const f = libFind(e.ejercicio);
+      if(!f){ state.libItems.push({ n:e.ejercicio, m:(edMuscle(e.seccion) === 'Abs' ? 'Core' : edMuscle(e.seccion)), e:'', v:e.video || '', t:e.nota || '' }); added++; }
+      else { if(!f.v && e.video){ f.v = e.video; added++; } if(!f.t && e.nota){ f.t = e.nota; added++; } }
+    })));
+    state.libItems.sort((a, b)=> a.n.localeCompare(b.n));
+    if(added) libSave().then(()=>{ if(cb) cb(); }); else if(cb) cb();
+  }).catch(()=>{ state.libLoading = false; state.libMerged = true; state.libItems = state.libItems || []; state.libErr = true; state.libMsg = 'No se pudo cargar la biblioteca'; if(cb) cb(); });
+}
+async function libPropagate(name, video, nota){
+  const keys = libRoutinesWith(name), k = edNorm(name); let n = 0;
+  for(const rk of keys){
+    const dias = JSON.parse(JSON.stringify(ROUTINES[rk]));
+    Object.keys(dias).forEach(d=> dias[d].forEach(it=>{ if(it.ejercicio && edNorm(it.ejercicio) === k){ if(video) it.video = video; if(nota) it.nota = nota; } }));
+    const body = { orden:Object.keys(dias), dias }; if(CLIENT_CONFIG[rk]) body.config = Object.assign({}, CLIENT_CONFIG[rk]);
+    try{ await dbSet('rutina:' + rk, body); rtApplyRoutine(rk, body); n++; }catch(e){}
+  }
+  state.ed = null; return n;
+}
+function libForm(it, isNew){
+  const opt = (arr, v)=> arr.map(o=>`<option${o === v ? ' selected' : ''}>${escapeHtml(o)}</option>`).join('');
+  const eqs = LIB_EQ.slice(); if(it.e && eqs.indexOf(it.e) < 0) eqs.push(it.e);
+  const mus = LIB_MUS.slice(); if(it.m && mus.indexOf(it.m) < 0) mus.push(it.m);
+  return `<div class="lib-form"><label>Nombre<input id="lf-n" value="${escapeHtml(it.n)}" placeholder="Ej: Jalón abierto"></label>
+    <label>Músculo<select id="lf-m"><option value="">Elegir…</option>${opt(mus, it.m)}</select></label>
+    <label>Equipo<select id="lf-e"><option value="">—</option>${opt(eqs, it.e)}</select></label>
+    <label class="w">Link del video<input id="lf-v" value="${escapeHtml(it.v)}" placeholder="https://youtube.com/shorts/…"></label>
+    <label class="w">Nota técnica<textarea id="lf-t" rows="3" placeholder="Ej: Baja los codos. Lleva la barra al pecho.">${escapeHtml(it.t)}</textarea></label>
+    <div class="lib-act"><button class="pn-btn pri" id="lf-s">${isNew ? 'Agregar' : 'Guardar'}</button><button class="pn-btn" id="lf-c">Cancelar</button>${isNew ? '' : '<button class="pn-btn lib-del" id="lf-d">Eliminar</button>'}</div></div>`;
+}
+function libRender(main){
+  if(!state.libMerged){
+    main.innerHTML = '<h1 class="pn-h1">Biblioteca</h1><p class="pn-sub">Cargando tus ejercicios…</p>';
+    libLoad(()=>{ if(state.view === 'admin-list' && state.panelSec === 'biblioteca') render(); }); return;
+  }
+  const items = libItems(), q = edNorm(state.libQ || ''), f = state.libF || 'Todos';
+  const grp = LIB_GR.find(g=> g[0] === f);
+  const noVid = items.filter(x=> !x.v).length;
+  const list = items.map((x, i)=>({ x, i })).filter(r=>{
+    if(f === '__sin' && r.x.v) return false;
+    if(grp && grp[1].indexOf(r.x.m) < 0) return false;
+    if(q && edNorm(r.x.n + ' ' + r.x.t + ' ' + r.x.e).indexOf(q) < 0) return false;
+    return true;
+  });
+  const ed = state.libEd;
+  const cnt = {}; // cache de uso por nombre
+  const rows = list.map(r=>{
+    const x = r.x;
+    if(ed === r.i) return `<tr class="lib-edit"><td colspan="7">${libForm(x, false)}</td></tr>`;
+    const used = libRoutinesWith(x.n).length;
+    return `<tr><td class="lib-n">${escapeHtml(x.n)}</td><td><span class="lib-mus">${escapeHtml(x.m || '—')}</span></td><td>${escapeHtml(x.e || '—')}</td>
+      <td class="lib-t">${x.t ? escapeHtml(x.t.replace(/\n/g, ' ').slice(0, 90)) + (x.t.length > 90 ? '…' : '') : '<span class="g-mut">—</span>'}</td>
+      <td>${x.v ? `<a class="lib-ok" href="${escapeHtml(x.v)}" target="_blank" rel="noopener">🎥 ver</a>` : '<span class="lib-no">sin video</span>'}</td>
+      <td class="g-mut">${used ? used + (used === 1 ? ' rutina' : ' rutinas') : '—'}</td><td><button class="pn-btn" data-le="${r.i}">editar</button></td></tr>`;
+  }).join('');
+  main.innerHTML = `<h1 class="pn-h1">Biblioteca</h1><p class="pn-sub">Tus ejercicios con su video y nota técnica. Al agregar un ejercicio en Rutinas, se rellenan solos.</p>
+    <div class="lib-bar"><input id="lib-q" class="lib-q" placeholder="🔍 Buscar ejercicio…" value="${escapeHtml(state.libQ || '')}"><button class="pn-btn pri" id="lib-new">+ Nuevo ejercicio</button></div>
+    <div class="lib-chips">${['Todos'].concat(LIB_GR.map(g=>g[0])).map(c=>`<button type="button" data-lf="${c}" class="${c === f ? 'on' : ''}">${c}</button>`).join('')}<span style="flex:1"></span><button type="button" data-lf="__sin" class="lib-warn${f === '__sin' ? ' on' : ''}">${noVid} sin video</button></div>
+    <span class="pn-msg ${state.libErr ? 'err' : 'ok'}" id="lib-msg">${escapeHtml(state.libMsg || '')}</span>
+    ${ed === -1 ? `<div class="pn-card" style="padding:10px 14px;margin-bottom:12px">${libForm({ n:'', m:grp ? grp[1][0] : '', e:'', v:'', t:'' }, true)}</div>` : ''}
+    <div class="pn-card g-card"><div class="g-scroll"><table class="g-tb lib-tb"><thead><tr><th>Ejercicio</th><th>Músculo</th><th>Equipo</th><th>Nota técnica</th><th>Video</th><th>Usado en</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="7" class="g-none">No hay ejercicios con ese filtro.</td></tr>'}</tbody></table></div></div>`;
+  const qi = document.getElementById('lib-q');
+  qi.oninput = ()=>{ state.libQ = qi.value; const pos = qi.selectionStart; libRender(main); const n = document.getElementById('lib-q'); n.focus(); try{ n.setSelectionRange(pos, pos); }catch(e){} };
+  main.querySelectorAll('[data-lf]').forEach(b=> b.onclick = ()=>{ state.libF = b.getAttribute('data-lf'); libRender(main); });
+  main.querySelectorAll('[data-le]').forEach(b=> b.onclick = ()=>{ state.libEd = Number(b.getAttribute('data-le')); libRender(main); });
+  document.getElementById('lib-new').onclick = ()=>{ state.libEd = -1; libRender(main); const n = document.getElementById('lf-n'); if(n) n.focus(); };
+  const cancel = document.getElementById('lf-c'); if(cancel) cancel.onclick = ()=>{ state.libEd = null; libRender(main); };
+  const sv = document.getElementById('lf-s');
+  if(sv) sv.onclick = async ()=>{
+    const n = document.getElementById('lf-n').value.trim(), m = document.getElementById('lf-m').value, e = document.getElementById('lf-e').value, v = document.getElementById('lf-v').value.trim(), t = document.getElementById('lf-t').value.trim();
+    if(!n){ state.libMsg = 'Falta el nombre'; state.libErr = true; libRender(main); return; }
+    const dup = libItems().findIndex((x, i)=> i !== ed && edNorm(x.n) === edNorm(n));
+    if(dup > -1){ state.libMsg = 'Ya existe un ejercicio con ese nombre'; state.libErr = true; libRender(main); return; }
+    const old = ed === -1 ? null : libItems()[ed], vChg = !!(old && v && v !== old.v), tChg = !!(old && t && t !== old.t);
+    const it = { n, m, e, v, t };
+    if(ed === -1) state.libItems.push(it); else state.libItems[ed] = it;
+    state.libItems.sort((a, b)=> a.n.localeCompare(b.n)); state.libEd = null;
+    await libSave();
+    const where = (vChg || tChg) ? libRoutinesWith(old.n) : [];
+    if(where.length && confirm('Cambiaste ' + (vChg && tChg ? 'el video y la nota' : vChg ? 'el video' : 'la nota') + ' de “' + n + '”. Está en ' + where.length + (where.length === 1 ? ' rutina' : ' rutinas') + ' (' + where.map(k=> k.charAt(0).toUpperCase() + k.slice(1)).join(', ') + '). ¿Lo actualizo también ahí?')){
+      const c = await libPropagate(old.n, vChg ? v : '', tChg ? t : ''); state.libMsg = 'Guardado ✓ y actualizado en ' + c + (c === 1 ? ' rutina' : ' rutinas');
+    }
+    libRender(main);
+  };
+  const dl = document.getElementById('lf-d');
+  if(dl) dl.onclick = async ()=>{ if(!confirm('¿Quitar “' + libItems()[ed].n + '” de la biblioteca? No se borra de las rutinas.')) return; state.libItems.splice(ed, 1); state.libEd = null; await libSave(); libRender(main); };
+}
+
 // ===== Editor de rutinas (panel de Russ) =====
 function edSplit(label){
   const m = label.match(/^(.*?Día \d+)(?: - (.+))?$/);
@@ -3403,6 +3522,7 @@ function edGroups(ed){
 function edVideoMap(){
   const m = {};
   Object.keys(ROUTINES).forEach(k=> Object.keys(ROUTINES[k]).forEach(d=> ROUTINES[k][d].forEach(e=>{ if(e.ejercicio && e.video && !m[e.ejercicio]) m[e.ejercicio] = e.video; })));
+  libItems().forEach(x=>{ if(x.v) m[x.n] = x.v; });
   return m;
 }
 function edNames(){
@@ -3426,10 +3546,11 @@ const ED_OPT = {
 function edLib(){ if(!state.edLib) state.edLib = { notas:{}, custom:{ series:[], reps:[], peso:[], descanso:[] } }; return state.edLib; }
 function edLoadLib(cb){
   if(state.edLibLoaded) return; state.edLibLoaded = true;
-  dbGet('admin:biblioteca').then(d=>{ if(d){ const l = edLib(); l.notas = d.notas || {}; l.custom = Object.assign({ series:[], reps:[], peso:[], descanso:[] }, d.custom || {}); if(cb) cb(); } }).catch(()=>{ state.edLibLoaded = false; });
+  dbGet('admin:biblioteca').then(d=>{ if(d){ if(!state.libMerged && Array.isArray(d.ejercicios)) state.libItems = libFromRaw(d.ejercicios); const l = edLib(); l.notas = d.notas || {}; l.custom = Object.assign({ series:[], reps:[], peso:[], descanso:[] }, d.custom || {}); if(cb) cb(); } }).catch(()=>{ state.edLibLoaded = false; });
 }
 function edLibNota(name){
   const l = edLib(); if(l.notas[name]) return l.notas[name];
+  const lf = libFind(name); if(lf && lf.t) return lf.t;
   let r = '';
   Object.keys(ROUTINES).forEach(k=> Object.keys(ROUTINES[k]).forEach(d=> ROUTINES[k][d].forEach(e=>{ if(!r && e.ejercicio === name && e.nota) r = e.nota; })));
   return r;
@@ -3445,6 +3566,7 @@ function edCatalog(){
   };
   Object.keys(EXERCISE_LIBRARY).forEach(k=> { add(k); EXERCISE_LIBRARY[k].forEach(n=> add(k, n)); });
   Object.keys(ROUTINES).forEach(k=> Object.keys(ROUTINES[k]).forEach(d=> ROUTINES[k][d].forEach(e=>{ if(e.ejercicio && e.seccion && (e.tipo === 'carga' || e.tipo === 'checklist')) add(e.seccion, e.ejercicio); })));
+  libItems().forEach(x=>{ if(x.n && x.m) add(x.m, x.n); });
   cats.forEach(c=> c.names.sort((a,b)=> a.localeCompare(b)));
   return cats;
 }
@@ -3750,7 +3872,7 @@ function edRender(main){
         const notas = Object.assign({}, fresh.notas || {}, l.notas);
         Object.keys(dias).forEach(k=> dias[k].forEach(it=>{ if(it.ejercicio && it.nota) notas[it.ejercicio] = it.nota; }));
         const custom = {}; ['series','reps','peso','descanso'].forEach(f=>{ custom[f] = Array.from(new Set(((fresh.custom || {})[f] || []).concat(l.custom[f] || []))); });
-        l.notas = notas; l.custom = custom; await dbSet('admin:biblioteca', { notas, custom });
+        l.notas = notas; l.custom = custom; await dbSet('admin:biblioteca', Object.assign({}, fresh, { notas, custom }));
       }catch(e){}
       rtApplyRoutine(ed.key, body);
       ed.dirty = false; ed.err = false; ed.msg = 'Guardado ✓ Ya lo ve ' + ed.key.charAt(0).toUpperCase() + ed.key.slice(1);
