@@ -2490,6 +2490,7 @@ function pnFicha(main){
     const feelings = buildActivityFeed({[key]: c}).filter(i=>i.feeling).slice(0, 10);
     const waNumber = f.telefono ? f.telefono.replace(/\D/g,'') : '';
     const waLink = waNumber ? 'https://wa.me/' + waNumber : '';
+    const grupoLink = /^https:\/\/chat\.whatsapp\.com\//.test(f.grupoWa || '') ? f.grupoWa : '';
     const opt = (v, cur)=> '<option value="' + v + '"' + (cur === v ? ' selected' : '') + '>' + v + '</option>';
     const alerts = [];
     if(isAlert) alerts.push('⚠️ ' + (lastActive ? 'Última actividad: ' + formatDate(lastActive) + ' (' + gap + ' días)' : 'Todavía no registró actividad'));
@@ -2498,7 +2499,7 @@ function pnFicha(main){
       <div class="pn-crumb"><button class="pn-lnk" id="back-btn">Alumnas</button> › <b>${escapeHtml(c.displayName)}</b></div>
       <div class="pn-ftop"><div class="pn-bigav">${escapeHtml(c.displayName.charAt(0))}</div>
         <div><h1 class="pn-h1" style="margin:0">${escapeHtml(c.displayName)}</h1><p class="pn-sub" style="margin:2px 0 0">${monthNum ? 'Mes ' + monthNum : ''}${f.fechaInicio ? (monthNum ? ' · ' : '') + 'desde el ' + formatDate(f.fechaInicio) : ''}</p></div>
-        <div class="pn-fbtns"><button class="pn-btn pri" id="f-edit-rutina">✏️ Editar su rutina</button>${waLink ? `<a class="pn-btn" href="${waLink}" target="_blank" rel="noopener">WhatsApp</a>` : ''}</div></div>
+        <div class="pn-fbtns"><button class="pn-btn pri" id="f-edit-rutina">✏️ Editar su rutina</button>${waLink ? `<a class="pn-btn" href="${waLink}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${grupoLink ? `<a class="pn-btn" href="${escapeHtml(grupoLink)}" target="_blank" rel="noopener">👥 Grupo</a>` : ''}</div></div>
       ${alerts.map(a=>`<div class="pn-alert" style="margin-bottom:10px">${escapeHtml(a)}</div>`).join('')}
       <div class="pn-kps">
         <div class="pn-kp"><small>Esta semana</small><b>${computeWeekCount(c.data)} de ${weeklyTarget(c.displayName)} días</b></div>
@@ -2514,6 +2515,7 @@ function pnFicha(main){
             <label>Nivel</label><select id="f-nivel"><option value="">Elegir...</option>${['Principiante','Intermedio','Avanzado'].map(v=>opt(v, f.nivel)).join('')}</select>
             <label>Restricciones o cuidados</label><input id="f-restricciones" value="${escapeHtml(f.restricciones)}" placeholder="Ej: Sin restricciones" />
             <label>Teléfono (WhatsApp)</label><input id="f-telefono" value="${escapeHtml(f.telefono || '')}" placeholder="Ej: 5491123456789 (con código de país)" />
+            <label>Grupo de WhatsApp (link de invitación)</label><input id="f-grupowa" value="${escapeHtml(f.grupoWa || '')}" placeholder="https://chat.whatsapp.com/..." />
             <div class="row"><div><label>Fecha de inicio</label><div style="display:flex; gap:6px;"><input type="date" id="f-fechainicio" value="${escapeHtml(f.fechaInicio)}" style="flex:1;" /><button type="button" class="pn-btn" id="f-fechainicio-hoy">Hoy</button></div></div>
             <div><label>Cumpleaños</label><input type="text" id="f-cumple" value="${escapeHtml(f.cumpleanos)}" placeholder="MM-DD" /></div></div>
             <label>Vencimiento del plan</label><input type="date" id="f-vencimiento" value="${escapeHtml(c.data.vencimiento)}" />
@@ -5777,6 +5779,7 @@ async function onSaveFicha(key){
     nivel: document.getElementById('f-nivel').value.trim(),
     restricciones: document.getElementById('f-restricciones').value.trim(),
     telefono: document.getElementById('f-telefono').value.trim(),
+    grupoWa: document.getElementById('f-grupowa').value.trim(),
     fechaInicio: document.getElementById('f-fechainicio').value,
     cumpleanos: document.getElementById('f-cumple').value.trim(),
     semanaInicio: document.getElementById('f-semanainicio').value
