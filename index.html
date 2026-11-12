@@ -3394,6 +3394,8 @@ function libItems(){ return state.libItems || []; }
 function libFromRaw(a){ return (a || []).map(x=>({ n:x[0], m:x[1] || '', e:x[2] || '', v:x[3] || '', t:x[4] || '' })); }
 function libToRaw(items){ return items.map(x=>[x.n, x.m, x.e, x.v, x.t]); }
 function libFind(name){ const k = edNorm(name); return libItems().find(x=> edNorm(x.n) === k); }
+function libToks(n){ return edNorm(n).split(/\s+/).filter(w=> w && ['de','con','en','la','el','a','del'].indexOf(w) < 0).map(w=> w.replace(/(es|s)$/, '')).sort().join(' '); }
+function libSimilar(name, skip){ const k = libToks(name); if(!k) return null; return libItems().find((x, i)=> i !== skip && libToks(x.n) === k) || null; }
 function libRoutinesWith(name){
   const k = edNorm(name), out = [];
   Object.keys(ROUTINES).forEach(rk=>{ let has = false; Object.keys(ROUTINES[rk] || {}).forEach(d=> (ROUTINES[rk][d] || []).forEach(e=>{ if(e.ejercicio && edNorm(e.ejercicio) === k) has = true; })); if(has) out.push(rk); });
@@ -3410,7 +3412,7 @@ function libLoad(cb){
     let added = 0;
     Object.keys(ROUTINES).forEach(rk=> Object.keys(ROUTINES[rk] || {}).forEach(dn=> (ROUTINES[rk][dn] || []).forEach(e=>{
       if(!e.ejercicio || (e.tipo !== 'carga' && e.tipo !== 'checklist') || /se está preparando/i.test(e.ejercicio)) return;
-      const f = libFind(e.ejercicio);
+      const f = libFind(e.ejercicio) || libSimilar(e.ejercicio);
       if(!f){ state.libItems.push({ n:e.ejercicio, m:(edMuscle(e.seccion) === 'Abs' ? 'Core' : edMuscle(e.seccion)), e:'', v:e.video || '', t:e.nota || '' }); added++; }
       else { if(!f.v && e.video){ f.v = e.video; added++; } if(!f.t && e.nota){ f.t = e.nota; added++; } }
     })));
@@ -3482,6 +3484,8 @@ function libRender(main){
     if(!n){ state.libMsg = 'Falta el nombre'; state.libErr = true; libRender(main); return; }
     const dup = libItems().findIndex((x, i)=> i !== ed && edNorm(x.n) === edNorm(n));
     if(dup > -1){ state.libMsg = 'Ya existe un ejercicio con ese nombre'; state.libErr = true; libRender(main); return; }
+    const sim = libSimilar(n, ed);
+    if(sim && !confirm('Ya tienes “' + sim.n + '” que se parece mucho a “' + n + '”. ¿Guardas igual como ejercicio nuevo?')) return;
     const old = ed === -1 ? null : libItems()[ed], vChg = !!(old && v && v !== old.v), tChg = !!(old && t && t !== old.t);
     const it = { n, m, e, v, t };
     if(ed === -1) state.libItems.push(it); else state.libItems[ed] = it;
