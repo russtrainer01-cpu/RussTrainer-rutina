@@ -350,6 +350,20 @@
     font-size:14px;
     cursor:pointer;
   }
+  .reto-card{ background:#fff; border:2px solid var(--rose); border-radius:22px; padding:16px 18px; margin:14px 0; position:relative; z-index:1; }
+  .reto-card .reto-k{ font-size:12px; font-weight:800; letter-spacing:.08em; color:var(--rose); }
+  .reto-card .reto-t{ font-size:21px; font-weight:800; margin:4px 0 2px; color:var(--text); }
+  .reto-card .reto-d{ font-size:14px; color:#6b6b6b; margin:0 0 12px; }
+  .reto-row{ display:flex; align-items:center; gap:10px; padding:6px 0; }
+  .reto-row b{ min-width:64px; font-size:14px; }
+  .reto-row small{ margin-left:auto; color:#6b6b6b; font-size:13px; }
+  .reto-dots{ display:flex; gap:6px; flex-wrap:wrap; }
+  .reto-dot{ width:26px; height:26px; border-radius:50%; border:2px solid var(--rose); display:inline-flex; align-items:center; justify-content:center; font-size:14px; color:#fff; font-weight:800; }
+  .reto-dot.on{ background:var(--rose); }
+  .reto-btn{ width:100%; margin-top:10px; padding:13px; border:none; border-radius:14px; background:var(--rose); color:#fff; font-weight:800; font-size:16px; font-family:inherit; cursor:pointer; }
+  .reto-ok{ margin-top:10px; font-weight:700; color:#1f9d6b; text-align:center; }
+  .reto-undo{ background:none; border:none; color:#6b6b6b; font-size:13px; text-decoration:underline; cursor:pointer; display:block; margin:6px auto 0; font-family:inherit; }
+  .reto-done{ margin-top:12px; padding:12px; border-radius:14px; background:#eaf7f0; color:#1b5e44; font-weight:700; text-align:center; }
   .stat-grid{
     display:grid;
     grid-template-columns:1fr 1fr;
@@ -2934,7 +2948,7 @@ function renderPanel(app){
   const feed = buildActivityFeed(state.adminData || {});
   const pending = feed.filter(i=>i.comment && !i.respondido);
   const nav = [
-    ['agenda','🗓️','Mi agenda'],['bandeja','💡','Bandeja'],['rutinas','📝','Rutinas'],['biblioteca','📚','Biblioteca'],['suplementos','💊','Suplementos'],['hoy','🏠','Alumnas hoy'],['alumnas','👥','Alumnas'],['comentarios','💬','Comentarios'],['claves','🔑','Claves'],'sep',
+    ['agenda','🗓️','Mi agenda'],['bandeja','💡','Bandeja'],['rutinas','📝','Rutinas'],['biblioteca','📚','Biblioteca'],['suplementos','💊','Suplementos'],['hoy','🏠','Alumnas hoy'],['alumnas','👥','Alumnas'],['retos','💞','Retos de pareja'],['comentarios','💬','Comentarios'],['claves','🔑','Claves'],'sep',
     ['resumen','📋','Resumen semanal'],['actividad','🕐','Actividad']
   ];
   const navHtml = nav.map(n=> n === 'sep' ? '<div class="pn-sep"></div>' :
@@ -3077,6 +3091,7 @@ function renderPanel(app){
       <div class="pn-card" style="max-width:820px">${pending.length ? pending.map(commentHtml).join('') : '<div class="pn-empty">No tienes comentarios pendientes 🎉</div>'}</div>`;
     detailBtns(); respBtns();
   }
+  else if(sec === 'retos'){ retoAdminRender(main); }
   else if(sec === 'claves'){
     main.innerHTML = `<h1 class="pn-h1">Claves</h1><p class="pn-sub">Crea el acceso de una alumna nueva o cambia la clave de una que ya tiene. Pásale el nombre y la clave por WhatsApp.</p>
       <div class="pn-card" style="max-width:820px">
@@ -4454,6 +4469,90 @@ async function dbSet(nombre, data){
   if(!res.ok) throw new Error('No se pudo guardar en la base');
 }
 
+// ===== Retos de pareja =====
+function retoMonday(d){ const x = new Date(d); x.setHours(12, 0, 0, 0); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return localISO(x); }
+function retoSemana(row){
+  if(!row || !row.retos || !row.retos.length) return null;
+  const mon = retoMonday(new Date()), ini = retoMonday(new Date((row.inicio || mon) + 'T12:00:00'));
+  const w = Math.round((new Date(mon + 'T12:00:00') - new Date(ini + 'T12:00:00')) / (7 * 864e5));
+  if(w < 0) return null;
+  return { mon, idx: w % row.retos.length, reto: row.retos[w % row.retos.length] };
+}
+function retoHtml(row){
+  const me = authSlug(state.clienta || ''), s = retoSemana(row);
+  if(!s || !(row.miembros || []).some(m=> m.k === me)) return '';
+  const r = s.reto, meta = Math.max(1, Number(r.meta) || 1), prog = (row.progreso || {})[s.mon] || {};
+  const cnt = k=> Math.min(Number(prog[k]) || 0, 20);
+  const rowsH = (row.miembros || []).map(m=>{
+    const n = cnt(m.k), dots = Array.from({ length:meta }, (_, i)=> `<span class="reto-dot${i < n ? ' on' : ''}">${i < n ? '✓' : ''}</span>`).join('');
+    return `<div class="reto-row"><b>${m.k === me ? 'Tú' : escapeHtml(m.n)}</b><span class="reto-dots">${dots}</span><small>${Math.min(n, meta)} de ${meta}</small></div>`;
+  }).join('');
+  const hecho = (row.miembros || []).every(m=> cnt(m.k) >= meta), mine = cnt(me);
+  return `<div class="reto-card"><div class="reto-k">💞 RETO DE LA SEMANA</div><div class="reto-t">${escapeHtml(r.t || '')}</div><p class="reto-d">${escapeHtml(r.d || '')}${meta > 1 ? ' · meta: ' + meta + ' veces' : ''}</p>${rowsH}
+    ${mine < meta ? `<button class="reto-btn" id="reto-add">${escapeHtml(r.boton || 'Lo hice')}</button>` : '<div class="reto-ok">Ya hiciste tu parte ✓</div>'}
+    ${mine > 0 ? '<button class="reto-undo" id="reto-del">Deshacer la última</button>' : ''}
+    ${hecho ? `<div class="reto-done">Reto cumplido 💪${row.mensaje ? '<br><span style="font-weight:600">' + escapeHtml(row.mensaje) + '</span>' : ''}</div>` : ''}</div>`;
+}
+function retoPaint(){
+  const box = document.getElementById('reto-box'); if(!box) return;
+  box.innerHTML = state.retoRow ? retoHtml(state.retoRow) : '';
+  const a = document.getElementById('reto-add'), d = document.getElementById('reto-del');
+  if(a) a.onclick = ()=> retoMarcar(1);
+  if(d) d.onclick = ()=> retoMarcar(-1);
+}
+async function retoMarcar(delta){
+  const id = (CLIENT_CONFIG[routineKey(state.clienta)] || {}).pareja, s = retoSemana(state.retoRow);
+  if(!id || !s) return;
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/retos_marcar`, { method:'POST', headers: await sbH({ 'Content-Type':'application/json' }), body: JSON.stringify({ p_id:id, p_semana:s.mon, p_delta:delta }) });
+    if(!res.ok) throw new Error('x');
+    state.retoRow = await res.json();
+  }catch(e){ alert('No se pudo guardar. Revisa tu conexión e intenta de nuevo'); }
+  retoPaint();
+}
+async function retoLoad(){
+  const id = (CLIENT_CONFIG[routineKey(state.clienta)] || {}).pareja; if(!id) return;
+  retoPaint();
+  try{ const d = await dbGet('pareja:' + id); if(d){ state.retoRow = d; retoPaint(); } }catch(e){}
+}
+async function retoAdminRender(main){
+  main.innerHTML = '<h1 class="pn-h1">Retos de pareja</h1><p class="pn-sub">Cargando…</p>';
+  let rows = [];
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/clientes?nombre=like.pareja%3A%25&select=nombre,data`, { headers: await sbH() });
+    if(!res.ok) throw new Error('x'); rows = await res.json();
+  }catch(e){ main.innerHTML = '<h1 class="pn-h1">Retos de pareja</h1><p class="pn-sub">No se pudo cargar. Revisa tu conexión.</p>'; return; }
+  if(!rows.length){ main.innerHTML = '<h1 class="pn-h1">Retos de pareja</h1><div class="pn-card"><div class="pn-empty">Todavía no hay parejas con retos.</div></div>'; return; }
+  const e = escapeHtml;
+  main.innerHTML = '<h1 class="pn-h1">Retos de pareja</h1><p class="pn-sub">Un reto por semana, rota solo cada lunes. Cada uno toca su casilla en su app.</p>' + rows.map((r, ri)=>{
+    const d = r.data || {}, s = retoSemana(d), prog = s ? ((d.progreso || {})[s.mon] || {}) : {}, meta = s ? Math.max(1, Number(s.reto.meta) || 1) : 1;
+    const names = (d.miembros || []).map(m=> m.n).join(' y ');
+    return `<div class="pn-card" style="max-width:820px;margin-bottom:18px" data-ri="${ri}"><h2>💞 ${e(names)}</h2>
+      <p class="pn-sub" style="margin:0 0 10px">${s ? 'Esta semana: <b>' + e(s.reto.t) + '</b> · ' + (d.miembros || []).map(m=> e(m.n) + ' ' + Math.min(Number(prog[m.k]) || 0, meta) + '/' + meta).join(' · ') : 'Todavía no empezó (arranca el ' + e(d.inicio || '') + ')'}</p>
+      <div class="pn-form"><label>Empieza el lunes<input type="date" class="rt-ini" value="${e(d.inicio || '')}"></label>
+      <label style="grid-column:1/-1">Mensaje cuando cumplen el reto<textarea class="rt-msg" rows="2">${e(d.mensaje || '')}</textarea></label></div>
+      <div class="rt-list">${(d.retos || []).map((x, i)=> `<div class="rt-item" style="border:1px solid #eee;border-radius:12px;padding:10px;margin:8px 0"><div class="pn-form"><label>Semana ${i + 1} · Título<input class="rt-t" value="${e(x.t)}"></label><label>Veces (meta)<input class="rt-meta" type="number" min="1" max="7" value="${e(x.meta)}"></label><label style="grid-column:1/-1">Descripción<input class="rt-d" value="${e(x.d)}"></label><label style="grid-column:1/-1">Texto del botón<input class="rt-b" value="${e(x.boton)}"></label></div><button class="pn-btn rt-x" type="button">Quitar</button></div>`).join('')}</div>
+      <button class="pn-btn rt-add" type="button">+ Agregar reto</button> <button class="pn-btn pri rt-save" type="button">Guardar</button> <span class="pn-msg"></span></div>`;
+  }).join('');
+  main.querySelectorAll('[data-ri]').forEach(card=>{
+    const ri = Number(card.getAttribute('data-ri')), msg = card.querySelector('.pn-msg');
+    const rowHtml = ()=> `<div class="rt-item" style="border:1px solid #eee;border-radius:12px;padding:10px;margin:8px 0"><div class="pn-form"><label>Título<input class="rt-t"></label><label>Veces (meta)<input class="rt-meta" type="number" min="1" max="7" value="1"></label><label style="grid-column:1/-1">Descripción<input class="rt-d"></label><label style="grid-column:1/-1">Texto del botón<input class="rt-b" value="Lo hicimos"></label></div><button class="pn-btn rt-x" type="button">Quitar</button></div>`;
+    const bindX = ()=> card.querySelectorAll('.rt-x').forEach(b=> b.onclick = ()=> b.closest('.rt-item').remove());
+    bindX();
+    card.querySelector('.rt-add').onclick = ()=>{ card.querySelector('.rt-list').insertAdjacentHTML('beforeend', rowHtml()); bindX(); };
+    card.querySelector('.rt-save').onclick = async ()=>{
+      const retos = Array.from(card.querySelectorAll('.rt-item')).map(it=> ({ t:it.querySelector('.rt-t').value.trim(), d:it.querySelector('.rt-d').value.trim(), meta:Math.max(1, Math.min(7, Number(it.querySelector('.rt-meta').value) || 1)), boton:it.querySelector('.rt-b').value.trim() || 'Lo hicimos' })).filter(x=> x.t);
+      if(!retos.length){ msg.className = 'pn-msg err'; msg.textContent = 'Agrega al menos un reto'; return; }
+      msg.className = 'pn-msg'; msg.textContent = 'Guardando…';
+      try{
+        const fresh = (await dbGet(rows[ri].nombre)) || rows[ri].data;
+        await dbSet(rows[ri].nombre, Object.assign({}, fresh, { inicio: card.querySelector('.rt-ini').value, mensaje: card.querySelector('.rt-msg').value.trim(), retos }));
+        msg.className = 'pn-msg ok'; msg.textContent = 'Guardado ✓';
+      }catch(err){ msg.className = 'pn-msg err'; msg.textContent = 'No se pudo guardar'; }
+    };
+  });
+}
+
 // Rutinas en la base: si existe 'rutina:<nombre>' reemplaza a la del código; sin conexión usa la copia del celular
 function rtApplyRoutine(key, r){
   if(!r || !r.dias) return false;
@@ -4950,6 +5049,8 @@ function renderMain(){
         </div>
       ` : ''}
 
+      <div id="reto-box"></div>
+
       <div class="stat-grid">
         <div class="stat-card">
           <div class="stat-num">${weekCount}/${target}</div>
@@ -4989,6 +5090,7 @@ function renderMain(){
       };
     }
     supClientLoad();
+    retoLoad();
     document.getElementById('progress-toggle').onclick = ()=>{
       if(state.uiExpanded['client-progress']) delete state.uiExpanded['client-progress'];
       else state.uiExpanded['client-progress'] = true;
