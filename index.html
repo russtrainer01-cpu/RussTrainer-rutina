@@ -490,9 +490,31 @@
     display:block;
   }
   body.theme-masculine{
-    --rose:#5a6472;
-    --rose-dark:#333b45;
+    --rose:#8a5a3b;
+    --rose-dark:#5a3a2a;
   }
+  /* Tema marrón: reemplaza los rosados fijos de la app */
+  body.theme-masculine .home-bg .h1{ background:#8a5a3b; opacity:.34; }
+  body.theme-masculine .home-bg .h2{ background:#6b4a35; opacity:.26; }
+  body.theme-masculine .home-bg .h3{ background:#e3d3c4; opacity:.6; }
+  body.theme-masculine .hv-mono{ border-color:#7a4f35; color:#7a4f35; }
+  body.theme-masculine .hv-word i{ color:#7a4f35; }
+  body.theme-masculine .guide-open{ color:#7a4f35 !important; }
+  body.theme-masculine .wk-seg.today, body.theme-masculine .wk-dot.today{ background:#8a5a3b; }
+  body.theme-masculine .wk-dot.extra{ border-color:#8a5a3b; }
+  body.theme-masculine .wk-sub.today{ color:#7a4f35; }
+  body.theme-masculine .wk-card.today{ background:#efe3d8; }
+  body.theme-masculine .month-badge{ background:#8a5a3b !important; }
+  body.theme-masculine .tb-i.on{ color:#8a5a3b; }
+  body.theme-masculine #tb-sheet h4{ color:#8a5a3b; }
+  body.theme-masculine .lg-bg .b1{ background:#8a5a3b; }
+  body.theme-masculine .lg-title i, body.theme-masculine .lg-help a{ color:#7a4f35; }
+  body.theme-masculine .login-v2 input:focus{ border-color:#7a4f35; }
+  body.theme-masculine .hero-today-card{ background:linear-gradient(135deg,#4a2f22 0%,#7a4f35 55%,#a47a5a 100%); }
+  body.theme-masculine .hero-today-card.hero-done{ background:linear-gradient(135deg,#4a2f22,#7a4f35); }
+  body.theme-masculine .workout-progress-track{ background:linear-gradient(90deg,#e3d3c4,#a47a5a,#5a3a2a); }
+  body.theme-masculine .set-minus{ background:#efe3d8; color:#7a4f35; }
+  body.theme-masculine .set-plus, body.theme-masculine .feeling-btn.selected{ background:#8a5a3b; color:#fff; }
   /* Login nuevo: degradado difuminado + nombre + campo y boton en pildora */
   .login-wrap.login-v2{ font-family:'Nunito',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; justify-content:flex-start; position:relative; min-height:calc(100vh - 122px); }
   .lg-bg{ position:fixed; left:0; top:0; width:100%; height:min(460px,56vh); overflow:hidden; pointer-events:none; z-index:0; }
