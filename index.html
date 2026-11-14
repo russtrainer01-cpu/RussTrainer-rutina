@@ -1311,7 +1311,7 @@
   .g-ed{display:flex;gap:4px}.g-ed .ed-sl{padding:5px 6px;font-size:13px;font-weight:600}.g-ed .ed-sl:nth-child(1){width:90px}.g-ed .ed-sl:nth-child(2){width:86px}.g-ed .ed-sl:nth-child(3){width:108px}.g-ed .ed-sl{padding:5px 3px}
   .g-tb .ed-pk{padding:6px 9px;font-size:13.5px;font-weight:600}.g-tb .ed-ct{display:flex;gap:0;justify-content:flex-end}.g-tb .ag-ic{padding:2px 3px;white-space:nowrap}.g-tb td.g-ctl,.g-tb th.g-ctl{min-width:96px;padding-left:2px;padding-right:2px}
   .g-cp,.g-ed1{border:1px dashed #b9c0d8;background:transparent;color:#cfd4e6;border-radius:8px;font-size:12px;padding:2px 8px;cursor:pointer;margin-top:3px;font-family:inherit}.g-cp{color:#6b7289;border-color:#cfd4e1}.g-ed1{color:#e7e9f5}
-  .g-fbc{min-width:80px;font-size:12.5px;color:#6b7289}.g-fbc .sg{font-style:normal;border-radius:99px;padding:2px 9px;font-size:11.5px;font-weight:700}.g-mut{color:#a2a8bc;font-size:12.5px}
+  .g-fbc{min-width:80px;font-size:12.5px;color:#6b7289}.g-fbc[data-fbk]{cursor:help}.g-fbc[data-fbk]:hover{background:#f4f6ff}#fb-pop{position:fixed;z-index:9999;display:none;max-width:360px;min-width:240px;background:#fff;border:1px solid #dfe3f0;border-radius:12px;box-shadow:0 10px 30px rgba(30,40,80,.2);padding:12px 14px;font-size:13px;line-height:1.45;color:#2b3047;pointer-events:none}#fb-pop h4{margin:0 0 6px;font-size:13.5px}#fb-pop .fp-s{padding:7px 0;border-top:1px solid #eef0f6}#fb-pop .fp-s:first-of-type{border-top:0;padding-top:0}#fb-pop .fp-d{color:#8a90a6;font-size:11.5px}#fb-pop .fp-c{margin-top:3px;white-space:pre-wrap;color:#2b3047}.g-fbc .sg{font-style:normal;border-radius:99px;padding:2px 9px;font-size:11.5px;font-weight:700}.g-mut{color:#a2a8bc;font-size:12.5px}
   .g-more{display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:#f6f7fb;border-radius:8px;padding:8px}.g-more .ed-sl{width:auto;flex:1 1 150px}.g-more .ed-nota{flex:2 1 260px}
   .g-foot{padding:12px 14px;border-top:1px solid #e3e6ee}.g-foot .ed-dh{display:flex;gap:8px;align-items:center;margin-bottom:8px}.g-foot .ed-dn{flex:1;border:1px solid #cfd4e1;border-radius:8px;padding:8px 9px;font-size:15px;font-weight:700;background:#fff;font-family:inherit}.g-foot .ed-pre{font-size:13px;color:#6b7289;font-weight:600;white-space:nowrap}.g-note summary{cursor:pointer;font-size:13px;font-weight:600;color:#6b7289}.g-note textarea{width:100%;margin-top:6px;border:1px solid #f0e2b8;background:#fffaf0;border-radius:8px;padding:8px;font-family:inherit;font-size:14px;box-sizing:border-box}
 
@@ -3760,8 +3760,36 @@ function edFbCell(key, name){
   const c = state.adminData && state.adminData[key]; if(!c || !name) return '';
   const r = pnStrength(c).find(x=> x.name === name); if(!r) return '<span class="g-mut">—</span>';
   const l = r.last || {}, sg = pnSug(r), kg = r.cur === null ? (r.txt ? escapeHtml(r.txt) : 'sin peso') : String(r.cur).replace('.', ',') + ' kg';
-  return `<span class="g-fb">${kg}${l.feeling ? ' · ' + escapeHtml(l.feeling) : ''}</span> <em class="sg ${sg[0]}">${sg[1]}</em>${l.comment ? ` <span class="g-cm" title="${escapeHtml(l.comment)}">💬</span>` : ''}`;
+  return `<span class="g-fb">${kg}${l.feeling ? ' · ' + escapeHtml(l.feeling) : ''}</span> <em class="sg ${sg[0]}">${sg[1]}</em>${l.comment ? ` <span class="g-cm">💬</span>` : ''}`;
 }
+// Vista previa flotante: al pasar el mouse por "Cómo le fue" se ve el comentario completo y las últimas sesiones
+function edFbPopHtml(key, name){
+  const c = state.adminData && state.adminData[key]; if(!c) return '';
+  const arr = ((c.data.exercises || {})[name] || []).slice().sort((a, b)=> String(b.ts || b.date).localeCompare(String(a.ts || a.date))).slice(0, 3);
+  if(!arr.length) return '';
+  const r = pnStrength(c).find(x=> x.name === name), sg = r ? pnSug(r) : null;
+  return `<h4>${escapeHtml(name)}${sg ? ` <em class="sg ${sg[0]}" style="font-style:normal">${sg[1]}</em>` : ''}</h4>` + arr.map(e=>{
+    const det = [e.weight ? escapeHtml(String(e.weight)) + (/^[\d.,]+$/.test(String(e.weight).trim()) ? ' kg' : '') : '', e.reps ? escapeHtml(String(e.reps)) + ' reps' : '', e.feeling ? escapeHtml(String(e.feeling)) : ''].filter(Boolean).join(' · ');
+    return `<div class="fp-s"><div class="fp-d">${e.date ? formatDate(e.date) : ''}</div><div>${det || 'Sin detalle'}</div>${e.comment ? `<div class="fp-c">💬 ${escapeHtml(String(e.comment))}</div>` : ''}</div>`;
+  }).join('');
+}
+(function(){
+  if(window.__fbPopInit) return; window.__fbPopInit = true;
+  const get = ()=>{ let el = document.getElementById('fb-pop'); if(!el){ el = document.createElement('div'); el.id = 'fb-pop'; document.body.appendChild(el); } return el; };
+  const hide = ()=>{ const el = document.getElementById('fb-pop'); if(el) el.style.display = 'none'; };
+  document.addEventListener('mouseover', e=>{
+    const t = e.target && e.target.closest ? e.target.closest('.g-fbc[data-fbk]') : null;
+    if(!t){ hide(); return; }
+    const h = edFbPopHtml(t.getAttribute('data-fbk'), t.getAttribute('data-fbn')); if(!h){ hide(); return; }
+    const el = get(); el.innerHTML = h; el.style.display = 'block';
+    const r = t.getBoundingClientRect(), pw = el.offsetWidth, ph = el.offsetHeight;
+    let left = r.left - pw - 10; if(left < 8) left = Math.min(r.right + 10, window.innerWidth - pw - 8);
+    el.style.left = Math.max(8, left) + 'px';
+    el.style.top = Math.max(8, Math.min(r.top - 6, window.innerHeight - ph - 8)) + 'px';
+  });
+  window.addEventListener('scroll', hide, true);
+  document.addEventListener('mouseleave', hide);
+})();
 function edGridInfo(ed){
   const all = ed.days.map((d, i)=>{ const p = parseDayLabel(edLabel(d)); return { i, gk:p.groupKey, sem:p.semana, n:edDayNum(d) }; });
   const ok = all.filter(x=> x.gk !== null && x.n !== null);
@@ -3818,7 +3846,8 @@ function edGridHtml(ed){
       const di = dayAt(c.gk), o = di < 0 ? null : ed.days[di].items.find(x=> x.ejercicio === it.ejercicio && x.tipo !== 'mensaje');
       h += `<td class="g-ot${o ? '' : ' g-emp'}">${o ? edCellTxt(o) : '—'}</td>`;
     });
-    h += `<td class="g-fbc">${carga ? edFbCell(ed.key, it.ejercicio) : ''}</td><td class="g-ctl"><div class="ed-ct"><button class="ag-ic" data-gmore="${k}" title="Video, nota, descanso">${it.video ? '🎥' : ''}${it.nota ? '💡' : ''}⋯</button><button class="ag-ic" data-up="${k}" title="Subir"${ii <= lo + 1 && !fd.items.slice(0, ii).some(x=> x.tipo !== 'mensaje') ? ' disabled' : ''}>↑</button><button class="ag-ic" data-dn="${k}" title="Bajar"${ii === fd.items.length - 1 ? ' disabled' : ''}>↓</button><button class="ag-ic" data-rm="${k}" title="Quitar">✕</button></div></td></tr>`;
+    const hasFb = carga && it.ejercicio && state.adminData && state.adminData[ed.key] && ((state.adminData[ed.key].data.exercises || {})[it.ejercicio] || []).length > 0;
+    h += `<td class="g-fbc"${hasFb ? ` data-fbk="${escapeHtml(ed.key)}" data-fbn="${escapeHtml(it.ejercicio)}"` : ''}>${carga ? edFbCell(ed.key, it.ejercicio) : ''}</td><td class="g-ctl"><div class="ed-ct"><button class="ag-ic" data-gmore="${k}" title="Video, nota, descanso">${it.video ? '🎥' : ''}${it.nota ? '💡' : ''}⋯</button><button class="ag-ic" data-up="${k}" title="Subir"${ii <= lo + 1 && !fd.items.slice(0, ii).some(x=> x.tipo !== 'mensaje') ? ' disabled' : ''}>↑</button><button class="ag-ic" data-dn="${k}" title="Bajar"${ii === fd.items.length - 1 ? ' disabled' : ''}>↓</button><button class="ag-ic" data-rm="${k}" title="Quitar">✕</button></div></td></tr>`;
     if(ed.gMore && ed.gMore[k]){
       const secs = edSecOptions(); if(it.seccion && !secs.some(x=> edMuscle(x) === edMuscle(it.seccion))) secs.push(it.seccion);
       const secSel = `<select class="ed-sl" data-sel="${k}:seccion"><option value="">Músculo</option>${secs.map(x=>`<option${edMuscle(x) === edMuscle(it.seccion) ? ' selected' : ''} value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join('')}</select>`;
