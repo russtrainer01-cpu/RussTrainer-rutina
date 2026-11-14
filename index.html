@@ -3792,7 +3792,9 @@ function edGridHtml(ed){
   });
   h += '<th class="g-fbh">Cómo le fue</th><th class="g-ctl"></th></tr></thead><tbody>';
   if(fdi < 0){
-    h += `<tr><td colspan="${cols.length + 3}" class="g-none">${wLabel(ed.gFocus)} no tiene el Día ${ed.gDay}. Elige otra semana arriba o cópialo desde una semana anterior.</td></tr></tbody></table></div></div>`;
+    const prev = gi.ok.filter(y=> y.n === ed.gDay && y.gk < ed.gFocus).sort((a, b)=> b.gk - a.gk)[0];
+    const cpBtn = prev ? `<div style="margin-top:10px"><button type="button" class="pn-btn" data-gcopy="${ed.gFocus}" data-gn="${ed.gDay}">+ Copiar el Día ${ed.gDay} de ${wLabel(prev.gk)}</button></div>` : '';
+    h += `<tr><td colspan="${cols.length + 3}" class="g-none">${wLabel(ed.gFocus)} no tiene el Día ${ed.gDay}. Elige otra semana arriba o cópialo desde una semana anterior.${cpBtn}</td></tr></tbody></table></div></div>`;
     return h;
   }
   const fd = ed.days[fdi], lo = fd.items[0] && fd.items[0].tipo === 'mensaje' ? 0 : -1;
