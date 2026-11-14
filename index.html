@@ -1425,6 +1425,29 @@ function parseDefaultWeight(pesoStr){
   return parseFloat(m[1]);
 }
 
+// Unidad del peso: las máquinas de bloques se registran en bloques, no en kg
+function weightUnit(item){ return item && /bloque/i.test(String(item.peso || '')) ? 'bloques' : 'kg'; }
+function fmtWeight(w, unit){
+  const t = String(w === undefined || w === null ? '' : w).trim();
+  if(!t) return '';
+  return /^[\d.,]+$/.test(t) ? t + (unit === 'bloques' ? (t === '1' ? ' bloque' : ' bloques') : ' kg') : t;
+}
+function unitForExercise(name){
+  try{
+    for(const k in ROUTINES){
+      const days = ROUTINES[k];
+      for(const d in days){
+        const arr = Array.isArray(days[d]) ? days[d] : (days[d] && days[d].items) || [];
+        for(const it of arr){
+          if(it && it.ejercicio === name && weightUnit(it) === 'bloques') return 'bloques';
+          if(it && it.ejercicios) for(const x of it.ejercicios) if(x.ejercicio === name && weightUnit(x) === 'bloques') return 'bloques';
+        }
+      }
+    }
+  }catch(e){}
+  return 'kg';
+}
+
 // Dropset: devuelve { heavy, light, repsHeavy, repsLight } si el ejercicio es un dropset
 // con peso tipo "35kg → baja a 25kg" y reps tipo "10 + 8"; si no, null.
 function parseDropset(item){
@@ -2496,7 +2519,7 @@ function pnStrength(c){
     const fl = String(last.feeling || '');
     const txt = String(last.weight || '').trim(); const ready = /F[aá]cil/i.test(fl) && (nums.length > 0 || !!txt);
     const review = /l[ií]mite/i.test(fl);
-    rows.push({ name, n: arr.length, nums, first, cur, pct, ready, review, last, txt });
+    rows.push({ name, n: arr.length, nums, first, cur, pct, ready, review, last, txt, unit: unitForExercise(name) });
   });
   rows.sort((a,b)=> (b.review - a.review) || (b.ready - a.ready) || ((b.pct === null ? -1 : b.pct) - (a.pct === null ? -1 : a.pct)));
   return rows;
@@ -2522,7 +2545,7 @@ function pnStrengthHtml(c){
   const fe = r=>{ const m = String((r.last && r.last.feeling) || '').match(/^\s*(\S+)\s+(.*)$/); return m ? '<span class="fe">' + m[1] + ' ' + escapeHtml(m[2]) + '</span>' : '<span class="fe none">—</span>'; };
   return `<div class="pn-card pn-hl"><div class="pn-hh"><h2>Cómo le fue en cada ejercicio</h2><div>${nUp ? '<span class="pn-pl g">' + nUp + ' para subir</span> ' : ''}${nRev ? '<span class="pn-pl o">' + nRev + ' para revisar</span>' : ''}</div></div>
     <div class="pn-sh"><span>Ejercicio</span><span>Última vez</span><span>Cómo se sintió</span><span>Sugerencia</span></div>
-    ${rows.map(r=>{ const sg = pnSug(r), l = r.last || {}, wt = r.cur === null ? (r.txt ? escapeHtml(r.txt) : 'sin peso') : (r.pct === null ? kgTxt(r.cur) + ' kg' : kgTxt(r.first) + ' → ' + kgTxt(r.cur) + ' kg');
+    ${rows.map(r=>{ const sg = pnSug(r), l = r.last || {}, wt = r.cur === null ? (r.txt ? escapeHtml(r.txt) : 'sin peso') : (r.pct === null ? kgTxt(r.cur) + (r.unit === 'bloques' ? ' bloques' : ' kg') : kgTxt(r.first) + ' → ' + kgTxt(r.cur) + (r.unit === 'bloques' ? ' bloques' : ' kg'));
       return `<div class="pn-sr${r.review ? ' rev' : ''}"><div class="n"><b>${escapeHtml(r.name)}</b><small>${l.date ? formatDate(l.date) : ''} · ${r.n} ${r.n === 1 ? 'registro' : 'registros'}</small></div>
       <div class="w"><b>${wt}</b><small>${l.sets || '-'} × ${l.reps || '-'}</small></div>${fe(r)}<span class="sg ${sg[0]}">${sg[1]}</span>
       ${l.comment ? `<div class="cm">💬 ${escapeHtml(l.comment)}</div>` : ''}</div>`; }).join('')}</div>`;
@@ -2676,7 +2699,7 @@ function pnFicha(main){
               inner += `<div style="margin:0 0 10px; padding-left:10px; border-left:2px solid var(--border);">
                 <div style="font-weight:600; color:var(--text); font-size:13px;">${escapeHtml(ex.ejercicio)}</div>
                 ${last ? `
-                  <div class="sub" style="margin:2px 0 0;">${formatDate(last.date)} · ${ex.sinPeso ? '' : last.weight + 'kg · '}${last.reps}${last.feeling ? ' · ' + last.feeling : ''}</div>
+                  <div class="sub" style="margin:2px 0 0;">${formatDate(last.date)} · ${ex.sinPeso || !last.weight ? '' : fmtWeight(last.weight, weightUnit(ex)) + ' · '}${last.reps}${last.feeling ? ' · ' + last.feeling : ''}</div>
                   ${last.comment ? `<div class="tip" style="margin:4px 0 0;">💬 ${escapeHtml(last.comment)}</div>` : ''}
                 ` : `<div class="sub" style="margin:2px 0 0;">Sin registros todavía</div>`}
                 <input type="text" class="nextweek-input" data-exercise="${escapeHtml(ex.ejercicio)}" value="${escapeHtml(nextNote)}" placeholder="📝 Para la próxima semana" style="margin-top:6px; font-size:12px; padding:7px 9px;" />
@@ -2690,7 +2713,7 @@ function pnFicha(main){
           inner += `<div style="margin:0 0 14px;">
             <div style="font-weight:600; color:var(--text);">${escapeHtml(item.ejercicio)}</div>
             ${last ? `
-              <div class="sub" style="margin:2px 0 0;">${formatDate(last.date)} · ${item.sinPeso ? '' : last.weight + 'kg · '}${last.reps} × ${last.sets}${last.feeling ? ' · ' + last.feeling : ''}</div>
+              <div class="sub" style="margin:2px 0 0;">${formatDate(last.date)} · ${item.sinPeso || !last.weight ? '' : fmtWeight(last.weight, weightUnit(item)) + ' · '}${last.reps} × ${last.sets}${last.feeling ? ' · ' + last.feeling : ''}</div>
               ${last.comment ? `<div class="tip" style="margin:4px 0 0;">💬 ${escapeHtml(last.comment)}</div>` : ''}
             ` : `<div class="sub" style="margin:2px 0 0;">Sin registros todavía</div>`}
             <input type="text" class="nextweek-input" data-exercise="${escapeHtml(item.ejercicio)}" value="${escapeHtml(nextNote)}" placeholder="📝 Para la próxima semana (ej: súbele peso)" style="margin-top:6px; font-size:13px; padding:8px 10px;" />
@@ -3090,7 +3113,7 @@ function renderPanel(app){
       const r = pnRows().find(x=>x.key === i.key);
       const flag = i.type === 'exercise' && !i.respondido && (i.comment || recentLim(i));
       const line = i.type === 'checklist' ? `<span style="color:#17794a">✓ Marcó como hecho</span> ${escapeHtml(i.exercise)}` :
-        `${escapeHtml(i.exercise)}${i.weight ? ' · ' + escapeHtml(String(i.weight)) + ' kg' : ''} · ${escapeHtml(String(i.reps || 0))} × ${escapeHtml(String(i.sets || 0))} ${i.feeling ? '<span class="pn-tag">' + escapeHtml(i.feeling) + '</span>' : ''}`;
+        `${escapeHtml(i.exercise)}${i.weight ? ' · ' + escapeHtml(fmtWeight(i.weight, unitForExercise(i.exercise))) : ''} · ${escapeHtml(String(i.reps || 0))} × ${escapeHtml(String(i.sets || 0))} ${i.feeling ? '<span class="pn-tag">' + escapeHtml(i.feeling) + '</span>' : ''}`;
       return `<div class="pn-ev${flag ? ' flag' : ''}"><div class="pn-av">${escapeHtml(i.clienta.charAt(0))}</div><div style="flex:1;min-width:0"><div><b>${escapeHtml(i.clienta)}</b> · ${line}</div>
         ${i.comment ? `<div class="pn-say">💬 ${escapeHtml(i.comment)}</div>` : ''}
         ${i.type === 'exercise' && i.comment && !i.respondido ? `<div style="margin-top:9px;display:flex;gap:8px;flex-wrap:wrap"><button class="pn-btn" data-aresp="${escapeHtml(i.key)}|${escapeHtml(i.exercise)}|${escapeHtml(String(i.ts))}">✓ Ya respondí</button>${r ? pnWaBtn(r, '') : ''}<button class="pn-btn" data-det="${escapeHtml(i.key)}">Ver su ficha</button></div>` : ''}</div></div>`;
@@ -3662,7 +3685,7 @@ function edSel(ed, di, ii, f, val, ph){
 function edLastLine(key, name){
   const c = state.adminData && state.adminData[key]; if(!c || !name) return '';
   const r = pnStrength(c).find(x=> x.name === name); if(!r) return '<div class="ed-last none">Sin registros todavía</div>';
-  const l = r.last || {}, sg = pnSug(r), kg = r.cur === null ? (r.txt ? escapeHtml(r.txt) : 'sin peso') : String(r.cur).replace('.', ',') + ' kg';
+  const l = r.last || {}, sg = pnSug(r), kg = r.cur === null ? (r.txt ? escapeHtml(r.txt) : 'sin peso') : String(r.cur).replace('.', ',') + (r.unit === 'bloques' ? ' bloques' : ' kg');
   return `<div class="ed-last"><span>Última vez ${l.date ? formatDate(l.date) : ''}: <b>${kg}</b> · ${l.sets || '-'}×${l.reps || '-'}${l.feeling ? ' · ' + escapeHtml(l.feeling) : ''}</span><em class="sg ${sg[0]}">${sg[1]}</em>${l.comment ? `<span class="cm">💬 ${escapeHtml(l.comment)}</span>` : ''}</div>`;
 }
 function edWeekSummary(key){
@@ -3759,7 +3782,7 @@ function edCellTxt(it){
 function edFbCell(key, name){
   const c = state.adminData && state.adminData[key]; if(!c || !name) return '';
   const r = pnStrength(c).find(x=> x.name === name); if(!r) return '<span class="g-mut">—</span>';
-  const l = r.last || {}, sg = pnSug(r), kg = r.cur === null ? (r.txt ? escapeHtml(r.txt) : 'sin peso') : String(r.cur).replace('.', ',') + ' kg';
+  const l = r.last || {}, sg = pnSug(r), kg = r.cur === null ? (r.txt ? escapeHtml(r.txt) : 'sin peso') : String(r.cur).replace('.', ',') + (r.unit === 'bloques' ? ' bloques' : ' kg');
   return `<span class="g-fb">${kg}${l.feeling ? ' · ' + escapeHtml(l.feeling) : ''}</span> <em class="sg ${sg[0]}">${sg[1]}</em>${l.comment ? ` <span class="g-cm">💬</span>` : ''}`;
 }
 // Vista previa flotante: al pasar el mouse por "Cómo le fue" se ve el comentario completo y las últimas sesiones
@@ -3769,7 +3792,7 @@ function edFbPopHtml(key, name){
   if(!arr.length) return '';
   const r = pnStrength(c).find(x=> x.name === name), sg = r ? pnSug(r) : null;
   return `<h4>${escapeHtml(name)}${sg ? ` <em class="sg ${sg[0]}" style="font-style:normal">${sg[1]}</em>` : ''}</h4>` + arr.map(e=>{
-    const det = [e.weight ? escapeHtml(String(e.weight)) + (/^[\d.,]+$/.test(String(e.weight).trim()) ? ' kg' : '') : '', e.reps ? escapeHtml(String(e.reps)) + ' reps' : '', e.feeling ? escapeHtml(String(e.feeling)) : ''].filter(Boolean).join(' · ');
+    const det = [e.weight ? escapeHtml(fmtWeight(e.weight, unitForExercise(name))) : '', e.reps ? escapeHtml(String(e.reps)) + ' reps' : '', e.feeling ? escapeHtml(String(e.feeling)) : ''].filter(Boolean).join(' · ');
     return `<div class="fp-s"><div class="fp-d">${e.date ? formatDate(e.date) : ''}</div><div>${det || 'Sin detalle'}</div>${e.comment ? `<div class="fp-c">💬 ${escapeHtml(String(e.comment))}</div>` : ''}</div>`;
   }).join('');
 }
@@ -5404,7 +5427,7 @@ function renderMain(){
           entries.slice().reverse().map(e=>`
             <div class="entry-row">
               <span class="entry-date">${formatDate(e.date)}</span>
-              <span class="entry-detail">${e.weight}kg &times; ${e.reps} &times; ${e.sets}</span>
+              <span class="entry-detail">${e.weight ? fmtWeight(e.weight, unitForExercise(state.exercise)) : '—'} &times; ${e.reps} &times; ${e.sets}</span>
             </div>
           `).join('')}
       </div>
@@ -5650,7 +5673,7 @@ function renderMain(){
       `;
       if(lastToday && !editing){
         bodyHtml += `
-          <div class="tip" style="border-left-color:#5b8f6f;">✓ Hecho hoy${item.sinPeso ? '' : ' · ' + (parseDropset(item) ? dropsetValues(lastToday.weight).filter(Boolean).join(' → ') : lastToday.weight) + 'kg'}${lastToday.feeling ? ' · ' + lastToday.feeling : ''}${lastToday.comment ? '<br/>💬 ' + escapeHtml(lastToday.comment) : ''}</div>
+          <div class="tip" style="border-left-color:#5b8f6f;">✓ Hecho hoy${item.sinPeso ? '' : (lastToday.weight !== '' && lastToday.weight !== undefined ? ' · ' + (parseDropset(item) ? dropsetValues(lastToday.weight).filter(Boolean).join(' → ') + ' kg' : fmtWeight(lastToday.weight, weightUnit(item))) : '')}${lastToday.feeling ? ' · ' + lastToday.feeling : ''}${lastToday.comment ? '<br/>💬 ' + escapeHtml(lastToday.comment) : ''}</div>
           <button class="btn-ghost edit-btn" data-idx="${idx}" style="width:100%;">✏️ Editar registro</button>
         `;
       } else {
@@ -5700,11 +5723,11 @@ function renderMain(){
               </div>
             </div>`;
           })() : `
-            <label>Peso usado (kg)</label>
-            <input type="text" id="reg-weight-${idx}" value="${state.uiWeightPrefill[idx] !== undefined ? state.uiWeightPrefill[idx] : (lastToday ? lastToday.weight : '')}" placeholder="Ej: 10 o 9 bloques" />
+            <label>${weightUnit(item) === 'bloques' ? 'Bloques usados' : 'Peso usado (kg)'}</label>
+            <input type="text" id="reg-weight-${idx}" value="${state.uiWeightPrefill[idx] !== undefined ? state.uiWeightPrefill[idx] : (lastToday ? lastToday.weight : '')}" placeholder="${weightUnit(item) === 'bloques' ? 'Ej: 5 (puedes dejarlo vacío y solo comentar)' : 'Ej: 10'}" />
           `)}
           <input type="text" id="reg-comment-${idx}" value="${lastToday && lastToday.comment ? escapeHtml(lastToday.comment) : ''}" placeholder="💬 Comentario para tu entrenadora (opcional)" />
-          <div class="error hidden" id="reg-error-${idx}">Ingresá el peso usado.</div>
+          <div class="error hidden" id="reg-error-${idx}">${weightUnit(item) === 'bloques' ? 'Ingresa los bloques usados o escribe un comentario.' : 'Ingresa el peso usado.'}</div>
           <button class="btn-primary registrar-btn" data-idx="${idx}" data-exercise="${escapeHtml(item.ejercicio)}" data-sinpeso="${item.sinPeso ? '1':'0'}" data-reps="${repsTarget !== null ? repsTarget : ''}" data-sets="${setsTarget !== null ? Math.max(setsDone, setsTarget) : setsDone}" style="margin-top:4px;">Registrar</button>
         `;
       }
@@ -5897,11 +5920,13 @@ function renderMain(){
         const sinPeso = btn.dataset.sinpeso === '1';
         const weightInput = document.getElementById(`reg-weight-${idx}`);
         const err = document.getElementById(`reg-error-${idx}`);
-        if(!sinPeso && (!weightInput || weightInput.value === '')){
+        const cmtInput = document.getElementById(`reg-comment-${idx}`);
+        const hasCmt = !!(cmtInput && cmtInput.value.trim());
+        if(!sinPeso && (!weightInput || weightInput.value === '') && !(hasCmt && !document.getElementById(`reg-weight2-${idx}`))){
           err.classList.remove('hidden');
           return;
         }
-        let weight = sinPeso ? '' : weightInput.value;
+        let weight = sinPeso ? '' : (weightInput ? weightInput.value : '');
         const weight2Input = document.getElementById(`reg-weight2-${idx}`);
         if(!sinPeso && weight2Input){
           if(weight2Input.value === ''){ err.classList.remove('hidden'); return; }
