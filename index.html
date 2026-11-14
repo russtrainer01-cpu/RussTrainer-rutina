@@ -2441,10 +2441,30 @@ function pnRows(){
   });
   return all;
 }
+// Cuántas semanas distintas tiene cargadas la rutina de una alumna
+function pnWeeksLoaded(key){
+  const R = ROUTINES[key]; if(!R) return 0;
+  const set = {}; Object.keys(R).forEach(l=>{ const p = parseDayLabel(l); if(p.groupKey !== null) set[p.groupKey] = 1; });
+  return Object.keys(set).length;
+}
+// Estado de la semana de una alumna mirando la rutina cargada (no solo la fecha de su ficha):
+// pide una semana nueva solo si la semana en curso es la última cargada y está por terminar, o ya no hay una cargada para hoy.
+function pnSemana(key, f){
+  const loaded = pnWeeksLoaded(key);
+  if(!f.semanaInicio) return { needsNew: loaded === 0, soon:false, wi:null, loaded };
+  const dd = -daysUntil(f.semanaInicio);
+  if(dd < 0) return { needsNew:false, soon:false, wi:null, loaded };
+  const idx = Math.floor(dd / 7);
+  const start = new Date(f.semanaInicio + 'T00:00:00');
+  const endOf = n=>{ const d = new Date(start); d.setDate(d.getDate() + 7 * n); const e = localISO(d); return { endStr:e, daysLeft:daysUntil(e) }; };
+  if(loaded <= idx) return { needsNew:true, soon:false, wi:endOf(idx), loaded };
+  if(loaded === idx + 1){ const wi = endOf(idx + 1); return { needsNew:false, soon: wi.daysLeft > 0 && wi.daysLeft <= 3, wi, loaded }; }
+  return { needsNew:false, soon:false, wi:null, loaded };
+}
 function pnUrgent(r){
-  const f = r.c.data.ficha, wi = weekEndInfo(f.semanaInicio);
-  const needsNew = !f.semanaInicio || (wi && wi.daysLeft <= 0);
-  const soon = !!(wi && wi.daysLeft > 0 && wi.daysLeft <= 3);
+  const f = r.c.data.ficha, sm = pnSemana(r.key, f), wi = sm.wi;
+  const needsNew = sm.needsNew;
+  const soon = sm.soon;
   const gap = daysSince(lastActivityDate(r.c.data));
   const inactive = gap === null || gap >= 3;
   const pc = buildActivityFeed({[r.key]: r.c}).filter(i=>i.comment && !i.respondido).length;
@@ -3093,10 +3113,10 @@ function renderPanel(app){
     main.innerHTML = `<h1 class="pn-h1">Alumnas</h1>${errBar}<p class="pn-sub">Toca una para ver su detalle. Las que ya no entrenan las pasas a inactivas: dejan de aparecer en tus pendientes y no se borra nada. Puedes reactivarlas cuando quieras.</p>
       <div id="pn-new"></div>
       <div class="pn-card">${all.map(r=>{
-        const venc = daysUntil(r.c.data.vencimiento); const wi = weekEndInfo(r.c.data.ficha.semanaInicio);
+        const venc = daysUntil(r.c.data.vencimiento); const sm = pnSemana(r.key, r.c.data.ficha); const wi = (sm.needsNew || sm.soon) ? sm.wi : null;
         const avisos = [];
         if(venc !== null && venc <= 7) avisos.push(venc < 0 ? '💳 Plan vencido' : venc === 0 ? '💳 Vence hoy' : '💳 Vence en ' + venc + ' días');
-        if(wi && wi.daysLeft <= 3) avisos.push(wi.daysLeft < 0 ? '📅 Semana vencida' : '📅 Semana termina en ' + wi.daysLeft + 'd');
+        if(sm.needsNew) avisos.push('📅 Falta cargar su semana'); else if(wi && wi.daysLeft <= 3) avisos.push('📅 Semana termina en ' + wi.daysLeft + 'd');
         return `<div class="pn-row click" data-det="${r.key}" style="${r.hidden ? 'opacity:.55' : ''}"><div class="pn-av">${escapeHtml(r.c.displayName.charAt(0))}</div>
           <div class="pn-nm"><b>${escapeHtml(r.c.displayName)}</b><small>${r.hidden ? 'Inactiva' : (computeStreak(r.c.data) > 0 ? '🔥 ' + computeStreak(r.c.data) + ' días seguidos' : '')}</small></div>
           <div class="pn-prog"><div class="pn-bar"><i style="width:${Math.min(100, Math.round(r.week / (r.target || 1) * 100))}%;background:${r.st.col}"></i></div><small>${r.week}/${r.target} esta semana</small></div>
@@ -3162,7 +3182,7 @@ const AG_FMT = ['Carrusel','Reel','Historia','Post','Otro'];
 const AG_DIAS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 const AG_ORDEN = [1,2,3,4,5,6,0];
 let agPending = [], agBusy = false, agAgain = false, agLoaded = false;
-function agEmpty(){ return { tareas:[], semana:{}, repetir:[], hechas:{}, norte:null, ocultas:null }; }
+function agEmpty(){ return { tareas:[], semana:{}, repetir:[], hechas:{}, norte:null, ocultas:null, resp:{}, pospuestas:{} }; }
 function agNorm(d){ const b = agEmpty(); d = d || {}; Object.keys(b).forEach(k=>{ if(d[k] !== undefined && d[k] !== null) b[k] = d[k]; }); b.norte = d.norte || null; b.ocultas = Array.isArray(d.ocultas) ? d.ocultas : null; return b; }
 function agStore(){ try{ localStorage.setItem('rt_agenda', JSON.stringify(state.agenda)); }catch(e){} }
 function agGet(){
@@ -3227,7 +3247,23 @@ function agEdit(id, patch){ agMutate(ag=>{ const t = ag.tareas.find(x=>x.id === 
 function agDel(id){ agMutate(ag=>{ ag.tareas = ag.tareas.filter(x=>x.id !== id); }); }
 function agToggleHecha(key){
   const iso = agToday();
-  agMutate(ag=>{ const a = ag.hechas[iso] || []; ag.hechas[iso] = a.indexOf(key) > -1 ? a.filter(x=>x !== key) : a.concat(key); });
+  agMutate(ag=>{
+    const a = ag.hechas[iso] || [], on = a.indexOf(key) > -1;
+    ag.hechas[iso] = on ? a.filter(x=>x !== key) : a.concat(key);
+    // Pedido respondido: se recuerda y no vuelve a salir. 'Escribirle a': se pospone unos días.
+    if(!ag.resp) ag.resp = {}; if(!ag.pospuestas) ag.pospuestas = {};
+    if(key.indexOf('a:ped:') === 0){ if(on) delete ag.resp[key.slice(6)]; else ag.resp[key.slice(6)] = iso; }
+    else if(key.indexOf('a:') === 0 && key.split(':').length === 2 && key !== 'a:com'){ if(on) delete ag.pospuestas[key.slice(2)]; else ag.pospuestas[key.slice(2)] = iso; }
+  });
+}
+const AG_POSPONER = 3;
+// Una tarea automática ya atendida se muestra solo el día que se tildó (para poder destildarla) y después desaparece
+function agAtendida(mapa, id, iso, dias){
+  const d = mapa && mapa[id]; if(!d) return false;
+  if(d === iso) return false;
+  if(!dias) return true;
+  const t0 = new Date(d + 'T00:00:00'), t1 = new Date(iso + 'T00:00:00');
+  return Math.round((t1 - t0) / 86400000) < dias;
 }
 function agDayItems(pending){
   const ag = agGet(), iso = agToday(), dow = new Date().getDay();
@@ -3240,18 +3276,20 @@ function agDayItems(pending){
     items.push({ id:'r:' + r.id, t:r.t, cat:r.cat, hora:r.hora || '', done:hechas.indexOf('r:' + r.id) > -1, sub:'Se repite' });
   });
   if(pending && pending.length) items.push({ id:'a:com', t:'Responder comentarios de alumnas', cat:'alumnas', hora:'', done:hechas.indexOf('a:com') > -1, sub:'Automática · ' + pending.length + (pending.length === 1 ? ' pendiente' : ' pendientes'), go:'comentarios' });
-  supAllOrders().filter(o=> (o.p.estado || 'Por coordinar') === 'Por coordinar').forEach(o=>{
+  supAllOrders().filter(o=> (o.p.estado || 'Por coordinar') === 'Por coordinar' && !agAtendida(ag.resp, String(o.p.id), iso, 0)).forEach(o=>{
     items.push({ id:'a:ped:' + o.p.id, t:'Responder el pedido de ' + o.nombre, cat:'alumnas', hora:'', done:hechas.indexOf('a:ped:' + o.p.id) > -1, sub:'Automática · pedido de suplementos ' + supMoney(o.p.total), go:'suplementos' });
   });
   const hid = pnHidden();
   Object.keys(state.adminData || {}).filter(k=> hid.indexOf(k) < 0).map(k=>({ k, c:state.adminData[k] })).forEach(r=>{
     const st = pnStatus(r.c);
-    if(st.gap !== null && st.gap >= 4) items.push({ id:'a:' + r.k, t:'Escribirle a ' + r.c.displayName, cat:'alumnas', hora:'', done:hechas.indexOf('a:' + r.k) > -1, sub:'Automática · ' + st.gap + ' días sin entrenar', det:r.k, gap:st.gap });
+    const ini = (r.c.data && r.c.data.ficha && (r.c.data.ficha.fechaInicio || '')) || '';
+    const noEmpezo = ini && ini > iso;
+    if(!noEmpezo && !agAtendida(ag.pospuestas, r.k, iso, AG_POSPONER) && st.gap !== null && st.gap >= 4) items.push({ id:'a:' + r.k, t:'Escribirle a ' + r.c.displayName, cat:'alumnas', hora:'', done:hechas.indexOf('a:' + r.k) > -1, sub:'Automática · ' + st.gap + ' días sin entrenar', det:r.k, gap:st.gap });
   });
   Object.keys(state.adminData || {}).filter(k=> hid.indexOf(k) < 0).forEach(k=>{
     const r = pnRows().find(x=>x.key === k); if(!r) return;
     const u = pnUrgent(r), nm = r.c.displayName;
-    if(u.needsNew) items.push({ id:'a:sem:' + k, t:'Armar la semana nueva de ' + nm, cat:'alumnas', hora:'', done:hechas.indexOf('a:sem:' + k) > -1, sub:'Automática · ' + (u.wi ? 'su semana ya venció' : 'sin semana cargada'), ed:k });
+    if(u.needsNew) items.push({ id:'a:sem:' + k, t:'Armar la semana nueva de ' + nm, cat:'alumnas', hora:'', done:hechas.indexOf('a:sem:' + k) > -1, sub:'Automática · ' + (u.wi ? 'su semana ya venció y no hay otra cargada' : 'sin semana cargada'), ed:k });
     else if(u.wi && u.wi.daysLeft <= 1) items.push({ id:'a:sem:' + k, t:'Armar la semana nueva de ' + nm, cat:'alumnas', hora:'', done:hechas.indexOf('a:sem:' + k) > -1, sub:'Automática · su semana termina ' + (u.wi.daysLeft === 1 ? 'mañana' : 'hoy'), ed:k });
     if(u.vence && u.venc <= 3) items.push({ id:'a:ven:' + k, t:'Renovar el plan de ' + nm, cat:'alumnas', hora:'', done:hechas.indexOf('a:ven:' + k) > -1, sub:'Automática · ' + (u.venc < 0 ? 'plan vencido' : u.venc === 0 ? 'vence hoy' : 'vence en ' + u.venc + ' días'), det:k, gap:-1 });
   });
