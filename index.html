@@ -312,6 +312,13 @@
     color:#fff;
     opacity:0.9;
   }
+  #aviso-pago{ position:fixed; inset:0; z-index:9998; display:flex; align-items:center; justify-content:center; padding:24px; background:rgba(45,28,28,.58); -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px); }
+  #aviso-pago .ap-card{ width:100%; max-width:340px; background:#fffcfa; border-radius:28px; padding:26px 22px 22px; text-align:center; box-shadow:0 18px 50px rgba(0,0,0,.3); }
+  #aviso-pago .ap-ico{ width:56px; height:56px; border-radius:50%; background:#f6dfe2; color:var(--rose); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; }
+  #aviso-pago h3{ margin:0 0 8px; font-size:20px; color:#34262a; }
+  #aviso-pago p{ margin:0 0 8px; font-size:14.5px; line-height:1.45; color:#7a6a6c; }
+  #aviso-pago .ap-gr{ font-weight:700; color:#70443c; margin-bottom:16px; }
+  #aviso-pago button{ width:100%; border:0; border-radius:999px; padding:13px; font-weight:800; font-size:15px; color:#fff; background:#70443c; cursor:pointer; }
   .hero-today-card{
     background:linear-gradient(135deg, var(--rose-dark), var(--rose));
     border-radius:16px;
@@ -2615,6 +2622,8 @@ function pnFicha(main){
             <div class="row"><div><label>Fecha de inicio</label><div style="display:flex; gap:6px;"><input type="date" id="f-fechainicio" value="${escapeHtml(f.fechaInicio)}" style="flex:1;" /><button type="button" class="pn-btn" id="f-fechainicio-hoy">Hoy</button></div></div>
             <div><label>Cumpleaños</label><input type="text" id="f-cumple" value="${escapeHtml(f.cumpleanos)}" placeholder="MM-DD" /></div></div>
             <label>Vencimiento del plan</label><input type="date" id="f-vencimiento" value="${escapeHtml(c.data.vencimiento)}" />
+            <label>Aviso de pago en su inicio (mostrar desde)</label><input type="date" id="f-avisopago" value="${escapeHtml(c.data.avisoPago || '')}" />
+            <p class="pn-sub" style="margin:6px 0 12px;font-size:12.5px">Es un recurso si no te pagan: le sale una ventanita amable con el recordatorio del mes cada vez que abre la app. Déjalo vacío para quitarlo.</p>
             <label>Inicio de su semana actual</label><div style="display:flex; gap:6px;"><input type="date" id="f-semanainicio" value="${escapeHtml(f.semanaInicio)}" style="flex:1;" /><button type="button" class="pn-btn" id="f-semanainicio-hoy">Hoy</button></div>
             <p class="pn-sub" style="margin:6px 0 12px;font-size:12.5px">Actualiza esto cada vez que le armes una semana nueva: así el panel te avisa cuando está por terminar.</p>
             <button class="pn-btn pri" id="f-save-btn">Guardar ficha</button></div></details>
@@ -4713,6 +4722,7 @@ async function loadClienta(name){
       if(parsed.ficha.semanaInicio === undefined) parsed.ficha.semanaInicio = '';
       if(parsed.ficha.telefono === undefined) parsed.ficha.telefono = '';
       if(!parsed.vencimiento) parsed.vencimiento = '';
+      if(parsed.avisoPago === undefined) parsed.avisoPago = '';
       if(!parsed.trainerNotes) parsed.trainerNotes = [];
       if(!parsed.nextWeekNotes) parsed.nextWeekNotes = {};
       offSave(name, parsed);
@@ -5069,7 +5079,23 @@ function cqRender(){
 }
 
 function render(){ renderMain(); try{ renderTabBar(); }catch(e){} }
+// Ventanita de recordatorio de pago: la activas tú desde la ficha de la alumna (campo "Aviso de pago").
+function mountAvisoPago(){
+  const old = document.getElementById('aviso-pago'); if(old) old.remove();
+  const f = state.data && state.data.avisoPago;
+  if(state.view !== 'dashboard' || !f || state.avisoPagoCerrado || localISO(new Date()) < f) return;
+  const o = document.createElement('div'); o.id = 'aviso-pago';
+  o.innerHTML = `<div class="ap-card" role="dialog" aria-modal="true">
+    <div class="ap-ico"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.4-1.8h-4.8A2.5 2.5 0 0 0 12 22zm7-5.5V11c0-3.1-1.6-5.6-4.5-6.3V4a2.5 2.5 0 0 0-5 0v.7C6.6 5.4 5 7.9 5 11v5.5l-2 2V20h18v-1.5l-2-2z"/></svg></div>
+    <h3>Recordatorio del mes</h3>
+    <p>Un aviso de la app: ya iniciaste un nuevo mes de tu plan. Cuando puedas, realiza el pago del mes para seguir entrenando sin cortes.</p>
+    <p class="ap-gr">Si ya lo hiciste, muchas gracias.</p>
+    <button type="button" id="aviso-pago-ok">Entendido</button></div>`;
+  document.body.appendChild(o);
+  document.getElementById('aviso-pago-ok').onclick = ()=>{ state.avisoPagoCerrado = true; o.remove(); };
+}
 function renderMain(){
+  const _ap = document.getElementById('aviso-pago'); if(_ap) _ap.remove();
   const app = document.getElementById('app');
   document.body.classList.toggle('theme-masculine', !!(state.clienta && isMasculino(state.clienta)));
   const _gMasc = !!(state.clienta && isMasculino(state.clienta));
@@ -5207,6 +5233,7 @@ function renderMain(){
         <div class="chip-list" id="chip-list"></div>
       ` : ''}
     `;
+    mountAvisoPago();
     if(heroDay){
       document.getElementById('hero-start-btn').onclick = ()=>{ state.view='routine-day'; state.routineDay=heroDay; render(); };
     }
@@ -6020,6 +6047,7 @@ async function onSaveFicha(key){
     semanaInicio: document.getElementById('f-semanainicio').value
   };
   fresh.vencimiento = document.getElementById('f-vencimiento').value;
+  fresh.avisoPago = document.getElementById('f-avisopago').value;
   await saveClienta(c.displayName, fresh);
   c.data = fresh;
   render();
