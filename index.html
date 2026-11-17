@@ -2201,6 +2201,13 @@ function getMaxSemana(routine){
 // el mes completo sin que cambie lo que ve hoy. Es la semana mas avanzada en la que ya
 // hizo algun dia; pasa a la siguiente cuando completo todos los dias de esa semana o
 // cuando lleva 7 dias o mas sin completar nada en ella (y existe una semana posterior).
+// Para pasar de semana basta con haber registrado todos los ejercicios del día: movilidad y estiramientos (checklist) no bloquean
+function isDayEverDoneForWeek(data, day, items){
+  const real = items.filter(it=> it.tipo !== 'checklist' && it.tipo !== 'mensaje');
+  if(!real.length) return isDayEverComplete(data, day, items);
+  const dates = Array.from(getActivityDates(data));
+  return dates.some(ds=> isDayCompleteOn(data, day, real, ds));
+}
 function getCurrentSemana(data, routine){
   const { groups } = groupDaysBySemana(routine);
   const keys = Object.keys(groups).map(Number).sort((a,b)=>a-b);
@@ -2208,13 +2215,13 @@ function getCurrentSemana(data, routine){
   if(!data) return keys[0];
   let cur = null;
   keys.forEach(k=>{
-    if(groups[k].some(d=> isDayEverComplete(data, d, routine[d]))) cur = k;
+    if(groups[k].some(d=> isDayEverDoneForWeek(data, d, routine[d]))) cur = k;
   });
   if(cur === null) return keys[0];
   const next = keys.filter(k=> k > cur)[0];
   if(next === undefined) return cur;
   const days = groups[cur];
-  const allDone = days.every(d=> isDayEverComplete(data, d, routine[d]));
+  const allDone = days.every(d=> isDayEverDoneForWeek(data, d, routine[d]));
   let lastDone = null;
   days.forEach(d=>{
     const ds = lastCompletionDate(data, d, routine[d]);
