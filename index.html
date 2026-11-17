@@ -2479,8 +2479,18 @@ function pnWeeksLoaded(key){
 }
 // Estado de la semana de una alumna mirando la rutina cargada (no solo la fecha de su ficha):
 // pide una semana nueva solo si la semana en curso es la última cargada y está por terminar, o ya no hay una cargada para hoy.
-function pnSemana(key, f){
+// ¿Ya hizo todos los días de la última semana cargada? Así se avisa aunque la fecha diga que todavía le queda tiempo.
+function pnSemanaTerminada(key, data){
+  const R = ROUTINES[key]; if(!R || !data) return false;
+  let max = null;
+  Object.keys(R).forEach(l=>{ const g = parseDayLabel(l).groupKey; if(g !== null && (max === null || g > max)) max = g; });
+  if(max === null) return false;
+  const days = Object.keys(R).filter(l=> parseDayLabel(l).groupKey === max);
+  return days.length > 0 && days.every(l=> isDayEverDoneForWeek(data, l, R[l]));
+}
+function pnSemana(key, f, data){
   const loaded = pnWeeksLoaded(key);
+  if(pnSemanaTerminada(key, data)) return { needsNew:true, soon:false, wi:null, loaded, terminada:true };
   if(!f.semanaInicio) return { needsNew: loaded === 0, soon:false, wi:null, loaded };
   const dd = -daysUntil(f.semanaInicio);
   if(dd < 0) return { needsNew:false, soon:false, wi:null, loaded };
@@ -2492,7 +2502,7 @@ function pnSemana(key, f){
   return { needsNew:false, soon:false, wi:null, loaded };
 }
 function pnUrgent(r){
-  const f = r.c.data.ficha, sm = pnSemana(r.key, f), wi = sm.wi;
+  const f = r.c.data.ficha, sm = pnSemana(r.key, f, r.c.data), wi = sm.wi;
   const needsNew = sm.needsNew;
   const soon = sm.soon;
   const gap = daysSince(lastActivityDate(r.c.data));
@@ -2507,7 +2517,7 @@ function pnUrgent(r){
   if(pc) items.push(['am', pc + (pc === 1 ? ' comentario sin responder' : ' comentarios sin responder')]);
   if(vence) items.push(['am', venc < 0 ? 'Plan vencido' : venc === 0 ? 'Su plan vence hoy' : 'Su plan vence en ' + venc + ' días']);
   const urg = (needsNew ? 20 : 0) + (soon ? 8 : 0) + (inactive ? 10 : 0) + pc * 2 + (vence ? 6 : 0);
-  return { needsNew, soon, wi, gap, inactive, pc, venc, vence, items, urg };
+  return { needsNew, soon, wi, gap, inactive, pc, venc, vence, items, urg, terminada: !!sm.terminada };
 }
 function pnWaBtn(r, texto){
   const link = pnWa(r.c.data.ficha && r.c.data.ficha.telefono, r.c.displayName, texto);
@@ -3143,7 +3153,7 @@ function renderPanel(app){
     main.innerHTML = `<h1 class="pn-h1">Alumnas</h1>${errBar}<p class="pn-sub">Toca una para ver su detalle. Las que ya no entrenan las pasas a inactivas: dejan de aparecer en tus pendientes y no se borra nada. Puedes reactivarlas cuando quieras.</p>
       <div id="pn-new"></div>
       <div class="pn-card">${all.map(r=>{
-        const venc = daysUntil(r.c.data.vencimiento); const sm = pnSemana(r.key, r.c.data.ficha); const wi = (sm.needsNew || sm.soon) ? sm.wi : null;
+        const venc = daysUntil(r.c.data.vencimiento); const sm = pnSemana(r.key, r.c.data.ficha, r.c.data); const wi = (sm.needsNew || sm.soon) ? sm.wi : null;
         const avisos = [];
         if(venc !== null && venc <= 7) avisos.push(venc < 0 ? '💳 Plan vencido' : venc === 0 ? '💳 Vence hoy' : '💳 Vence en ' + venc + ' días');
         if(sm.needsNew) avisos.push('📅 Falta cargar su semana'); else if(wi && wi.daysLeft <= 3) avisos.push('📅 Semana termina en ' + wi.daysLeft + 'd');
@@ -3319,7 +3329,7 @@ function agDayItems(pending){
   Object.keys(state.adminData || {}).filter(k=> hid.indexOf(k) < 0).forEach(k=>{
     const r = pnRows().find(x=>x.key === k); if(!r) return;
     const u = pnUrgent(r), nm = r.c.displayName;
-    if(u.needsNew) items.push({ id:'a:sem:' + k, t:'Armar la semana nueva de ' + nm, cat:'alumnas', hora:'', done:hechas.indexOf('a:sem:' + k) > -1, sub:'Automática · ' + (u.wi ? 'su semana ya venció y no hay otra cargada' : 'sin semana cargada'), ed:k });
+    if(u.needsNew) items.push({ id:'a:sem:' + k, t:'Armar la semana nueva de ' + nm, cat:'alumnas', hora:'', done:hechas.indexOf('a:sem:' + k) > -1, sub:'Automática · ' + (u.terminada ? 'ya hizo todos los días de su semana y no hay otra cargada' : u.wi ? 'su semana ya venció y no hay otra cargada' : 'sin semana cargada'), ed:k });
     else if(u.wi && u.wi.daysLeft <= 1) items.push({ id:'a:sem:' + k, t:'Armar la semana nueva de ' + nm, cat:'alumnas', hora:'', done:hechas.indexOf('a:sem:' + k) > -1, sub:'Automática · su semana termina ' + (u.wi.daysLeft === 1 ? 'mañana' : 'hoy'), ed:k });
     if(u.vence && u.venc <= 3) items.push({ id:'a:ven:' + k, t:'Renovar el plan de ' + nm, cat:'alumnas', hora:'', done:hechas.indexOf('a:ven:' + k) > -1, sub:'Automática · ' + (u.venc < 0 ? 'plan vencido' : u.venc === 0 ? 'vence hoy' : 'vence en ' + u.venc + ' días'), det:k, gap:-1 });
   });
