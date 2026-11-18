@@ -312,6 +312,30 @@
     color:#fff;
     opacity:0.9;
   }
+  .russ-nota{ background:#fbeef0; border-left:4px solid #c46e7c; border-radius:12px; padding:10px 12px; margin:8px 0; font-size:14px; line-height:1.4; color:#4a3030; }
+  .russ-nota b{ display:block; font-size:11px; letter-spacing:.08em; color:#a05060; margin-bottom:2px; }
+  .resp-card{ background:#fff; border:1px solid #efd9dc; border-radius:22px; padding:14px 16px; margin:14px 0; box-shadow:0 8px 22px rgba(120,70,70,.12); }
+  .resp-h{ font-weight:800; font-size:15px; color:#5a3a2e; display:flex; align-items:center; gap:8px; }
+  .resp-n{ background:#d64550; color:#fff; font-size:12px; font-weight:800; border-radius:999px; min-width:22px; height:22px; display:inline-flex; align-items:center; justify-content:center; padding:0 6px; }
+  .resp-i{ margin-top:10px; padding-top:10px; border-top:1px solid #f3e6e6; }
+  .resp-i:first-of-type{ border-top:0; padding-top:0; }
+  .resp-ex{ font-size:12px; font-weight:800; color:#a05060; }
+  .resp-q{ font-size:12px; color:#8a7a7a; margin:2px 0; }
+  .resp-t{ font-size:15px; color:#3a2a2a; line-height:1.4; }
+  .resp-ok,.resp-read{ margin-top:10px; background:#70443c; color:#fff; border:0; border-radius:999px; padding:9px 18px; font-weight:800; font-family:inherit; cursor:pointer; }
+  .resp-ex-b{ background:#f6dfe2; border-radius:14px; padding:10px 12px; margin:8px 0; font-size:14px; color:#3a2a2a; line-height:1.4; }
+  .resp-ex-b b{ display:flex; align-items:center; gap:8px; color:#70443c; margin-bottom:2px; }
+  .resp-ex-b small{ display:block; color:#8a7a7a; margin-top:4px; font-size:12px; }
+  .resp-new{ background:#c46e7c; color:#fff; font-size:11px; font-weight:800; border-radius:999px; padding:2px 8px; }
+  .rp-box{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin:6px 0 2px; }
+  .rp-q{ flex-basis:100%; font-size:12px; color:#7a6a6a; }
+  .rp-in{ flex:1 1 220px; min-width:0; font-size:13px; padding:8px 10px; border:1px solid #d8c6c6; border-radius:10px; font-family:inherit; }
+  .rp-ok{ font-size:13px; color:#3f7a54; font-weight:700; }
+  .g-nr .g-nrw{ display:flex; flex-direction:column; gap:8px; position:sticky; left:0; width:370px; max-width:calc(100vw - 56px); padding:2px 4px 4px; box-sizing:border-box; }
+  .g-nrw > input{ width:100%; box-sizing:border-box; }
+  .g-nrw > .rp-box{ margin:0; }
+  .ed-it .g-nrw{ display:flex; flex-direction:column; gap:8px; }
+  .ed-it .g-nrw > input{ width:100%; box-sizing:border-box; }
   #aviso-pago{ position:fixed; inset:0; z-index:9998; display:flex; align-items:center; justify-content:center; padding:24px; background:rgba(45,28,28,.58); -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px); }
   #aviso-pago .ap-card{ width:100%; max-width:340px; background:#fffcfa; border-radius:28px; padding:26px 22px 22px; text-align:center; box-shadow:0 18px 50px rgba(0,0,0,.3); }
   #aviso-pago .ap-ico{ width:56px; height:56px; border-radius:50%; background:#f6dfe2; color:var(--rose); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; }
@@ -2740,7 +2764,7 @@ function pnFicha(main){
             <div style="font-weight:600; color:var(--text);">${escapeHtml(item.ejercicio)}</div>
             ${last ? `
               <div class="sub" style="margin:2px 0 0;">${formatDate(last.date)} · ${item.sinPeso || !last.weight ? '' : fmtWeight(last.weight, weightUnit(item)) + ' · '}${last.reps} × ${last.sets}${last.feeling ? ' · ' + last.feeling : ''}</div>
-              ${last.comment ? `<div class="tip" style="margin:4px 0 0;">💬 ${escapeHtml(last.comment)}</div>` : ''}
+              ${last.comment ? `<div class="tip" style="margin:4px 0 0;">💬 ${escapeHtml(last.comment)}</div>${replyBoxHtml(key, item.ejercicio, last.ts || last.date, last.comment, { noq:true })}` : ''}
             ` : `<div class="sub" style="margin:2px 0 0;">Sin registros todavía</div>`}
             <input type="text" class="nextweek-input" data-exercise="${escapeHtml(item.ejercicio)}" value="${escapeHtml(nextNote)}" placeholder="📝 Para la próxima semana (ej: súbele peso)" style="margin-top:6px; font-size:13px; padding:8px 10px;" />
           </div>`;
@@ -3734,7 +3758,7 @@ function edItemRow(it, di, ii, n, lo, ed){
   return `<div class="ed-it"><div class="ed-l1 ${carga ? '' : 'k'}">${secSel}${pk}
     ${carga ? edSel(ed, di, ii, 'series', it.series, 'Series') + edSel(ed, di, ii, 'reps', it.reps, 'Reps') + edSel(ed, di, ii, 'peso', it.peso, 'Peso') + edSel(ed, di, ii, 'descanso', it.descanso, 'Descanso') : f('reps', 'Detalle (ej: 15 min · ritmo suave)', 'ed-sl')}
     ${ctrl}</div>
-    <div class="ed-l2 ${carga ? '' : 'k'}">${f('video', 'Link del video', 'ed-sl')}${carga ? `<label class="ed-sw"><input type="checkbox" data-sp="${di}:${ii}"${it.sinPeso ? ' checked' : ''}> sin peso</label>` : ''}${f('nota', '💡 Nota técnica de este ejercicio (opcional)', 'ed-sl ed-nota')}</div>${carga ? edLastLine(ed.key, it.ejercicio) : ''}</div>`;
+    <div class="ed-l2 ${carga ? '' : 'k'}">${f('video', 'Link del video', 'ed-sl')}${carga ? `<label class="ed-sw"><input type="checkbox" data-sp="${di}:${ii}"${it.sinPeso ? ' checked' : ''}> sin peso</label>` : ''}${f('nota', '💡 Nota técnica de este ejercicio (opcional)', 'ed-sl ed-nota')}</div>${carga ? `<div class="g-nrw" style="margin-top:6px;">${f('comentario', '💬 Comentario para ella (lo ve junto al ejercicio)', 'ed-sl ed-nota')}${it.ejercicio ? replyBoxHtml(ed.key, it.ejercicio) : ''}</div>` : ''}${carga ? edLastLine(ed.key, it.ejercicio) : ''}</div>`;
 }
 function edSumData(ed){
   const groups = edGroups(ed);
@@ -3805,6 +3829,68 @@ function edCellTxt(it){
   const a = String(it.series || '').replace(/\s*series?/i, '');
   return escapeHtml((a ? a + '×' : '') + (it.reps || '') + (it.peso ? ' · ' + it.peso : ''));
 }
+// ===== Respuestas de Russ a los comentarios de las alumnas =====
+function rpLastComment(c, name){
+  const arr = ((c.data.exercises || {})[name] || []).filter(e=> e.comment).sort((a, b)=> String(a.ts || a.date).localeCompare(String(b.ts || b.date)));
+  return arr.length ? arr[arr.length - 1] : null;
+}
+function replyBoxHtml(key, name, ts, comment, opts){
+  opts = opts || {};
+  const c = state.adminData && state.adminData[key]; if(!c || !name) return '';
+  let done = false;
+  if(ts === undefined){ const e = rpLastComment(c, name); if(!e) return ''; ts = e.ts || e.date; comment = e.comment; done = !!e.respondido; }
+  const q = String(comment || '').slice(0, 220);
+  return `<div class="rp-box" data-k="${escapeHtml(key)}" data-n="${escapeHtml(name)}" data-t="${escapeHtml(String(ts))}" data-q="${escapeHtml(q)}"${opts.rr ? ' data-rr="1"' : ''}>${opts.noq ? '' : `<div class="rp-q">💬 Ella dijo: «${escapeHtml(q)}»${done ? ' · ✓ ya respondido' : ''}</div>`}<input class="rp-in" type="text" placeholder="Responderle…"><button type="button" class="pn-btn rp-go">Responder</button></div>`;
+}
+async function sendReply(key, name, text, ts, q){
+  const c = state.adminData[key];
+  const fresh = await loadClienta(c.displayName);
+  if(!fresh.respuestas) fresh.respuestas = [];
+  fresh.respuestas.push({ ej:name, text, date:todayISO(), ts:new Date().toISOString(), re:ts || '', q:q || '', leido:false });
+  if(fresh.respuestas.length > 40) fresh.respuestas = fresh.respuestas.slice(-40);
+  const en = ((fresh.exercises || {})[name] || []).find(e=> (e.ts || e.date) === ts); if(en) en.respondido = true;
+  await saveClienta(c.displayName, fresh);
+  c.data = fresh;
+}
+function respUnread(){ return ((state.data && state.data.respuestas) || []).filter(r=> !r.leido); }
+async function markRespRead(tsList){
+  try{
+    const fresh = await loadClienta(state.clienta);
+    (fresh.respuestas || []).forEach(r=>{ if(tsList.indexOf(r.ts) > -1) r.leido = true; });
+    await saveClienta(state.clienta, fresh);
+  }catch(e){}
+  (state.data.respuestas || []).forEach(r=>{ if(tsList.indexOf(r.ts) > -1) r.leido = true; });
+  render();
+}
+function respExHtml(name){
+  const arr = ((state.data && state.data.respuestas) || []).filter(r=> r.ej === name); if(!arr.length) return '';
+  const r = arr[arr.length - 1];
+  return `<div class="resp-ex-b"><b>Russ ${r.leido ? '' : '<span class="resp-new">Nuevo</span>'}</b>${escapeHtml(r.text)}<small>${formatDate(r.date)}</small>${r.leido ? '' : `<button type="button" class="resp-read" data-rts="${escapeHtml(r.ts)}">Entendido ✓</button>`}</div>`;
+}
+function mountRespuestas(){
+  const un = respUnread(); if(!un.length) return;
+  const app = document.getElementById('app'); if(!app) return;
+  const w = document.createElement('div');
+  w.innerHTML = `<div class="resp-card" id="resp-card"><div class="resp-h">💌 Russ te respondió <span class="resp-n">${un.length}</span></div>${un.slice(-3).reverse().map(r=>`<div class="resp-i"><div class="resp-ex">${escapeHtml(r.ej)}</div>${r.q ? `<div class="resp-q">Tu comentario: «${escapeHtml(r.q)}»</div>` : ''}<div class="resp-t">${escapeHtml(r.text)}</div></div>`).join('')}<button type="button" class="resp-ok" id="resp-ok">Entendido ✓</button></div>`;
+  const card = w.firstChild, hero = app.querySelector('.hero-today-card');
+  if(hero) hero.parentNode.insertBefore(card, hero); else app.insertBefore(card, app.firstChild);
+  card.querySelector('#resp-ok').onclick = ()=> markRespRead(un.map(r=> r.ts));
+}
+(function(){
+  if(window.__rpInit) return; window.__rpInit = true;
+  document.addEventListener('click', async e=>{
+    const rd = e.target && e.target.closest ? e.target.closest('.resp-read') : null;
+    if(rd){ markRespRead([rd.getAttribute('data-rts')]); return; }
+    const b = e.target && e.target.closest ? e.target.closest('.rp-go') : null; if(!b) return;
+    const box = b.closest('.rp-box'), inp = box.querySelector('.rp-in'), text = inp.value.trim(); if(!text){ inp.focus(); return; }
+    b.disabled = true; b.textContent = 'Enviando…';
+    try{
+      await sendReply(box.dataset.k, box.dataset.n, text, box.dataset.t, box.dataset.q);
+      box.innerHTML = '<div class="rp-ok">✓ Enviado. Ella lo ve en su app: «' + escapeHtml(text) + '»</div>';
+      if(box.dataset.rr) setTimeout(()=> render(), 1100);
+    }catch(err){ b.disabled = false; b.textContent = 'Reintentar'; }
+  });
+})();
 function edFbCell(key, name){
   const c = state.adminData && state.adminData[key]; if(!c || !name) return '';
   const r = pnStrength(c).find(x=> x.name === name); if(!r) return '<span class="g-mut">—</span>';
@@ -3897,6 +3983,7 @@ function edGridHtml(ed){
     });
     const hasFb = carga && it.ejercicio && state.adminData && state.adminData[ed.key] && ((state.adminData[ed.key].data.exercises || {})[it.ejercicio] || []).length > 0;
     h += `<td class="g-fbc"${hasFb ? ` data-fbk="${escapeHtml(ed.key)}" data-fbn="${escapeHtml(it.ejercicio)}"` : ''}>${carga ? edFbCell(ed.key, it.ejercicio) : ''}</td><td class="g-ctl"><div class="ed-ct"><button class="ag-ic" data-gmore="${k}" title="Video, nota, descanso">${it.video ? '🎥' : ''}${it.nota ? '💡' : ''}⋯</button><button class="ag-ic" data-up="${k}" title="Subir"${ii <= lo + 1 && !fd.items.slice(0, ii).some(x=> x.tipo !== 'mensaje') ? ' disabled' : ''}>↑</button><button class="ag-ic" data-dn="${k}" title="Bajar"${ii === fd.items.length - 1 ? ' disabled' : ''}>↓</button><button class="ag-ic" data-rm="${k}" title="Quitar">✕</button></div></td></tr>`;
+    if(carga && it.ejercicio){ h += `<tr class="g-nr"><td colspan="${cols.length + 3}"><div class="g-nrw">${f('comentario', '💬 Comentario para ella (lo ve junto al ejercicio)', 'ed-sl ed-nota')}${replyBoxHtml(ed.key, it.ejercicio)}</div></td></tr>`; }
     if(ed.gMore && ed.gMore[k]){
       const secs = edSecOptions(); if(it.seccion && !secs.some(x=> edMuscle(x) === edMuscle(it.seccion))) secs.push(it.seccion);
       const secSel = `<select class="ed-sl" data-sel="${k}:seccion"><option value="">Músculo</option>${secs.map(x=>`<option${edMuscle(x) === edMuscle(it.seccion) ? ' selected' : ''} value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join('')}</select>`;
@@ -4021,7 +4108,7 @@ function edRender(main){
       dias[edLabel(d)] = d.items.filter(it=> !(it.ejercicio === PH && d.items.some(o=> o !== it && o.tipo !== 'mensaje' && o.ejercicio !== PH))).filter(it=> it.tipo !== 'carga' && it.tipo !== 'checklist' ? true : (it.ejercicio && it.ejercicio.trim())).map(it=>{
         const o = Object.assign({}, it); if(o.tipo === 'checklist'){ o.series = '-'; o.peso = 'Sin peso'; delete o.sinPeso; delete o.descanso; }
         else if(o.tipo === 'carga'){ if(o.sinPeso && !o.peso) o.peso = 'Peso corporal'; o.sinPeso = !!o.sinPeso; if(!o.descanso) delete o.descanso; }
-        if(o.video === '' || o.video === undefined) o.video = null; if(!o.nota) delete o.nota; return o; });
+        if(o.video === '' || o.video === undefined) o.video = null; if(!o.nota) delete o.nota; if(!o.comentario) delete o.comentario; return o; });
     });
     const body = { orden: labels, dias };
     if(CLIENT_CONFIG[ed.key]) body.config = Object.assign({}, CLIENT_CONFIG[ed.key]);
@@ -4725,6 +4812,7 @@ async function loadClienta(name){
       if(parsed.avisoPago === undefined) parsed.avisoPago = '';
       if(!parsed.trainerNotes) parsed.trainerNotes = [];
       if(!parsed.nextWeekNotes) parsed.nextWeekNotes = {};
+      if(!parsed.respuestas) parsed.respuestas = [];
       offSave(name, parsed);
       await rtOverlay(routineKey(name));
       state.offline = false;
@@ -5234,6 +5322,7 @@ function renderMain(){
       ` : ''}
     `;
     mountAvisoPago();
+    mountRespuestas();
     if(heroDay){
       document.getElementById('hero-start-btn').onclick = ()=>{ state.view='routine-day'; state.routineDay=heroDay; render(); };
     }
@@ -5373,6 +5462,7 @@ function renderMain(){
             </div>
             <div class="sub" style="margin:2px 0 8px;">sobre <strong>${escapeHtml(item.exercise)}</strong></div>
             <div class="tip" style="margin:0;">💬 ${escapeHtml(item.comment)}</div>
+            ${replyBoxHtml(item.key, item.exercise, item.ts, item.comment, { rr:true, noq:true })}
             <button class="comment-check-btn">✓ Ya respondí</button>
           </div>
         `;
@@ -5683,6 +5773,7 @@ function renderMain(){
           ? `<div class="tip">💡 ${escapeHtml(item.nota)}</div>`
           : `<button class="tip-toggle" data-tipidx="${idx}">💡 Ver consejo técnico</button>`
       ) : '';
+      const russHtml = (item.comentario ? `<div class="russ-nota"><b>NOTA DE RUSS</b>${escapeHtml(item.comentario)}</div>` : '') + respExHtml(item.ejercicio);
 
       if(item.tipo === 'checklist'){
         const isDone = !!(doneToday[idx] && doneToday[idx].done);
@@ -5692,6 +5783,7 @@ function renderMain(){
           <div style="font-weight:700; margin-bottom:4px;">${escapeHtml(item.ejercicio)}</div>
           <div class="sub" style="margin:0 0 10px;">${escapeHtml(item.reps)}</div>
           ${videoLink}
+          ${russHtml}
           ${tipHtml}
           <button class="btn-primary check-btn" data-idx="${idx}" style="${isDone ? 'background:#5b8f6f;color:#0d1a12;' : ''} margin-top:8px;">${isDone ? 'Hecho ✓' : 'Marcar como hecho'}</button>
         `;
@@ -5713,6 +5805,7 @@ function renderMain(){
         <div style="font-weight:700; margin-bottom:4px;">${escapeHtml(item.ejercicio)}</div>
         <div class="sub" style="margin:0 0 10px;">Objetivo: ${escapeHtml(item.series)} &times; ${escapeHtml(item.reps)}${item.sinPeso ? '' : ' &middot; ' + escapeHtml(item.peso)}</div>
         ${videoLink}
+        ${russHtml}
         ${tipHtml}
       `;
       if(lastToday && !editing){
