@@ -2235,7 +2235,23 @@ function getMaxSemana(routine){
 // hizo algun dia; pasa a la siguiente cuando completo todos los dias de esa semana o
 // cuando lleva 7 dias o mas sin completar nada en ella (y existe una semana posterior).
 // Para pasar de semana basta con haber registrado todos los ejercicios del día: movilidad y estiramientos (checklist) no bloquean
-function isDayEverDoneForWeek(data, day, items){
+// Cada fecha entrenada cuenta para UN solo día de la rutina: se asigna por orden de fecha al primer día
+// (semana más antigua primero) que esa fecha completa y que todavía no tenía fecha. Así, repetir los mismos
+// ejercicios en una semana nueva no hereda lo hecho en la anterior.
+function dayClaims(data, routine){
+  const labels = Object.keys(routine).map((l, i)=>({ l, i, wk: parseDayLabel(l).groupKey })).sort((a, b)=> ((a.wk === null ? 1e9 : a.wk) - (b.wk === null ? 1e9 : b.wk)) || a.i - b.i);
+  const real = {}; labels.forEach(x=>{ const r = (routine[x.l] || []).filter(it=> it.tipo !== 'checklist' && it.tipo !== 'mensaje'); real[x.l] = r.length ? r : (routine[x.l] || []); });
+  const claimed = {};
+  Array.from(getActivityDates(data)).sort().forEach(ds=>{
+    const cands = labels.filter(x=> real[x.l].length && isDayCompleteOn(data, x.l, real[x.l], ds));
+    if(!cands.length) return;
+    const pick = cands.find(x=> !claimed[x.l]) || cands[cands.length - 1];
+    (claimed[pick.l] = claimed[pick.l] || []).push(ds);
+  });
+  return claimed;
+}
+function isDayEverDoneForWeek(data, day, items, routine){
+  if(routine) return (dayClaims(data, routine)[day] || []).length > 0;
   const real = items.filter(it=> it.tipo !== 'checklist' && it.tipo !== 'mensaje');
   if(!real.length) return isDayEverComplete(data, day, items);
   const dates = Array.from(getActivityDates(data));
@@ -2248,13 +2264,13 @@ function getCurrentSemana(data, routine){
   if(!data) return keys[0];
   let cur = null;
   keys.forEach(k=>{
-    if(groups[k].some(d=> isDayEverDoneForWeek(data, d, routine[d]))) cur = k;
+    if(groups[k].some(d=> isDayEverDoneForWeek(data, d, routine[d], routine))) cur = k;
   });
   if(cur === null) return keys[0];
   const next = keys.filter(k=> k > cur)[0];
   if(next === undefined) return cur;
   const days = groups[cur];
-  const allDone = days.every(d=> isDayEverDoneForWeek(data, d, routine[d]));
+  const allDone = days.every(d=> isDayEverDoneForWeek(data, d, routine[d], routine));
   let lastDone = null;
   days.forEach(d=>{
     const ds = lastCompletionDate(data, d, routine[d]);
@@ -2502,11 +2518,11 @@ function pnWeekProg(key, data){
   const { groups } = groupDaysBySemana(R);
   const keys = Object.keys(groups).map(Number).sort((a, b)=> a - b); if(!keys.length) return null;
   let cur = null;
-  keys.forEach(k=>{ if(groups[k].some(d=> isDayEverDoneForWeek(data, d, R[d]))) cur = k; });
+  keys.forEach(k=>{ if(groups[k].some(d=> isDayEverDoneForWeek(data, d, R[d], R))) cur = k; });
   if(cur === null) cur = keys[0];
   const days = groups[cur].filter(d=> (R[d] || []).some(it=> it.tipo !== 'mensaje'));
   if(!days.length) return null;
-  return { done: days.filter(d=> isDayEverDoneForWeek(data, d, R[d])).length, total: days.length, sem: cur % 1000 };
+  return { done: days.filter(d=> isDayEverDoneForWeek(data, d, R[d], R)).length, total: days.length, sem: cur % 1000 };
 }
 function pnRows(){
   const hid = pnHidden();
@@ -2532,7 +2548,7 @@ function pnSemanaTerminada(key, data){
   Object.keys(R).forEach(l=>{ const g = parseDayLabel(l).groupKey; if(g !== null && (max === null || g > max)) max = g; });
   if(max === null) return false;
   const days = Object.keys(R).filter(l=> parseDayLabel(l).groupKey === max);
-  return days.length > 0 && days.every(l=> isDayEverDoneForWeek(data, l, R[l]));
+  return days.length > 0 && days.every(l=> isDayEverDoneForWeek(data, l, R[l], R));
 }
 function pnSemana(key, f, data){
   const loaded = pnWeeksLoaded(key);
@@ -4626,7 +4642,7 @@ function renderWeekTimeline(box, routine){
     box.appendChild(label);
     keys.forEach(sNum=>{
       const days = groups[sNum];
-      const doneFlags = days.map(d=> planned ? false : isDayEverComplete(state.data, d, routine[d]));
+      const doneFlags = days.map(d=> planned ? false : isDayEverDoneForWeek(state.data, d, routine[d], routine));
       const nDone = doneFlags.filter(Boolean).length;
       const toggleKey = 'client-semana-' + sNum;
       const open = !!state.uiExpanded[toggleKey];
