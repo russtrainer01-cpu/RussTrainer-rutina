@@ -4122,7 +4122,13 @@ function edRender(main){
   const mv = (attr, delta)=> main.querySelectorAll('[' + attr + ']').forEach(b=> b.onclick = ()=>{ const p = b.getAttribute(attr).split(':').map(Number), a = ed.days[p[0]].items, j = p[1] + delta; if(j < 0 || j >= a.length || a[j].tipo === 'mensaje') return; const t = a[p[1]]; a[p[1]] = a[j]; a[j] = t; dirty(); edRender(main); });
   mv('data-up', -1); mv('data-dn', 1);
   main.querySelectorAll('[data-rm]').forEach(b=> b.onclick = ()=>{ const p = b.getAttribute('data-rm').split(':').map(Number); ed.days[p[0]].items.splice(p[1], 1); dirty(); edRender(main); });
-  main.querySelectorAll('[data-add]').forEach(b=> b.onclick = ()=>{ const d = ed.days[Number(b.getAttribute('data-add'))]; const last = d.items.filter(x=>x.tipo === 'carga').pop(); d.items.push({ seccion: last ? last.seccion : '', ejercicio:'', series:'3 series', reps:'12', peso:'', descanso:'40 seg', tipo:'carga', sinPeso:false, video:null }); ed.autoPick = Number(b.getAttribute('data-add')) + ':' + (d.items.length - 1); dirty(); edRender(main); });
+  main.querySelectorAll('[data-add]').forEach(b=> b.onclick = ()=>{ const d = ed.days[Number(b.getAttribute('data-add'))];
+    // El ejercicio nuevo entra después del último ejercicio de fuerza y antes de los estiramientos del final
+    const isSt = x=> /estir|elongaci|vuelta a la calma|enfriamiento/i.test(String(x.ejercicio || '') + ' ' + String(x.seccion || ''));
+    let at = -1; d.items.forEach((x, i)=>{ if(x.tipo !== 'mensaje' && !isSt(x)) at = i; });
+    const last = d.items.filter(x=> x.tipo === 'carga' && !isSt(x)).pop();
+    const pos = at < 0 ? d.items.length : at + 1;
+    d.items.splice(pos, 0, { seccion: last ? last.seccion : '', ejercicio:'', series:'3 series', reps:'12', peso:'', descanso:'40 seg', tipo:'carga', sinPeso:false, video:null }); ed.autoPick = Number(b.getAttribute('data-add')) + ':' + pos; dirty(); edRender(main); });
   main.querySelectorAll('[data-rmday]').forEach(b=> b.onclick = ()=>{ const i = Number(b.getAttribute('data-rmday')); if(!confirm('¿Quitar este día completo?')) return; ed.days.splice(i, 1); dirty(); edRender(main); });
   main.querySelectorAll('[data-addday]').forEach(b=> b.onclick = ()=>{
     const gk = b.getAttribute('data-addday'), g = groups.find(x=> String(x.k) === gk); if(!g) return;
