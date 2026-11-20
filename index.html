@@ -3101,6 +3101,7 @@ function renderPanel(app){
     const r = pnRows().find(x=>x.key === it.key);
     return `<div class="pn-cm"><div><b>${escapeHtml(it.clienta)}</b> · ${escapeHtml(it.exercise)} ${it.feeling ? '<span class="pn-tag">' + escapeHtml(it.feeling) + '</span>' : ''}<small style="float:right">${formatDate(it.date)}</small></div>
       <div class="t">“${escapeHtml(it.comment)}”</div>
+      ${replyBoxHtml(it.key, it.exercise, it.ts, it.comment, { rr:true, noq:true })}
       <button class="pn-btn" data-resp="${i}">✓ Ya respondí</button> ${r ? pnWaBtn(r, '') : ''}</div>`;
   };
   if(sec === 'agenda'){ agRenderAgenda(main, pending); }
@@ -3166,6 +3167,7 @@ function renderPanel(app){
         `${escapeHtml(i.exercise)}${i.weight ? ' · ' + escapeHtml(fmtWeight(i.weight, unitForExercise(i.exercise))) : ''} · ${escapeHtml(String(i.reps || 0))} × ${escapeHtml(String(i.sets || 0))} ${i.feeling ? '<span class="pn-tag">' + escapeHtml(i.feeling) + '</span>' : ''}`;
       return `<div class="pn-ev${flag ? ' flag' : ''}"><div class="pn-av">${escapeHtml(i.clienta.charAt(0))}</div><div style="flex:1;min-width:0"><div><b>${escapeHtml(i.clienta)}</b> · ${line}</div>
         ${i.comment ? `<div class="pn-say">💬 ${escapeHtml(i.comment)}</div>` : ''}
+        ${i.type === 'exercise' && i.comment && !i.respondido ? replyBoxHtml(i.key, i.exercise, i.ts, i.comment, { rr:true, noq:true }) : ''}
         ${i.type === 'exercise' && i.comment && !i.respondido ? `<div style="margin-top:9px;display:flex;gap:8px;flex-wrap:wrap"><button class="pn-btn" data-aresp="${escapeHtml(i.key)}|${escapeHtml(i.exercise)}|${escapeHtml(String(i.ts))}">✓ Ya respondí</button>${r ? pnWaBtn(r, '') : ''}<button class="pn-btn" data-det="${escapeHtml(i.key)}">Ver su ficha</button></div>` : ''}</div></div>`;
     };
     main.innerHTML = `<h1 class="pn-h1">Actividad</h1><p class="pn-sub">Lo que hacen y escriben tus alumnas, ordenado por día</p>
