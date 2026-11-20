@@ -2496,11 +2496,24 @@ function pnStatus(c){
   if(gap < 6) return { col:'#e08a00', txt:'Sin entrenar hace ' + gap + ' días', lvl:1, gap };
   return { col:'#d64545', txt:'Sin entrenar hace ' + gap + ' días', lvl:2, gap };
 }
+// Progreso de la semana de rutina en curso: días hechos / días de esa semana (la más reciente donde ya hizo algo)
+function pnWeekProg(key, data){
+  const R = ROUTINES[key]; if(!R || !data) return null;
+  const { groups } = groupDaysBySemana(R);
+  const keys = Object.keys(groups).map(Number).sort((a, b)=> a - b); if(!keys.length) return null;
+  let cur = null;
+  keys.forEach(k=>{ if(groups[k].some(d=> isDayEverDoneForWeek(data, d, R[d]))) cur = k; });
+  if(cur === null) cur = keys[0];
+  const days = groups[cur].filter(d=> (R[d] || []).some(it=> it.tipo !== 'mensaje'));
+  if(!days.length) return null;
+  return { done: days.filter(d=> isDayEverDoneForWeek(data, d, R[d])).length, total: days.length, sem: cur % 1000 };
+}
 function pnRows(){
   const hid = pnHidden();
   const all = Object.keys(state.adminData || {}).map(k=>{
     const c = state.adminData[k];
-    return { key:k, c, st:pnStatus(c), week:computeWeekCount(c.data), target:weeklyTarget(c.displayName), hidden:hid.indexOf(k) > -1 };
+    const wp = pnWeekProg(k, c.data);
+    return { key:k, c, st:pnStatus(c), week:wp ? wp.done : computeWeekCount(c.data), target:wp ? wp.total : weeklyTarget(c.displayName), hidden:hid.indexOf(k) > -1 };
   });
   return all;
 }
@@ -2657,7 +2670,7 @@ function pnFicha(main){
         <div class="pn-fbtns"><button class="pn-btn pri" id="f-edit-rutina">✏️ Editar su rutina</button>${waLink ? `<a class="pn-btn" href="${waLink}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${grupoLink ? `<a class="pn-btn" href="${escapeHtml(grupoLink)}" target="_blank" rel="noopener">👥 Grupo</a>` : ''}</div></div>
       ${alerts.map(a=>`<div class="pn-alert" style="margin-bottom:10px">${escapeHtml(a)}</div>`).join('')}
       <div class="pn-kps">
-        <div class="pn-kp"><small>Esta semana</small><b>${computeWeekCount(c.data)} de ${weeklyTarget(c.displayName)} días</b></div>
+        <div class="pn-kp"><small>Esta semana</small><b>${(()=>{ const wp = pnWeekProg(key, c.data); return wp ? wp.done + ' de ' + wp.total : computeWeekCount(c.data) + ' de ' + weeklyTarget(c.displayName); })()} días</b></div>
         <div class="pn-kp"><small>Última vez que entrenó</small><b>${lastActive ? formatDate(lastActive) : '—'}</b></div>
         <div class="pn-kp"><small>Racha</small><b>${computeStreak(c.data) > 0 ? '🔥 ' + computeStreak(c.data) : '—'}</b></div>
         <div class="pn-kp"${pendC.length ? ' style="border-color:#f3c7c0;background:#fff7f5"' : ''}><small>Comentarios sin responder</small><b${pendC.length ? ' style="color:#b3261e"' : ''}>${pendC.length}</b></div>
