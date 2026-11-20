@@ -1378,6 +1378,9 @@
   .ed-pk:after{content:"▾";color:#9aa3b8}
   .ed-pk.empty{color:#9aa3b8;font-weight:400}
   .ed-nota{background:#fffaf0}
+  .ed-vd{ display:block; font-size:11px; font-weight:800; margin:3px 0 0 3px; }
+  .ed-vd.on{ color:#1f9d6b; } .ed-vd.off{ color:#d48a1c; }
+  .ed-po .ed-vd{ display:inline; float:right; margin:0; }
   #ed-pop{position:fixed;z-index:95;background:#fff;border:1px solid #cfd4e1;border-radius:12px;box-shadow:0 14px 34px rgba(28,34,48,.22);padding:10px;width:380px;font-family:Inter,"Segoe UI",system-ui,sans-serif;color:#1c2230}
   #ed-pop input{width:100%;box-sizing:border-box;border:1px solid #3d5afe;border-radius:8px;padding:9px 10px;font-size:15px;font-family:inherit;margin-bottom:6px;outline:none}
   .ed-pl{max-height:min(340px,48vh);overflow:auto}
@@ -3732,6 +3735,7 @@ function edGroups(ed){
   });
   return g;
 }
+function edVdBadge(it){ return it && it.ejercicio ? (it.video ? '<span class="ed-vd on">🎥 con video</span>' : '<span class="ed-vd off">sin video</span>') : ''; }
 function edVideoMap(){
   const m = {};
   Object.keys(ROUTINES).forEach(k=> Object.keys(ROUTINES[k]).forEach(d=> ROUTINES[k][d].forEach(e=>{ if(e.ejercicio && e.video && !m[e.ejercicio]) m[e.ejercicio] = e.video; })));
@@ -3813,7 +3817,7 @@ function edItemRow(it, di, ii, n, lo, ed){
   const carga = it.tipo === 'carga';
   const secs = edSecOptions(); if(it.seccion && !secs.some(x=> edMuscle(x) === edMuscle(it.seccion))) secs.push(it.seccion);
   const secSel = `<select class="ed-sl" data-sel="${di}:${ii}:seccion"><option value="">Músculo</option>${secs.map(x=>`<option${edMuscle(x) === edMuscle(it.seccion) ? ' selected' : ''} value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join('')}</select>`;
-  const pk = `<button type="button" class="ed-pk${it.ejercicio ? '' : ' empty'}" data-pick="${di}:${ii}">${escapeHtml(it.ejercicio || 'Elegir ejercicio…')}</button>`;
+  const pk = `<button type="button" class="ed-pk${it.ejercicio ? '' : ' empty'}" data-pick="${di}:${ii}">${escapeHtml(it.ejercicio || 'Elegir ejercicio…')}</button>` + edVdBadge(it);
   return `<div class="ed-it"><div class="ed-l1 ${carga ? '' : 'k'}">${secSel}${pk}
     ${carga ? edSel(ed, di, ii, 'series', it.series, 'Series') + edSel(ed, di, ii, 'reps', it.reps, 'Reps') + edSel(ed, di, ii, 'peso', it.peso, 'Peso') + edSel(ed, di, ii, 'descanso', it.descanso, 'Descanso') : f('reps', 'Detalle (ej: 15 min · ritmo suave)', 'ed-sl')}
     ${ctrl}</div>
@@ -3861,12 +3865,13 @@ function edOpenPicker(target, onPick){
   const r = target.getBoundingClientRect(), w = Math.max(r.width, 360);
   pop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - w - 8)) + 'px'; pop.style.width = w + 'px';
   const below = window.innerHeight - r.bottom; pop.style.top = (below > 300 ? r.bottom + 4 : Math.max(8, r.top - 330)) + 'px';
+  const vm = edVideoMap();
   const draw = ()=>{
     const q = edNorm(document.getElementById('ed-ps').value.trim()); let h = '', any = false, exact = false;
     cats.forEach(c=>{
       const ns = c.names.filter(n=> !q || edNorm(n).indexOf(q) > -1 || edNorm(c.sec).indexOf(q) > -1);
       if(!ns.length) return; any = true;
-      h += `<div class="ed-pg">${escapeHtml(c.sec.toUpperCase())}</div>` + ns.map(n=>{ if(edNorm(n) === q) exact = true; return `<button class="ed-po" data-pn="${escapeHtml(n)}" data-ps="${escapeHtml(c.sec)}">${escapeHtml(n)}</button>`; }).join('');
+      h += `<div class="ed-pg">${escapeHtml(c.sec.toUpperCase())}</div>` + ns.map(n=>{ if(edNorm(n) === q) exact = true; return `<button class="ed-po" data-pn="${escapeHtml(n)}" data-ps="${escapeHtml(c.sec)}">${escapeHtml(n)}${vm[n] ? '<span class="ed-vd on">🎥</span>' : '<span class="ed-vd off">sin video</span>'}</button>`; }).join('');
     });
     const raw = document.getElementById('ed-ps').value.trim();
     if(raw && !exact) h += `<div class="ed-pg">OTRO</div><button class="ed-po" style="color:#3d5afe" data-pn="${escapeHtml(raw)}" data-ps="">+ Usar «${escapeHtml(raw)}» como ejercicio nuevo</button>`;
@@ -4029,7 +4034,7 @@ function edGridHtml(ed){
     const sec = edMuscle(it.seccion);
     if(sec !== lastSec){ lastSec = sec; h += `<tr class="g-sec"><td colspan="${cols.length + 3}">${escapeHtml(it.seccion || sec)}</td></tr>`; }
     const k = fdi + ':' + ii, carga = it.tipo === 'carga';
-    const pk = `<button type="button" class="ed-pk${it.ejercicio ? '' : ' empty'}" data-pick="${k}" title="Tocar para cambiar el ejercicio">${escapeHtml(it.ejercicio || 'Elegir ejercicio…')}</button>`;
+    const pk = `<button type="button" class="ed-pk${it.ejercicio ? '' : ' empty'}" data-pick="${k}" title="Tocar para cambiar el ejercicio">${escapeHtml(it.ejercicio || 'Elegir ejercicio…')}</button>` + edVdBadge(it);
     const f = (name, ph, cls)=> `<input class="${cls || ''}" data-f="${k}:${name}" value="${escapeHtml(it[name] === undefined || it[name] === null ? '' : String(it[name]))}" placeholder="${ph}">`;
     h += `<tr class="g-r"><td class="g-nm">${pk}</td>`;
     cols.forEach(c=>{
