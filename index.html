@@ -2248,8 +2248,16 @@ function dayClaims(data, routine){
   Array.from(getActivityDates(data)).sort().forEach(ds=>{
     const cands = labels.filter(x=> real[x.l].length && isDayCompleteOn(data, x.l, real[x.l], ds));
     if(!cands.length) return;
-    const pick = cands.find(x=> !claimed[x.l]) || cands[cands.length - 1];
-    (claimed[pick.l] = claimed[pick.l] || []).push(ds);
+    const names = x=> new Set(real[x.l].map(it=> String(it.ejercicio||'').trim().toLowerCase()));
+    const picks = [];
+    cands.forEach(x=>{
+      if(claimed[x.l]) return;
+      const nx = names(x);
+      // una misma fecha puede cerrar dos dias distintos (ej: terminas uno de noche y haces otro) solo si no comparten ejercicios
+      if(picks.every(q=> { const nq = names(q); return ![...nx].some(n=> nq.has(n)); })) picks.push(x);
+    });
+    if(!picks.length) picks.push(cands[cands.length - 1]);
+    picks.forEach(pick=> (claimed[pick.l] = claimed[pick.l] || []).push(ds));
   });
   return claimed;
 }
