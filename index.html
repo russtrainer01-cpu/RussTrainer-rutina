@@ -2243,7 +2243,7 @@ function getMaxSemana(routine){
 // ejercicios en una semana nueva no hereda lo hecho en la anterior.
 function dayClaims(data, routine){
   const labels = Object.keys(routine).map((l, i)=>({ l, i, wk: parseDayLabel(l).groupKey })).sort((a, b)=> ((a.wk === null ? 1e9 : a.wk) - (b.wk === null ? 1e9 : b.wk)) || a.i - b.i);
-  const real = {}; labels.forEach(x=>{ const r = (routine[x.l] || []).filter(it=> it.tipo !== 'checklist' && it.tipo !== 'mensaje'); real[x.l] = r.length ? r : (routine[x.l] || []); });
+  const real = {}; labels.forEach(x=>{ const r = (routine[x.l] || []).filter(it=> it.tipo !== 'checklist' && it.tipo !== 'mensaje'); real[x.l] = r.length ? r : (routine[x.l] || []).filter(it=> it.tipo !== 'mensaje'); });
   const claimed = {};
   Array.from(getActivityDates(data)).sort().forEach(ds=>{
     const cands = labels.filter(x=> real[x.l].length && isDayCompleteOn(data, x.l, real[x.l], ds));
@@ -2305,6 +2305,7 @@ function groupDaysBySemana(routine){
 }
 
 function isDayCompleteOn(data, dayLabel, items, dateStr){
+  if(!items.some(it=> it.tipo !== 'mensaje')) return false; // dia solo con enunciado (sin ejercicios cargados): nunca cuenta como hecho
   const finR = data.completados[dayLabel] && data.completados[dayLabel]['fin'];
   if(finR && finR.done && finR.date === dateStr) return true;
   return items.every((item, idx)=>{
