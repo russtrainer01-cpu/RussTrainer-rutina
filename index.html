@@ -5882,7 +5882,8 @@ function renderMain(){
       card.className = 'card';
       let bodyHtml = `
         <div style="font-weight:700; margin-bottom:4px;">${escapeHtml(item.ejercicio)}</div>
-        <div class="sub" style="margin:0 0 10px;">Objetivo: ${escapeHtml(item.series)} &times; ${escapeHtml(item.reps)}${item.sinPeso ? '' : ' &middot; ' + escapeHtml(item.peso)}</div>
+        <div class="sub" style="margin:0 0 ${(!item.sinPeso && item.peso) ? 2 : 10}px;">Objetivo: ${escapeHtml(item.series)} &times; ${escapeHtml(item.reps)}</div>
+        ${(!item.sinPeso && item.peso) ? `<div class="sub" style="margin:0 0 10px;">Peso: <b style="color:var(--rose-dark);">${escapeHtml(item.peso)}</b></div>` : ''}
         ${videoLink}
         ${russHtml}
         ${tipHtml}
