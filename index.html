@@ -1436,7 +1436,9 @@
   .pi-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
   .pi-gr{display:grid;grid-template-columns:minmax(0,1.9fr) minmax(0,1fr);gap:16px;align-items:start}
   .pn-card.pi-hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:18px;background:linear-gradient(135deg,#fffafa,#fbeff0);border:1px solid #f4e6e7;padding:24px 26px}
-  .pn-card .pi-hi{font-family:"Playfair Display",Georgia,serif;font-size:40px;font-weight:700;letter-spacing:-.8px;line-height:1.1;color:#4a2f2c;margin:0 0 10px}.pi-hi i{font-style:italic;font-weight:600;color:#b9626f}
+  .pn-card .pi-hi{font-family:"Playfair Display",Georgia,serif;font-size:40px;font-weight:700;letter-spacing:-.8px;line-height:1.1;color:#4a2f2c;margin:0 0 10px}
+  .pn-card.pi-hero{padding-top:22px}.pi-hi i{font-style:italic;font-weight:600;color:#b9626f}
+  .pi-fe{font-size:12.5px;font-weight:600;opacity:.6;margin-bottom:2px}
   .pi-rs{font-size:14px;line-height:1.5;margin:0 0 14px;opacity:.9;font-weight:400}.pi-rs b{font-weight:700}
   .pi-live{background:#fff;border-radius:20px;padding:14px 16px;box-shadow:0 4px 14px rgba(120,70,70,.06)}.pi-lt{font-size:11px;font-weight:700;letter-spacing:.06em;color:#2f8a5b;margin-bottom:4px}.pi-lt i{display:inline-block;width:8px;height:8px;border-radius:50%;background:#2fbf71;margin-right:6px;animation:piPulse 1.8s infinite}
   @keyframes piPulse{0%,100%{opacity:1}50%{opacity:.35}}
@@ -1470,7 +1472,7 @@
     .pn-nv:hover{background:rgba(255,255,255,.14)}
     .pn-nv.on{background:linear-gradient(135deg,#fbefdc,#f3d9c9);color:#5e2f3c;opacity:1;box-shadow:0 8px 20px rgba(0,0,0,.22)}
     .pn-sep{background:rgba(255,255,255,.18)}
-    .pn-main{padding-left:34px}
+    .pn-main{padding:24px 40px 60px 34px}.pn-main.pi-main{padding-top:14px}
   }
   @media(max-width:700px){.pn-side{background:linear-gradient(135deg,#a8606d,#5e2f3c)}.pn-nv.on{background:linear-gradient(135deg,#fbefdc,#f3d9c9);color:#5e2f3c}.pn-nv .bd{background:#ff4d5e}}
 </style>
@@ -3249,14 +3251,13 @@ function pnInicio(main, pending, feed){
   const urg = rows.map(r=>({ r, u:pnUrgent(r) })).filter(x=> x.u.needsNew || x.u.soon || x.u.vence).sort((a, b)=> b.u.urg - a.u.urg);
   const planHtml = plan.length ? plan.map(p=>`<div class="pi-al" data-det="${p.r.key}"><i>${escapeHtml(p.r.c.displayName.charAt(0))}</i><div><b>${escapeHtml(p.r.c.displayName)}</b><small>${escapeHtml(pnDayShort(p.label))}</small></div><em class="${p.done ? '' : 'p'}">${p.done ? 'Hecho' : 'Pendiente'}</em></div>`).join('') : '<div class="pi-none">Hoy no hay días marcados para ninguna alumna</div>';
   main.innerHTML = `
-    <div class="pi-top"><div><h1 class="pn-h1">Inicio</h1><p class="pn-sub" style="margin:0">${fechaTxt.charAt(0).toUpperCase() + fechaTxt.slice(1)}</p></div><button class="pn-btn pri" id="pi-new">+ Nueva alumna</button></div>
     <div class="pi-gr"><div>
       <div class="pn-card pi-hero"><div class="pi-hl">
-        <h2 class="pi-hi">${saludo}, <i>Russ</i></h2><p class="pi-rs">${resumen}</p>
+        <div class="pi-fe">${fechaTxt.charAt(0).toUpperCase() + fechaTxt.slice(1)}</div><h2 class="pi-hi">${saludo}, <i>Russ</i></h2><p class="pi-rs">${resumen}</p>
         <div class="pi-live"><div class="pi-lt"><i></i>HOY EN VIVO · leído ${hh}</div>
           <div class="pi-ln"><b>${nHoy}</b><span>${nHoy === 1 ? 'entreno hoy' : 'entrenos hoy'}</span><b>${plan.length}</b><span>${plan.length === 1 ? 'alumna hoy toca' : 'alumnas hoy toca'}</span></div>
           <div>${delta ? `<span class="pi-pl">+${delta} desde tu última visita</span>` : ''}${ultima ? `<span class="pi-pl">Última en entrenar: ${escapeHtml(ultima)}</span>` : ''}</div></div>
-        <div class="pi-bt"><button class="pn-btn pri" id="pi-rut">Armar rutina</button><button class="pn-btn" id="pi-al">Ver alumnas</button></div></div>
+        <div class="pi-bt"><button class="pn-btn pri" id="pi-rut">Armar rutina</button><button class="pn-btn" id="pi-new">+ Nueva alumna</button><button class="pn-btn" id="pi-al">Ver alumnas</button></div></div>
         <div class="pi-hoy"><h4>Hoy les toca</h4>${planHtml}</div></div>
       <div class="pn-card" style="margin-top:16px"><h2>Por atender</h2><small>Lo que necesita algo de ti esta semana</small>
         ${urg.length ? urg.slice(0, 6).map(x=>`<div class="pn-rs" data-det="${x.r.key}"><div class="pn-av">${escapeHtml(x.r.c.displayName.charAt(0))}</div><div class="pn-nm" style="flex:1"><b>${escapeHtml(x.r.c.displayName)}</b><div class="pn-bds">${x.u.items.map(i=>`<span class="pn-bd ${i[0]}">${escapeHtml(i[1])}</span>`).join('')}</div></div></div>`).join('') : '<div class="pn-empty">Todas están al día 🎉</div>'}</div>
@@ -3267,6 +3268,7 @@ function pnInicio(main, pending, feed){
       <div class="pn-card pi-r" style="margin-top:16px"><h3>Entrenos de la semana <span>${tot} en total</span></h3>
         <div class="pi-wk">${sem.map((x, i)=>`<div class="${x.fut ? 'f' : ''}${x.hoy ? ' t' : ''}"><i style="height:${x.fut ? 8 : 8 + Math.round(x.n / mx * 64)}px"></i>${LET[i]}</div>`).join('')}</div></div>
     </div></div>`;
+  main.classList.add('pi-main');
   main.querySelectorAll('[data-det]').forEach(b=> b.onclick = ()=>{ state.adminSelected = b.getAttribute('data-det'); state.view = 'admin-detail'; render(); });
   const go = (id, sec)=>{ const b = document.getElementById(id); if(b) b.onclick = ()=>{ state.view = 'admin-list'; state.panelSec = sec; render(); }; };
   go('pi-new', 'alumnas'); go('pi-rut', 'rutinas'); go('pi-al', 'alumnas'); go('pi-ag', 'agenda');
