@@ -1475,6 +1475,7 @@
     .pn-main{padding:24px 40px 60px 34px}.pn-main.pi-main{padding-top:14px}
   }
   @media(max-width:700px){.pn-side{background:linear-gradient(135deg,#a8606d,#5e2f3c)}.pn-nv.on{background:linear-gradient(135deg,#fbefdc,#f3d9c9);color:#5e2f3c}.pn-nv .bd{background:#ff4d5e}}
+#pv-bar{position:fixed;top:0;left:0;right:0;z-index:99999;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 14px;background:#3b2a2f;color:#fff;font:700 13px Nunito,sans-serif}#pv-bar button{background:#fff;color:#3b2a2f;border:0;border-radius:999px;padding:6px 14px;font:800 12.5px Nunito,sans-serif;cursor:pointer}body.pv-on{padding-top:42px}
 </style>
 </head>
 <body>
@@ -2752,7 +2753,7 @@ function pnFicha(main){
       <div class="pn-crumb"><button class="pn-lnk" id="back-btn">Alumnas</button> › <b>${escapeHtml(c.displayName)}</b></div>
       <div class="pn-ftop"><div class="pn-bigav">${escapeHtml(c.displayName.charAt(0))}</div>
         <div><h1 class="pn-h1" style="margin:0">${escapeHtml(c.displayName)}</h1><p class="pn-sub" style="margin:2px 0 0">${monthNum ? 'Mes ' + monthNum : ''}${f.fechaInicio ? (monthNum ? ' · ' : '') + 'desde el ' + formatDate(f.fechaInicio) : ''}</p></div>
-        <div class="pn-fbtns"><button class="pn-btn pri" id="f-edit-rutina">✏️ Editar su rutina</button>${waLink ? `<a class="pn-btn" href="${waLink}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${grupoLink ? `<a class="pn-btn" href="${escapeHtml(grupoLink)}" target="_blank" rel="noopener">👥 Grupo</a>` : ''}</div></div>
+        <div class="pn-fbtns"><button class="pn-btn pri" id="f-edit-rutina">✏️ Editar su rutina</button><button class="pn-btn" id="f-ver-alumna" title="Ver su app como la ve ella">👁 Ver como alumna</button>${waLink ? `<a class="pn-btn" href="${waLink}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${grupoLink ? `<a class="pn-btn" href="${escapeHtml(grupoLink)}" target="_blank" rel="noopener">👥 Grupo</a>` : ''}</div></div>
       ${alerts.map(a=>`<div class="pn-alert" style="margin-bottom:10px">${escapeHtml(a)}</div>`).join('')}
       <div class="pn-kps">
         <div class="pn-kp"><small>Esta semana</small><b>${(()=>{ const wp = pnWeekProg(key, c.data); return wp ? wp.done + ' de ' + wp.total : computeWeekCount(c.data) + ' de ' + weeklyTarget(c.displayName); })()} días</b></div>
@@ -2792,6 +2793,7 @@ function pnFicha(main){
       </div>`;
     main.querySelectorAll('details.pn-det').forEach(d=> d.addEventListener('toggle', ()=>{ const k = 'det-' + d.getAttribute('data-dk'); if(d.open) state.uiExpanded[k] = true; else delete state.uiExpanded[k]; }));
     document.getElementById('back-btn').onclick = ()=>{ state.view='admin-list'; state.panelSec='alumnas'; render(); };
+    document.getElementById('f-ver-alumna').onclick = ()=> pvEnter(key);
     document.getElementById('f-edit-rutina').onclick = ()=>{ state.edKey = key; state.ed = null; state.view='admin-list'; state.panelSec='rutinas'; render(); };
     document.getElementById('f-save-btn').onclick = ()=> onSaveFicha(key);
     document.getElementById('f-fechainicio-hoy').onclick = ()=>{ document.getElementById('f-fechainicio').value = todayISO(); };
@@ -5254,7 +5256,32 @@ async function _flushSave(){
   _saveBusy = false;
   if(_saveFailed) setTimeout(_flushSave, 5000);
 }
+// ---- Vista previa: ver la app como la ve la alumna (solo lectura, no guarda nada) ----
+function pvEnter(key){
+  const c = state.adminData && state.adminData[key]; if(!c) return;
+  state.preview = { key };
+  state.clienta = c.displayName;
+  state.data = JSON.parse(JSON.stringify(c.data));
+  state.uiExpanded = {}; state.uiFeeling = {}; state.uiSets = {}; state.uiWeightPrefill = {}; state.routineDay = null; state.exercise = null;
+  state.view = 'dashboard'; window.scrollTo(0,0); render();
+}
+function pvExit(){
+  const p = state.preview; if(!p) return;
+  state.preview = null; state.clienta = null; state.data = null; state.routineDay = null; state.exercise = null;
+  state.adminSelected = p.key; state.panelSec = 'alumnas'; state.view = 'admin-detail'; render(); window.scrollTo(0,0);
+}
+function pvBar(){
+  let bar = document.getElementById('pv-bar');
+  if(!state.preview){ if(bar) bar.remove(); document.body.classList.remove('pv-on'); return; }
+  const c = state.adminData && state.adminData[state.preview.key];
+  if(!bar){ bar = document.createElement('div'); bar.id = 'pv-bar'; document.body.appendChild(bar); }
+  bar.innerHTML = '<span>👁 Vista previa como ' + escapeHtml(c ? c.displayName : 'alumna') + ' · no se guarda nada</span><button type="button" id="pv-exit">Volver al panel</button>';
+  document.getElementById('pv-exit').onclick = pvExit;
+  document.body.classList.add('pv-on');
+  const sw = document.getElementById('switch-btn'); if(sw) sw.onclick = pvExit;
+}
 function saveClienta(name, data){
+  if(state.preview) return Promise.resolve();
   _savePending[storageKey(name)] = data;
   return _flushSave();
 }
@@ -5405,7 +5432,7 @@ function cqRender(){
   });
 }
 
-function render(){ renderMain(); try{ renderTabBar(); }catch(e){} }
+function render(){ renderMain(); try{ renderTabBar(); }catch(e){} try{ pvBar(); }catch(e){} }
 // Ventanita de recordatorio de pago: la activas tú desde la ficha de la alumna (campo "Aviso de pago").
 function mountAvisoPago(){
   const old = document.getElementById('aviso-pago'); if(old) old.remove();
@@ -6317,7 +6344,7 @@ function renderMain(){
     });
   }
   try{
-    if(state.clienta){
+    if(state.clienta && !state.preview){
       if(state.view === 'routine-day' && state.routineDay) localStorage.setItem('rt_view_' + state.clienta, JSON.stringify({ date: todayISO(), day: state.routineDay }));
       else if(state.view === 'dashboard') localStorage.removeItem('rt_view_' + state.clienta);
     }
